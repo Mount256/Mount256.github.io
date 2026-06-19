@@ -1,0 +1,657 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>uCOS-III 学习记录（6）——优先级表 | Mount256的博客</title><meta name="author" content="Mount256"><meta name="copyright" content="Mount256"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="参考内容：《[野火]uCOS-III内核实现与应用开发实战指南——基于STM32》第 11 章。 1 优先级表的定义 OSPrioTbl（os_prio.c） 在文件 os_prio.c 中定义优先级表，它是一个数组： 1CPU_DATA OSPrioTbl[OS_PRIO_TBL_SIZE];  &#x2F;* 定义优先级表 *&#x2F; 接下来着重理解 CPU_DATA 和 OS_PRIO_TBL_SIZE 的">
+<meta property="og:type" content="article">
+<meta property="og:title" content="uCOS-III 学习记录（6）——优先级表">
+<meta property="og:url" content="http://example.com/posts/cf62516.html">
+<meta property="og:site_name" content="Mount256的博客">
+<meta property="og:description" content="参考内容：《[野火]uCOS-III内核实现与应用开发实战指南——基于STM32》第 11 章。 1 优先级表的定义 OSPrioTbl（os_prio.c） 在文件 os_prio.c 中定义优先级表，它是一个数组： 1CPU_DATA OSPrioTbl[OS_PRIO_TBL_SIZE];  &#x2F;* 定义优先级表 *&#x2F; 接下来着重理解 CPU_DATA 和 OS_PRIO_TBL_SIZE 的">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/img/avatar.png">
+<meta property="article:published_time" content="2022-01-29T16:00:00.000Z">
+<meta property="article:modified_time" content="2026-06-18T16:00:00.000Z">
+<meta property="article:author" content="Mount256">
+<meta property="article:tag" content="STM32">
+<meta property="article:tag" content="uCOS">
+<meta property="article:tag" content="嵌入式">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/img/avatar.png"><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "uCOS-III 学习记录（6）——优先级表",
+  "url": "http://example.com/posts/cf62516.html",
+  "image": "http://example.com/img/avatar.png",
+  "datePublished": "2022-01-29T16:00:00.000Z",
+  "dateModified": "2026-06-18T16:00:00.000Z",
+  "author": [
+    {
+      "@type": "Person",
+      "name": "Mount256",
+      "url": "http://example.com"
+    }
+  ]
+}</script><link rel="shortcut icon" href="/img/favicon.png"><link rel="canonical" href="http://example.com/posts/cf62516.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css?v=5.5.5"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@7.2.0/css/all.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/ui@6.1.14/dist/fancybox/fancybox.min.css" media="print" onload="this.media='all'"><script>
+    (() => {
+      
+    const saveToLocal = {
+      set: (key, value, ttl) => {
+        if (!ttl) return
+        const expiry = Date.now() + ttl * 86400000
+        localStorage.setItem(key, JSON.stringify({ value, expiry }))
+      },
+      get: key => {
+        const itemStr = localStorage.getItem(key)
+        if (!itemStr) return undefined
+        const { value, expiry } = JSON.parse(itemStr)
+        if (Date.now() > expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return value
+      }
+    }
+
+    window.btf = {
+      saveToLocal,
+      getScript: (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        Object.entries(attr).forEach(([key, val]) => script.setAttribute(key, val))
+        script.onload = script.onreadystatechange = () => {
+          if (!script.readyState || /loaded|complete/.test(script.readyState)) resolve()
+        }
+        script.onerror = reject
+        document.head.appendChild(script)
+      }),
+      getCSS: (url, id) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onload = link.onreadystatechange = () => {
+          if (!link.readyState || /loaded|complete/.test(link.readyState)) resolve()
+        }
+        link.onerror = reject
+        document.head.appendChild(link)
+      }),
+      addGlobalFn: (key, fn, name = false, parent = window) => {
+        if (!false && key.startsWith('pjax')) return
+        const globalFn = parent.globalFn || {}
+        globalFn[key] = globalFn[key] || {}
+        globalFn[key][name || Object.keys(globalFn[key]).length] = fn
+        parent.globalFn = globalFn
+      }
+    }
+  
+      
+      const activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      const activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+
+      btf.activateDarkMode = activateDarkMode
+      btf.activateLightMode = activateLightMode
+
+      const theme = saveToLocal.get('theme')
+    
+          theme === 'dark' ? activateDarkMode() : theme === 'light' ? activateLightMode() : null
+        
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        document.documentElement.classList.toggle('hide-aside', asideStatus === 'hide')
+      }
+    
+      
+    const detectApple = () => {
+      if (/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)) {
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+  
+    })()
+  </script><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: {"path":"/search.xml","preload":false,"top_n_per_article":1,"unescape":false,"pagination":{"enable":false,"hitsPerPage":8},"languages":{"hits_empty":"未找到符合您查询的内容：${query}","hits_stats":"共找到 ${hits} 篇文章"}},
+  translate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false,"highlightFullpage":false,"highlightMacStyle":false},
+  copy: {
+    success: '复制成功',
+    error: '复制失败',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'fancybox',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid@4.13.0/dist/infinitegrid.min.js',
+    buttonText: '加载更多'
+  },
+  isPhotoFigcaption: false,
+  islazyloadPlugin: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'uCOS-III 学习记录（6）——优先级表',
+  isHighlightShrink: false,
+  isToc: true,
+  pageType: 'post'
+}</script><!-- hexo injector head_end start -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.css">
+<!-- hexo injector head_end end --><meta name="generator" content="Hexo 8.1.2"></head><body><div class="bg-animation" id="web_bg" style="background-color: #87CEEB;"></div><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img text-center"><img src="/img/avatar.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data text-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">13</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">4</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">3</div></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 链接</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header" style="background-image: url(/img/top.jpg);"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><span class="site-name">Mount256的博客</span></a><a class="nav-page-title" href="/"><span class="site-name">uCOS-III 学习记录（6）——优先级表</span><span class="site-name"><i class="fa-solid fa-circle-arrow-left"></i><span>  返回首页</span></span></a></span><div id="menus"><div id="search-button"><span class="site-page social-icon search"><i class="fas fa-search fa-fw"></i><span> 搜索</span></span></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 链接</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于</span></a></div></div><div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div></div></nav><div id="post-info"><h1 class="post-title">uCOS-III 学习记录（6）——优先级表</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2022-01-29T16:00:00.000Z" title="发表于 2022-01-30 00:00:00">2022-01-30</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2026-06-18T16:00:00.000Z" title="更新于 2026-06-19 00:00:00">2026-06-19</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/%E5%B5%8C%E5%85%A5%E5%BC%8F%E5%BC%80%E5%8F%91/">嵌入式开发</a><i class="fas fa-angle-right post-meta-separator"></i><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/%E5%B5%8C%E5%85%A5%E5%BC%8F%E5%BC%80%E5%8F%91/uCOS-III/">uCOS-III</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-wordcount"><i class="far fa-file-word fa-fw post-meta-icon"></i><span class="post-meta-label">总字数:</span><span class="word-count">4.8k</span><span class="post-meta-separator">|</span><i class="far fa-clock fa-fw post-meta-icon"></i><span class="post-meta-label">阅读时长:</span><span>17分钟</span></span><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title=""><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">浏览量:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="container post-content" id="article-container"><p>参考内容：《[野火]uCOS-III内核实现与应用开发实战指南——基于STM32》第 11 章。</p>
+<h2 id="1-优先级表的定义-OSPrioTbl（os-prio-c）">1 优先级表的定义 OSPrioTbl（os_prio.c）</h2>
+<p>在文件 os_prio.c 中定义优先级表，它是一个数组：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">CPU_DATA OSPrioTbl[OS_PRIO_TBL_SIZE];  <span class="comment">/* 定义优先级表 */</span></span><br></pre></td></tr></table></figure>
+<p>接下来着重理解 CPU_DATA 和 OS_PRIO_TBL_SIZE 的含义。</p>
+<h3 id="1-1-CPU-DATA——一个数组元素的数据长度为多少？（cpu-h）">1.1 CPU_DATA——一个数组元素的数据长度为多少？（cpu.h）</h3>
+<p>在 cpu.h 中定义了 CPU_DATA 的类型为 unsigned int，也就是一个数组元素为 32 位：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">typedef</span> <span class="type">unsigned</span> <span class="type">int</span>  	CPU_INT32U;</span><br><span class="line"></span><br><span class="line"><span class="keyword">typedef</span>  CPU_INT32U     CPU_DATA;</span><br></pre></td></tr></table></figure>
+<p>如果 MCU 的（字长）类型是 16 位、8 位或者 64 位，只需要把优先级表的数据类型 CPU_DATA 改成相应的位数即可。</p>
+<h3 id="1-2-OS-PRIO-TBL-SIZE——数组有多大？（os-h）">1.2 OS_PRIO_TBL_SIZE——数组有多大？（os.h）</h3>
+<p>这个问题将会关系到优先级表有多大。在 os.h 中宏定义了 OS_PRIO_TBL_SIZE：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">define</span>  OS_PRIO_TBL_SIZE		( ((OS_CFG_PRIO_MAX - 1u) / DEF_INT_CPU_NBR_BITS) + 1u )</span></span><br></pre></td></tr></table></figure>
+<p>接下来，我们来讲讲 OS_CFG_PRIO_MAX 和 DEF_INT_CPU_NBR_BITS 的来由。</p>
+<h4 id="1-2-1-OS-CFG-PRIO-MAX——支持多少个优先级？（os-cfg-h）">1.2.1 OS_CFG_PRIO_MAX——支持多少个优先级？（os_cfg.h）</h4>
+<p>在 os_cfg.h 中宏定义了 OS_CFG_PRIO_MAX。我们设置为 32，即最大支持 32 个优先级：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/* 支持最大的优先级 */</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> OS_CFG_PRIO_MAX		32u</span></span><br></pre></td></tr></table></figure>
+<h4 id="1-2-2-DEF-INT-CPU-NBR-BITS——CPU-整型数据有多少位？（cpu-def-h）">1.2.2 DEF_INT_CPU_NBR_BITS——CPU 整型数据有多少位？（cpu_def.h）</h4>
+<p>DEF_INT_CPU_NBR_BITS 表示一个整型数据有多少位，在 cpu_def.h 定义：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/* CPU整型数位定义 */</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> DEF_INT_CPU_NBR_BITS	(DEF_OCTET_NBR_BITS * CPU_CFG_DATA_SIZE)</span></span><br></pre></td></tr></table></figure>
+<ul>
+<li>DEF_OCTET_NBR_BITS 表示一个字节长度是多少位，这里默认设置为 8 位，在 cpu_def.h 中已定义：</li>
+</ul>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/* 一个字节长度为8位 */</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> DEF_OCTET_NBR_BITS		8u</span></span><br></pre></td></tr></table></figure>
+<ul>
+<li>CPU_CFG_DATA_SIZE 表示 CPU 数据的字长相当于多少个字节。类似地，CPU_CFG_ADDR_SIZE 表示 CPU 地址的字长相当于多少个字节。在 cpu.h 中已定义：</li>
+</ul>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/*********************************CPU字长配置**********************************/</span></span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="keyword">define</span>  CPU_CFG_ADDR_SIZE              CPU_WORD_SIZE_32</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span>  CPU_CFG_DATA_SIZE              CPU_WORD_SIZE_32</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span>  CPU_CFG_DATA_SIZE_MAX          CPU_WORD_SIZE_64</span></span><br></pre></td></tr></table></figure>
+<ul>
+<li>而 CPU_WORD_SIZE_32 又在 cpu_def.h 中已定义，表示 32 位长度在这种设置下被定义为 4 个字节：</li>
+</ul>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">define</span> CPU_WORD_SIZE_08		1u</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> CPU_WORD_SIZE_16		2u</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> CPU_WORD_SIZE_32		4u</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> CPU_WORD_SIZE_64		8u</span></span><br></pre></td></tr></table></figure>
+<p>因此，<code>DEF_INT_CPU_NBR_BITS = DEF_OCTET_NBR_BITS * CPU_CFG_DATA_SIZE = 8（一个字节有 8 位） * 4（4 个字节） = 32</code>，说明 CPU 整型数据有 32 位，即字长为 32。</p>
+<blockquote>
+<p>【恶补概念！】</p>
+<ul>
+<li>位（bit）：位表示的是二进制位，一般称为比特，是计算机存储的最小单位。</li>
+<li>字节（byte）：字节是计算机中数据处理的基本单位。计算机中以字节为单位存储和解释信息，规定一个字节由八个二进制位构成，即 1 个字节等于 8 个比特（1Byte = 8bit）。</li>
+<li>字（word）：计算机进行数据处理时，一次存取、加工和传送的数据长度称为字（word）。一个字通常由一个或多个（一般是字节的整数位）字节构成。例如 286 微机的字由 2 个字节组成，它的字长为 16；486 微机的字由 4 个字节组成，它的字长为 32。计算机的字长决定了其 CPU 一次操作处理实际位数的多少，由此可见计算机的字长越大，其性能越优越。</li>
+<li>字长：计算机的每个字所包含的位数称为字长。例如 286 微机的字由 2 个字节组成，它的字长为 16；486 微机的字由 4 个字节组成，它的字长为 32。</li>
+</ul>
+</blockquote>
+<h3 id="1-3-优先级表的结构——定义好了以后？">1.3 优先级表的结构——定义好了以后？</h3>
+<p>由以上讨论可知，我们定义的 CPU 字长为 32，支持最大优先级为 32，则<code>DEF_INT_CPU_NBR_BITS = 32</code>，<code>OS_CFG_PRIO_MAX = 32</code>，所以数组元素一共有：<code>( (OS_CFG_PRIO_MAX - 1u) / DEF_INT_CPU_NBR_BITS ) + 1u = ( (32 - 1) / 32 ) + 1 = 0 + 1 = 1</code>。优先级表里只有一个元素。</p>
+<p>如果我们需要支持 64 个优先级，CPU 字长为 32，那么<code>DEF_INT_CPU_NBR_BITS = 32</code>，<code>OS_CFG_PRIO_MAX = 64</code>，所以数组元素一共有：<code>( (OS_CFG_PRIO_MAX - 1u) / DEF_INT_CPU_NBR_BITS ) + 1u = ( (64 - 1) / 32 ) + 1 = 1 + 1 = 2</code>。优先级表里两个元素。</p>
+<p>如下图所示，这是 CPU 字长为 32 的优先级表结构：</p>
+<img src="/posts/cf62516/1structure.png" class="" title="1structure">
+<ul>
+<li>若最大支持 32 个优先级，那么说明优先级一共有 0-31 的编号，没有 32 的编号。</li>
+<li>优先级表 OSPrioTbl[0] 记录了优先级 0-31 的情况，OSPrioTbl[1] 记录了优先级 32-63 的情况，以此类推。</li>
+<li>数据的每一位表示该优先级的任务是否存在，置 1 表示该优先级存在任务，置 0 表示该优先级没有任务。</li>
+<li><strong>数据的高位对应的是更低的优先级，低位对应的是更高的优先级</strong>。比如，OSPrioTbl[0] 的位 31 对应的是优先级 0，而位 30 对应的是优先级 1。对于我们定义的字长和最大优先级，若要创建一个优先级为 prio 的任务，那么就在 OSPrioTbl[0] 的位 [31-prio] 置 1 即可。这与我们的认知正好相反。</li>
+<li><strong>总结：若要创建一个优先级为 prio 的任务，那么就在<code>OSPrioTbl[prio/字长]</code>的位<code>[字长-prio-1]</code>置 1 即可。</strong></li>
+</ul>
+<h2 id="2-初始化优先级表-OS-PrioInit-（os-prio-c）">2 初始化优先级表 OS_PrioInit()（os_prio.c）</h2>
+<p>该函数的功能是：</p>
+<ul>
+<li>初始化优先级表 OSPrioTbl，将每个数组元素全部置 0。</li>
+</ul>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/* 初始化优先级表 */</span></span><br><span class="line"><span class="type">void</span> <span class="title function_">OS_PrioInit</span> <span class="params">(<span class="type">void</span>)</span></span><br><span class="line">&#123;</span><br><span class="line">	CPU_DATA	i;</span><br><span class="line">	</span><br><span class="line">	<span class="comment">/* 全部初始化为 0 */</span></span><br><span class="line">	<span class="keyword">for</span> (i = <span class="number">0u</span>; i &lt; OS_PRIO_TBL_SIZE; i++)</span><br><span class="line">	&#123;</span><br><span class="line">		OSPrioTbl[i] = (CPU_DATA)<span class="number">0</span>;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>该函数需要被 OSInit() 调用。初始化后的优先级表如下所示：</p>
+<img src="/posts/cf62516/2init.png" class="" title="2init">
+<h2 id="3-置位优先级表中的相应位-OS-PrioInsert-（os-prio-c）">3 置位优先级表中的相应位 OS_PrioInsert()（os_prio.c）</h2>
+<p>该函数的功能是：</p>
+<ul>
+<li>在优先级表中，将相应的位置位。（形参是优先级）</li>
+</ul>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/* 在优先级表的相应位置置位 */</span></span><br><span class="line"><span class="type">void</span> <span class="title function_">OS_PrioInsert</span> <span class="params">(OS_PRIO prio)</span></span><br><span class="line">&#123;</span><br><span class="line">	CPU_DATA	bit;</span><br><span class="line">	CPU_DATA	bit_nbr;</span><br><span class="line">	OS_PRIO		ix;</span><br><span class="line">	</span><br><span class="line">	<span class="comment">/* 求模，获取优先级表数组的下标 */</span></span><br><span class="line">	ix 		= prio / DEF_INT_CPU_NBR_BITS;</span><br><span class="line">	</span><br><span class="line">	<span class="comment">/* 求余，将优先级限制在 DEF_INT_CPU_NBR_BITS 内 */</span></span><br><span class="line">	bit_nbr = (CPU_DATA)prio &amp; (DEF_INT_CPU_NBR_BITS - <span class="number">1u</span>);		<span class="comment">/* 等价于 prio % DEF_INT_CPU_NBR_BITS */</span></span><br><span class="line">																<span class="comment">/* X % (2^N) = X &amp; (2^N-1) */</span></span><br><span class="line">	bit 	= <span class="number">1u</span>;</span><br><span class="line">	</span><br><span class="line">	<span class="comment">/* 获取优先级在优先级表中对应的位的位置 */</span></span><br><span class="line">	bit   &lt;&lt;= (DEF_INT_CPU_NBR_BITS - <span class="number">1u</span>) - bit_nbr;</span><br><span class="line">	</span><br><span class="line">	<span class="comment">/* 将优先级在优先级表中对应的位置 1 */</span></span><br><span class="line">	OSPrioTbl[ix] |= bit;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>我们定义的 CPU 字长为 32，支持最大优先级为 32，则<code>DEF_INT_CPU_NBR_BITS = 32</code>，<code>OS_CFG_PRIO_MAX = 32</code>，则优先级表中只有一个元素。那么假设现在 prio = 3：</p>
+<ul>
+<li>求模：ix = 3 / 32 = 0，说明优先级为 3 在第一个数组元素 OSPrioTbl[0] 中。</li>
+<li>求余：bit_nbr = 3 &amp; 31 = 3。</li>
+<li>获取位置：bit &lt;&lt;= 31 - 3 = 28，在 OSPrioTbl[0] 的位 28 置 1 即可。</li>
+</ul>
+<p>若 prio = 35：</p>
+<ul>
+<li>求模：ix = 35 / 32 = 1，说明优先级为 35 在第二个数组元素 OSPrioTbl[1] 中。</li>
+<li>求余：bit_nbr = 35 &amp; 31 = 4。</li>
+<li>获取位置：bit &lt;&lt;= 31 - 4 = 27，在 OSPrioTbl[1] 的位 27 置 1 即可。</li>
+</ul>
+<p>由上面的例子可以看到，该函数没有防止优先级溢出的情况发生。目前我不太清楚 uCOS 有没有一种机制可以防止这种非法的情况发生。</p>
+<p>在优先级最大是 32，DEF_INT_CPU_NBR_BITS 等于 32 的情况下，如果分别创建了优先级 3、5、8 和 11 这四个任务，任务创建成功后，优先级表的设置情况可见下图。有一点要注意的是，在 uCOS 中，<strong>最高优先级和最低优先级是留给系统任务使用的，用户任务不能使用。</strong></p>
+<img src="/posts/cf62516/3set.png" class="" title="3set">
+<h3 id="位运算求余——为什么求余操作可以这么写？">位运算求余——为什么求余操作可以这么写？</h3>
+<p>应该有同学注意到了，求余的那行代码居然不用 % ，用的是 &amp; 运算符，这是什么原理呢？先提前声明：<strong>这个原理仅适用于 2 的幂次方。</strong></p>
+<p>我们知道，一个数除以一个形如 2^N 的数，可等价于这个数右移 N 位：</p>
+<p><code>X / 2^N = X &gt;&gt; N</code></p>
+<ul>
+<li>
+<p>比如 11 / 2 = 5，11 的二进制为 1011，右移一位为 0101，也就是 5。现在请注意，被移走的消失不见的数是什么？是二进制下的 1，也就是十进制的 1，它就是余数；</p>
+</li>
+<li>
+<p>再比如 11 / 8 = 1，11 的二进制为 1011，右移三位为 0001，也就是 1。被移走消失不见的数是二进制下的 011，也就是十进制的 3，它就是余数；</p>
+</li>
+<li>
+<p>再比如 14 / 4 = 3，15 的二进制为 1110，右移两位为 0011，也就是 3。被移走消失不见的数是二进制下的 10，也就是十进制的 2，它就是余数。</p>
+</li>
+</ul>
+<p>你有发现什么吗？其实我们移走的数字就是余数。现在我们求余，想要保留的就是这个余数。那如何得到呢？还需要仔细观察上面这三个例子。</p>
+<ul>
+<li>第一个例子：对 1011 右移一位，仅最后一位保留，保留的是 1；</li>
+<li>第二个例子：对 1011 右移三位，最后三位保留，保留的是 011；</li>
+<li>第三个例子：对 1110 右移两位，最后两位保留，保留的是 10。</li>
+</ul>
+<p>联想到 &amp; 运算的性质，可以将其等价为：</p>
+<ul>
+<li>第一个例子：1011 &amp; 0001，仅最后一位保留，保留的是 1；</li>
+<li>第二个例子：1011 &amp; 0111，最后三位保留，保留的是 011；</li>
+<li>第三个例子：1110 &amp; 0011，最后两位保留，保留的是 10。</li>
+</ul>
+<p>也就是可以看做：</p>
+<ul>
+<li>第一个例子： 1011 &amp; (2-1)，仅最后一位保留，保留的是 1；</li>
+<li>第二个例子： 1011 &amp; (8-1)，最后三位保留，保留的是 011；</li>
+<li>第三个例子： 1110 &amp; (4-1)，最后两位保留，保留的是 10。</li>
+</ul>
+<p>你看懂了么？所以对 2 的幂次方求余，<strong>可以等价为：X &amp; (2^N - 1)</strong>。这样做能加快运算速度。记住，该结论只对 2 的幂次方适用！！！</p>
+<h2 id="4-清除优先级表的相应位置-OS-PrioRemove-（os-prio-c）">4 清除优先级表的相应位置 OS_PrioRemove()（os_prio.c）</h2>
+<p>与优先级表置位的函数类似，这个函数也需要找到相应的位置，寻找方法也是一样的。唯一不同的是最后一句代码，本函数需要将相应位清零。</p>
+<p>该函数的功能是：</p>
+<ul>
+<li>在优先级表中，将相应的位清零。（形参是优先级）</li>
+</ul>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/* 清除优先级表的相应位置 */</span></span><br><span class="line"><span class="type">void</span> <span class="title function_">OS_PrioRemove</span> <span class="params">(OS_PRIO prio)</span></span><br><span class="line">&#123;</span><br><span class="line">	CPU_DATA	bit;</span><br><span class="line">	CPU_DATA	bit_nbr;</span><br><span class="line">	OS_PRIO		ix;</span><br><span class="line">	</span><br><span class="line">	<span class="comment">/* 求模，获取优先级表数组的下标 */</span></span><br><span class="line">	ix 		= prio / DEF_INT_CPU_NBR_BITS;</span><br><span class="line">	</span><br><span class="line">	<span class="comment">/* 求余，将优先级限制在 DEF_INT_CPU_NBR_BITS 内 */</span></span><br><span class="line">	bit_nbr = (CPU_DATA)prio &amp; (DEF_INT_CPU_NBR_BITS - <span class="number">1u</span>);		<span class="comment">/* 等价于 prio % DEF_INT_CPU_NBR_BITS */</span></span><br><span class="line">																<span class="comment">/* X % (2^N) = X &amp; (2^N-1) */</span></span><br><span class="line">	bit 	= <span class="number">1u</span>;</span><br><span class="line">	</span><br><span class="line">	<span class="comment">/* 获取优先级在优先级表中对应的位的位置 */</span></span><br><span class="line">	bit   &lt;&lt;= (DEF_INT_CPU_NBR_BITS - <span class="number">1u</span>) - bit_nbr;</span><br><span class="line">	</span><br><span class="line">	<span class="comment">/* 将优先级在优先级表中对应的位清 0 */</span></span><br><span class="line">	OSPrioTbl[ix] &amp;= ~bit;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="5-查找最高优先级-OS-PrioGetHighest-（os-prio-c）">5 查找最高优先级 OS_PrioGetHighest()（os_prio.c）</h2>
+<p>什么是最高优先级？最高优先级即数组元素下标最大且位数最大的位置。比如如下图所示，只有一个数组元素，从高位看起，第一次出现 1 的位置是 28，那么对应的最高优先级为 3。</p>
+<img src="/posts/cf62516/5high-pro.png" class="" title="5high-pro">
+<h3 id="5-1-前导零和后导零">5.1 前导零和后导零</h3>
+<p>好了，最精彩的部分来了。现在我想请各位思考一个问题，如何才能最快、最高效的找到最高优先级？一个很朴素的想法是，从数组的最高位开始，一位一位的测试哪个位为 1，第一次出现 1 的地方一定就是最高优先级的位置。对，这个想法很朴素，也是接下来我们寻找最高优先级的核心思路。但是，思路正确，实现起来却有点棘手。</p>
+<p>因为，一位位的测试，也太麻烦了。32 个优先级，就要循环 32 遍的位测试；128 个优先级，就要循环 128 遍的位测试。都说 uCOS 很小巧精致，这个称谓并非空穴来风。只需换个角度看待问题，立马算法效率就提高了。</p>
+<p>还是以上面的图为例，从数据的高位到低位查找第一个不为 0 的位置，即优先级为 3，为最高优先级。你注意到了吗？既然是最高优先级，那么更高的位数肯定全都是 0，数数这些 0 的个数，正好是 3 个 0，正好也是最高优先级的值！</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">0001 0100 1001 0000 0000 0000 0000 0000</span><br><span class="line">   |</span><br><span class="line">   |</span><br><span class="line">   |</span><br><span class="line">  最高优先级（前面有 3 个 0，正好是最高优先级的值，也是前导零的个数） </span><br></pre></td></tr></table></figure>
+<p><strong>从最高位起开始数 0 的个数，一直数到第一次出现 1 的地方。这些零，就是前导零，数出来的 0 的个数，就是这个数的前导零个数。</strong> 它也正好是最高优先级的值。</p>
+<p>一个数的前导零个数是多少？这个问题是有前提条件的，即，你要告诉我该数的位数是多少，不同位数，得出的结果是不同的。例如：</p>
+<ul>
+<li>在 4 位字长下，2 的前导零个数是多少？写成二进制：0010，前导零个数为 2。</li>
+<li>在 8 位字长下，2 的前导零个数是多少？写成二进制：0000 0010，前导零个数为 6。</li>
+<li>在 4 位字长下，7 的前导零个数是多少？写成二进制：0111，前导零个数为 1。</li>
+<li>在 8 位字长下，7 的前导零个数是多少？写成二进制：0000 0111，前导零个数为 5。</li>
+<li>在 32 位字长下，0001 0100 1001 0000 0000 0000 0000 0000 的前导零个数为 3。</li>
+</ul>
+<p>类似的，<strong>从最低位起开始数 0 的个数，一直数到第一次出现 1 的地方。数出来的 0 的个数，就是这个数的后导零个数。</strong></p>
+<p>查找最高优先级的本质，就是求前导零的过程。我们有两种办法实现求前导零，一种是 C 语言，另一种是 ARM 汇编。</p>
+<h3 id="5-2-由-C-语言实现前导零-CPU-CntLeadZeros（cpu-core-c）">5.2 由 C 语言实现前导零 CPU_CntLeadZeros（cpu_core.c）</h3>
+<p>用 C 语言查找一个 32 位数的前导零个数，一个最容易想到的办法是一位位的查找，但对于这种实时性要求高的系统而言还是太慢了。最快的办法是“用空间换时间”，可以将 32 位数拆成四部分，每部分都是 8 位，我们 8 位 8 位的去检查，最多只需要检查 4 次。每次检查，直接从一个大数组表中找到对应的前导零个数，如下所示：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment">*********************************************************************************************************</span></span><br><span class="line"><span class="comment">*                                            8位前导零查找表</span></span><br><span class="line"><span class="comment">*********************************************************************************************************</span></span><br><span class="line"><span class="comment">*/</span></span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="keyword">ifndef</span>   CPU_CFG_LEAD_ZEROS_ASM_PRESENT</span></span><br><span class="line"><span class="type">static</span>  <span class="type">const</span>  CPU_INT08U  CPU_CntLeadZerosTbl[<span class="number">256</span>] = &#123;                             <span class="comment">/* Data vals :                      */</span></span><br><span class="line"><span class="comment">/*   0    1    2    3    4    5    6    7    8    9    A    B    C    D    E    F   */</span></span><br><span class="line">    <span class="number">8u</span>,  <span class="number">7u</span>,  <span class="number">6u</span>,  <span class="number">6u</span>,  <span class="number">5u</span>,  <span class="number">5u</span>,  <span class="number">5u</span>,  <span class="number">5u</span>,  <span class="number">4u</span>,  <span class="number">4u</span>,  <span class="number">4u</span>,  <span class="number">4u</span>,  <span class="number">4u</span>,  <span class="number">4u</span>,  <span class="number">4u</span>,  <span class="number">4u</span>,  <span class="comment">/*   0x00 to 0x0F                   */</span></span><br><span class="line">    <span class="number">3u</span>,  <span class="number">3u</span>,  <span class="number">3u</span>,  <span class="number">3u</span>,  <span class="number">3u</span>,  <span class="number">3u</span>,  <span class="number">3u</span>,  <span class="number">3u</span>,  <span class="number">3u</span>,  <span class="number">3u</span>,  <span class="number">3u</span>,  <span class="number">3u</span>,  <span class="number">3u</span>,  <span class="number">3u</span>,  <span class="number">3u</span>,  <span class="number">3u</span>,  <span class="comment">/*   0x10 to 0x1F                   */</span></span><br><span class="line">    <span class="number">2u</span>,  <span class="number">2u</span>,  <span class="number">2u</span>,  <span class="number">2u</span>,  <span class="number">2u</span>,  <span class="number">2u</span>,  <span class="number">2u</span>,  <span class="number">2u</span>,  <span class="number">2u</span>,  <span class="number">2u</span>,  <span class="number">2u</span>,  <span class="number">2u</span>,  <span class="number">2u</span>,  <span class="number">2u</span>,  <span class="number">2u</span>,  <span class="number">2u</span>,  <span class="comment">/*   0x20 to 0x2F                   */</span></span><br><span class="line">    <span class="number">2u</span>,  <span class="number">2u</span>,  <span class="number">2u</span>,  <span class="number">2u</span>,  <span class="number">2u</span>,  <span class="number">2u</span>,  <span class="number">2u</span>,  <span class="number">2u</span>,  <span class="number">2u</span>,  <span class="number">2u</span>,  <span class="number">2u</span>,  <span class="number">2u</span>,  <span class="number">2u</span>,  <span class="number">2u</span>,  <span class="number">2u</span>,  <span class="number">2u</span>,  <span class="comment">/*   0x30 to 0x3F                   */</span></span><br><span class="line">    <span class="number">1u</span>,  <span class="number">1u</span>,  <span class="number">1u</span>,  <span class="number">1u</span>,  <span class="number">1u</span>,  <span class="number">1u</span>,  <span class="number">1u</span>,  <span class="number">1u</span>,  <span class="number">1u</span>,  <span class="number">1u</span>,  <span class="number">1u</span>,  <span class="number">1u</span>,  <span class="number">1u</span>,  <span class="number">1u</span>,  <span class="number">1u</span>,  <span class="number">1u</span>,  <span class="comment">/*   0x40 to 0x4F                   */</span></span><br><span class="line">    <span class="number">1u</span>,  <span class="number">1u</span>,  <span class="number">1u</span>,  <span class="number">1u</span>,  <span class="number">1u</span>,  <span class="number">1u</span>,  <span class="number">1u</span>,  <span class="number">1u</span>,  <span class="number">1u</span>,  <span class="number">1u</span>,  <span class="number">1u</span>,  <span class="number">1u</span>,  <span class="number">1u</span>,  <span class="number">1u</span>,  <span class="number">1u</span>,  <span class="number">1u</span>,  <span class="comment">/*   0x50 to 0x5F                   */</span></span><br><span class="line">    <span class="number">1u</span>,  <span class="number">1u</span>,  <span class="number">1u</span>,  <span class="number">1u</span>,  <span class="number">1u</span>,  <span class="number">1u</span>,  <span class="number">1u</span>,  <span class="number">1u</span>,  <span class="number">1u</span>,  <span class="number">1u</span>,  <span class="number">1u</span>,  <span class="number">1u</span>,  <span class="number">1u</span>,  <span class="number">1u</span>,  <span class="number">1u</span>,  <span class="number">1u</span>,  <span class="comment">/*   0x60 to 0x6F                   */</span></span><br><span class="line">    <span class="number">1u</span>,  <span class="number">1u</span>,  <span class="number">1u</span>,  <span class="number">1u</span>,  <span class="number">1u</span>,  <span class="number">1u</span>,  <span class="number">1u</span>,  <span class="number">1u</span>,  <span class="number">1u</span>,  <span class="number">1u</span>,  <span class="number">1u</span>,  <span class="number">1u</span>,  <span class="number">1u</span>,  <span class="number">1u</span>,  <span class="number">1u</span>,  <span class="number">1u</span>,  <span class="comment">/*   0x70 to 0x7F                   */</span></span><br><span class="line">    <span class="number">0u</span>,  <span class="number">0u</span>,  <span class="number">0u</span>,  <span class="number">0u</span>,  <span class="number">0u</span>,  <span class="number">0u</span>,  <span class="number">0u</span>,  <span class="number">0u</span>,  <span class="number">0u</span>,  <span class="number">0u</span>,  <span class="number">0u</span>,  <span class="number">0u</span>,  <span class="number">0u</span>,  <span class="number">0u</span>,  <span class="number">0u</span>,  <span class="number">0u</span>,  <span class="comment">/*   0x80 to 0x8F                   */</span></span><br><span class="line">    <span class="number">0u</span>,  <span class="number">0u</span>,  <span class="number">0u</span>,  <span class="number">0u</span>,  <span class="number">0u</span>,  <span class="number">0u</span>,  <span class="number">0u</span>,  <span class="number">0u</span>,  <span class="number">0u</span>,  <span class="number">0u</span>,  <span class="number">0u</span>,  <span class="number">0u</span>,  <span class="number">0u</span>,  <span class="number">0u</span>,  <span class="number">0u</span>,  <span class="number">0u</span>,  <span class="comment">/*   0x90 to 0x9F                   */</span></span><br><span class="line">    <span class="number">0u</span>,  <span class="number">0u</span>,  <span class="number">0u</span>,  <span class="number">0u</span>,  <span class="number">0u</span>,  <span class="number">0u</span>,  <span class="number">0u</span>,  <span class="number">0u</span>,  <span class="number">0u</span>,  <span class="number">0u</span>,  <span class="number">0u</span>,  <span class="number">0u</span>,  <span class="number">0u</span>,  <span class="number">0u</span>,  <span class="number">0u</span>,  <span class="number">0u</span>,  <span class="comment">/*   0xA0 to 0xAF                   */</span></span><br><span class="line">    <span class="number">0u</span>,  <span class="number">0u</span>,  <span class="number">0u</span>,  <span class="number">0u</span>,  <span class="number">0u</span>,  <span class="number">0u</span>,  <span class="number">0u</span>,  <span class="number">0u</span>,  <span class="number">0u</span>,  <span class="number">0u</span>,  <span class="number">0u</span>,  <span class="number">0u</span>,  <span class="number">0u</span>,  <span class="number">0u</span>,  <span class="number">0u</span>,  <span class="number">0u</span>,  <span class="comment">/*   0xB0 to 0xBF                   */</span></span><br><span class="line">    <span class="number">0u</span>,  <span class="number">0u</span>,  <span class="number">0u</span>,  <span class="number">0u</span>,  <span class="number">0u</span>,  <span class="number">0u</span>,  <span class="number">0u</span>,  <span class="number">0u</span>,  <span class="number">0u</span>,  <span class="number">0u</span>,  <span class="number">0u</span>,  <span class="number">0u</span>,  <span class="number">0u</span>,  <span class="number">0u</span>,  <span class="number">0u</span>,  <span class="number">0u</span>,  <span class="comment">/*   0xC0 to 0xCF                   */</span></span><br><span class="line">    <span class="number">0u</span>,  <span class="number">0u</span>,  <span class="number">0u</span>,  <span class="number">0u</span>,  <span class="number">0u</span>,  <span class="number">0u</span>,  <span class="number">0u</span>,  <span class="number">0u</span>,  <span class="number">0u</span>,  <span class="number">0u</span>,  <span class="number">0u</span>,  <span class="number">0u</span>,  <span class="number">0u</span>,  <span class="number">0u</span>,  <span class="number">0u</span>,  <span class="number">0u</span>,  <span class="comment">/*   0xD0 to 0xDF                   */</span></span><br><span class="line">    <span class="number">0u</span>,  <span class="number">0u</span>,  <span class="number">0u</span>,  <span class="number">0u</span>,  <span class="number">0u</span>,  <span class="number">0u</span>,  <span class="number">0u</span>,  <span class="number">0u</span>,  <span class="number">0u</span>,  <span class="number">0u</span>,  <span class="number">0u</span>,  <span class="number">0u</span>,  <span class="number">0u</span>,  <span class="number">0u</span>,  <span class="number">0u</span>,  <span class="number">0u</span>,  <span class="comment">/*   0xE0 to 0xEF                   */</span></span><br><span class="line">    <span class="number">0u</span>,  <span class="number">0u</span>,  <span class="number">0u</span>,  <span class="number">0u</span>,  <span class="number">0u</span>,  <span class="number">0u</span>,  <span class="number">0u</span>,  <span class="number">0u</span>,  <span class="number">0u</span>,  <span class="number">0u</span>,  <span class="number">0u</span>,  <span class="number">0u</span>,  <span class="number">0u</span>,  <span class="number">0u</span>,  <span class="number">0u</span>,  <span class="number">0u</span>   <span class="comment">/*   0xF0 to 0xFF                   */</span></span><br><span class="line">&#125;;</span><br><span class="line"><span class="meta">#<span class="keyword">endif</span></span></span><br></pre></td></tr></table></figure>
+<p>第一行存储的是 0x00-0x0F 的前导零个数，比如 0x00 的前导零有 8 个，0x01 的前导零有 7 个；以此类推，第二行存储的是 0x10-0x1F 的前导零个数，比如 0x10 的前导零有 3 个……一共有 256 个数，正好存储了从 0x00-0xFF 的前导零个数。现在的内存都已经非常充足，用这一点空间的损失换取算法上的提高是非常值得的。</p>
+<p>每次检查 8 位时，只需要用 8 位数作为下标去访问数组表，得到对应的前导零个数。</p>
+<p>用 C 语言求前导零，假设要求的数据是 32 位的：</p>
+<ul>
+<li>检查位 31-24，是否全是 0，若不是，将其右移 24 位，变成 8 位数，然后将其作为下标访问查找表，得到前导零个数。</li>
+<li>如果位 31-24 全是 0，检查位 23-16，是否全是 0，若不是，将其右移 16 位，变成 8 位数，然后将其作为下标访问查找表，得到前导零个数（还需要加上位 31-24 的前导零个数，即 8）。</li>
+<li>如果位 23-16 全是 0，检查位 15-8，是否全是 0，若不是，将其右移 8 位，变成 8 位数，然后将其作为下标访问查找表，得到前导零个数（还需要加上位 31-16 的前导零个数，即 16）。</li>
+<li>如果位 15-8 全是 0，检查位 7-0，是否全是 0，若不是，将其右移 0 位，变成 8 位数，然后将其作为下标访问查找表，得到前导零个数（还需要加上位 31-8 的前导零个数，即 24）。</li>
+</ul>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment">*********************************************************************************************************</span></span><br><span class="line"><span class="comment">*                                 前导零函数（只实现了 32 位）</span></span><br><span class="line"><span class="comment">*********************************************************************************************************</span></span><br><span class="line"><span class="comment">*/</span></span><br><span class="line"><span class="meta">#<span class="keyword">ifndef</span> CPU_CFG_LEAD_ZEROS_ASM_PRESENT</span></span><br><span class="line">CPU_DATA <span class="title function_">CPU_CntLeadZeros</span> <span class="params">(CPU_DATA val)</span></span><br><span class="line">&#123;</span><br><span class="line">	CPU_DATA	nbr_lead_zeros;</span><br><span class="line">	CPU_INT08U	ix;</span><br><span class="line">	</span><br><span class="line"><span class="meta">#<span class="keyword">if</span> (CPU_CFG_DATA_SIZE == CPU_WORD_SIZE_32)  </span></span><br><span class="line">	<span class="keyword">if</span> (val &gt; <span class="number">0x0000FFFFu</span>)		<span class="comment">/* 检查高 16 位，若不都是 0 */</span></span><br><span class="line">	&#123;</span><br><span class="line">		<span class="keyword">if</span> (val &gt; <span class="number">0x00FFFFFFu</span>)	<span class="comment">/* 检查位 31-24，若不都是 0 */</span></span><br><span class="line">		&#123;</span><br><span class="line">			ix = (CPU_INT08U)(val &gt;&gt; <span class="number">24u</span>); 	<span class="comment">/* 右移 24 位 */</span></span><br><span class="line">			nbr_lead_zeros = (CPU_DATA)(CPU_LeadZerosTbl[ix] + <span class="number">0u</span>);</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">else</span>					<span class="comment">/* 若位 31-24 都是 0，检查位 23-16 */</span></span><br><span class="line">		&#123;</span><br><span class="line">			ix = (CPU_INT08U)(val &gt;&gt; <span class="number">16u</span>); 	<span class="comment">/* 右移 16 位 */</span></span><br><span class="line">			nbr_lead_zeros = (CPU_DATA)(CPU_LeadZerosTbl[ix] + <span class="number">8u</span>);</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">else</span>						<span class="comment">/* 检查低 16 位，若不都是 0 */</span></span><br><span class="line">	&#123;</span><br><span class="line">		<span class="keyword">if</span> (val &gt; <span class="number">0x000000FFu</span>)	<span class="comment">/* 检查位 15-8，若不都是 0 */</span></span><br><span class="line">		&#123;</span><br><span class="line">			ix = (CPU_INT08U)(val &gt;&gt; <span class="number">8u</span>); 	<span class="comment">/* 右移 8 位 */</span></span><br><span class="line">			nbr_lead_zeros = (CPU_DATA)(CPU_LeadZerosTbl[ix] + <span class="number">16u</span>);</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">else</span>					<span class="comment">/* 若位 15-8 都是 0，检查位 7-0 */</span></span><br><span class="line">		&#123;</span><br><span class="line">			ix = (CPU_INT08U)(val &gt;&gt; <span class="number">0u</span>); 	<span class="comment">/* 右移 0 位 */</span></span><br><span class="line">			nbr_lead_zeros = (CPU_DATA)(CPU_LeadZerosTbl[ix] + <span class="number">24u</span>);</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line"><span class="meta">#<span class="keyword">endif</span></span></span><br><span class="line">	<span class="keyword">return</span> nbr_lead_zeros;</span><br><span class="line">&#125;</span><br><span class="line"><span class="meta">#<span class="keyword">endif</span></span></span><br></pre></td></tr></table></figure>
+<p>对于其他位数，比如 8 位、16 位、64 位等，也是一样的办法，这里不再赘述。</p>
+<h3 id="5-3-由汇编语言实现前导零-CPU-CntLeadZeros（cpu-a-asm）">5.3 由汇编语言实现前导零 CPU_CntLeadZeros（cpu_a.asm）</h3>
+<p>事实上，某些汇编已经支持前导零和后导零的指令了。有些汇编没有前导零的指令，只能使用 C 语言的办法实现。而在 ARM 汇编中，可以用 CLZ 指令求前导零。而对于后导零，可以先将源操作数反转，然后再求前导零。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">;********************************************************************************************************</span><br><span class="line">;                                    前导零/后导零函数</span><br><span class="line">;********************************************************************************************************</span><br><span class="line"></span><br><span class="line">; CPU_DATA CPU_CntLeadZeros (CPU_DATA val);  （前导零）</span><br><span class="line">CPU_CntLeadZeros</span><br><span class="line">	CLZ		R0, R0</span><br><span class="line">	BX		LR</span><br><span class="line">	</span><br><span class="line">; CPU_DATA CPU_CntTrailZeros (CPU_DATA val);  （后导零）</span><br><span class="line">CPU_CntTrailZeros</span><br><span class="line">	RBIT	R0, R0</span><br><span class="line">	CLZ 	R0, R0</span><br><span class="line">	BX 		LR</span><br></pre></td></tr></table></figure>
+<h3 id="5-4-完成剩余的工作">5.4 完成剩余的工作</h3>
+<p>现在将 OS_PrioGetHighest() 的代码全部展示出来：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/* 获取最高优先级 */</span></span><br><span class="line">OS_PRIO <span class="title function_">OS_PrioGetHighest</span> <span class="params">(<span class="type">void</span>)</span></span><br><span class="line">&#123;</span><br><span class="line">	CPU_DATA	*p_tbl;</span><br><span class="line">	OS_PRIO		prio;</span><br><span class="line">	</span><br><span class="line">	prio = (OS_PRIO)<span class="number">0</span>;</span><br><span class="line">	p_tbl = &amp;OSPrioTbl[<span class="number">0</span>];		<span class="comment">/* 优先级表首地址 */</span></span><br><span class="line">	</span><br><span class="line">	<span class="keyword">while</span> (*p_tbl == (CPU_DATA)<span class="number">0</span>)	<span class="comment">/* 找到不为 0 的数组元素 */</span></span><br><span class="line">	&#123;</span><br><span class="line">		prio += DEF_INT_CPU_NBR_BITS;</span><br><span class="line">		p_tbl++;</span><br><span class="line">	&#125;</span><br><span class="line">	</span><br><span class="line">	<span class="comment">/* 找到优先级表中置位的最高的优先级 */</span></span><br><span class="line">	prio += (OS_PRIO)CPU_CntLeadZeros(*p_tbl);</span><br><span class="line">	<span class="keyword">return</span> prio;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<img src="/posts/cf62516/5high-pro-find.png" class="" title="5high-pro-find">
+<p>该函数完成的工作有：</p>
+<ul>
+<li>先遍历优先级表，看看哪个数组元素是非 0 的。因为数组元素为 0，说明这个数组元素没有一个优先级是被置位的。</li>
+<li>一旦发现某个数组元素非 0，意味着该数组元素至少有一位被置位了，最高优先级也一定在里面。</li>
+<li>计算该数组元素的前导零个数，得到最高优先级。</li>
+</ul>
+<p>现在，优先级表的代码，看起来也不那么难了吧！</p>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>文章作者: </span><span class="post-copyright-info"><a href="http://example.com">Mount256</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>文章链接: </span><span class="post-copyright-info"><a href="http://example.com/posts/cf62516.html">http://example.com/posts/cf62516.html</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来源 <a href="http://example.com" target="_blank">Mount256的博客</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/%E5%B5%8C%E5%85%A5%E5%BC%8F/">嵌入式</a><a class="post-meta__tags" href="/tags/uCOS/">uCOS</a><a class="post-meta__tags" href="/tags/STM32/">STM32</a></div><div class="post-share"><div class="social-share" data-image="/img/avatar.png" data-sites="facebook,x,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><a class="pagination-related" href="/posts/c6617a77.html" title="uCOS-III 学习记录（7）——就序列表"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info"><div class="info-1"><div class="info-item-1">上一篇</div><div class="info-item-2">uCOS-III 学习记录（7）——就序列表</div></div><div class="info-2"><div class="info-item-1">参考内容：《[野火]uCOS-III内核实现与应用开发实战指南——基于STM32》第 11 章。 1 就绪列表和任务控制块的定义（os.h） 1.1 任务控制块链表 OS_TCB 在定义就绪列表之前，先修改一下 TCB 的内容。 TCB 是一条双向链表，每个节点都包含以下内容：  任务栈指针 StkPtr； 任务栈大小 StkSize； 任务阻塞时长 TaskDelayTicks； 任务的优先级 Prio； 前向指针域 PrevPtr 和后向指针域 NextPtr。  12345678910111213141516/*----------------------TCB---------------------------*//* TCB 重命名为大写字母格式 */typedef struct os_tcb	OS_TCB;/* TCB 数据类型声明 */struct os_tcb&#123;	CPU_STK			*StkPtr;	CPU_STK_SIZE	StkSize;		OS_TICK			TaskDelayTicks;		/* 任务延时多少个 Ticks，注意 1 个 Tic...</div></div></div></a><a class="pagination-related" href="/posts/26d23c92.html" title="uCOS-III 学习记录（5）——临界段"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-right"><div class="info-1"><div class="info-item-1">下一篇</div><div class="info-item-2">uCOS-III 学习记录（5）——临界段</div></div><div class="info-2"><div class="info-item-1">参考内容：《[野火]uCOS-III内核实现与应用开发实战指南——基于STM32》第 10 章。 1 临界段 临界段，又叫做临界区。对于多线程而言，它是一段不可分割、不可上下文切换的代码。对于 uCOS 而言，它是一段不可被中断的代码。临界段是不能被中断的，需要关中断或锁调度器（OSSched）以保护临界段。 什么情况下临界段代码会被打断？由刚才的描述可知，临界段被打断有两种情况：  外部中断。 系统调度。在系统调度中会产生 PendSV 异常中断，最终也可以归结为中断。  因此，对临界段保护的实质就是控制中断的开启和关闭。 uCOS 定义了进入临界段的宏和退出临界段的宏，这两个宏分别实现了中断的开启和关闭。  OS_CRITICAL_ENTER() 或 CPU_CRITICAL_ENTER() OS_CRITICAL_EXIT() 或 CPU_CRITICAL_EXIT()  还有一个宏，用于存储中断的状态：  CPU_SR_ALLOC()  2 临界段的保护 2.1 Cortex-M 内核的中断指令 在 CM 内核中，中断是通过 CPS 指令来控制的。 1234CPSID I...</div></div></div></a></nav><div class="relatedPosts"><div class="headline"><i class="fas fa-thumbs-up fa-fw"></i><span>相关推荐</span></div><div class="relatedPosts-list"><a class="pagination-related" href="/posts/c6617a77.html" title="uCOS-III 学习记录（7）——就序列表"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2022-01-31</div><div class="info-item-2">uCOS-III 学习记录（7）——就序列表</div></div><div class="info-2"><div class="info-item-1">参考内容：《[野火]uCOS-III内核实现与应用开发实战指南——基于STM32》第 11 章。 1 就绪列表和任务控制块的定义（os.h） 1.1 任务控制块链表 OS_TCB 在定义就绪列表之前，先修改一下 TCB 的内容。 TCB 是一条双向链表，每个节点都包含以下内容：  任务栈指针 StkPtr； 任务栈大小 StkSize； 任务阻塞时长 TaskDelayTicks； 任务的优先级 Prio； 前向指针域 PrevPtr 和后向指针域 NextPtr。  12345678910111213141516/*----------------------TCB---------------------------*//* TCB 重命名为大写字母格式 */typedef struct os_tcb	OS_TCB;/* TCB 数据类型声明 */struct os_tcb&#123;	CPU_STK			*StkPtr;	CPU_STK_SIZE	StkSize;		OS_TICK			TaskDelayTicks;		/* 任务延时多少个 Ticks，注意 1 个 Tic...</div></div></div></a><a class="pagination-related" href="/posts/10e09851.html" title="uCOS-III 学习记录（10）——时间片轮转调度"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2022-02-11</div><div class="info-item-2">uCOS-III 学习记录（10）——时间片轮转调度</div></div><div class="info-2"><div class="info-item-1">参考内容：《[野火]uCOS-III内核实现与应用开发实战指南——基于STM32》第 14 章。 0 时间片轮转调度的意义 我们现在实现的 uCOS 内核，包含了就绪列表和时基列表。就绪列表的插入规则与优先级有关，而时基列表的插入规则与时基计数器和延时时间有关。上一篇文章中，已经实现了时基列表的任务调度。但是我们写的内核还有一些缺陷，当不进行任务调度时（注意：任务调度的实质是切换到高优先级的任务去执行），系统只能执行就绪列表下的双向链表头指针对应的任务，那么相同优先级的其他任务就执行不到了。因此，我们希望相同优先级的多个任务都可以执行到，其中一个办法就是每隔一段时间就切换到相同优先级上的任务，这样这些任务都有机会被运行到。 时间片轮转调度用于解决相同优先级下多个任务的运行问题。现在假设 A 优先级下有任务 1、任务 2、任务 3，B 优先级有任务 4 且被阻塞 6 个时间片的长度，所以现在要运行 A 优先级下的任务。  如果不实现时间片轮转，那么 A 优先级排在最前面的任务 1 将运行 6 个时间片，即独占了这 6 个时间片。 如果实现时间片轮转，那么 A 优先级下的任务可以商量...</div></div></div></a><a class="pagination-related" href="/posts/194bbd1b.html" title="uCOS-III 学习记录（2）——任务时间片运行"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2022-01-19</div><div class="info-item-2">uCOS-III 学习记录（2）——任务时间片运行</div></div><div class="info-2"><div class="info-item-1">参考内容：《[野火]uCOS-III内核实现与应用开发实战指南——基于STM32》第 7 章。 这章的内容是：每隔一定的时间间隔，就会进行一次任务切换，使每个任务都能均等享有 CPU 控制权，这种不停地上下文切换的过程，有点像多进程。同是任务切换，与第一篇笔记不同的是：第一篇笔记是任务自己主动切换，这篇是 SysTick 发起的切换。 1 初始化 SysTick 1.1 SysTick 初始化函数 OS_CPU_SysTickInit (os_cpu_c.c) 由于 SysTick 属于内核外设，所以在 os_cpu_c.c 中定义该函数。实现方法其实很简单，就是我们之前在 STM32 所学的 SysTick 那样进行初始化。 其中函数参数为 ms，意思是经过多少 ms 后触发 SysTick 中断。之后在中断程序内，进行任务切换即可。 123456789101112131415/* 初始化SysTick */void OS_CPU_SysTickInit (CPU_INT32U ms)&#123; 	SysTick-&gt;LOAD  = ms * SystemCoreCloc...</div></div></div></a><a class="pagination-related" href="/posts/7cfbb3ed.html" title="uCOS-III 学习记录（9）——时基列表"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2022-02-11</div><div class="info-item-2">uCOS-III 学习记录（9）——时基列表</div></div><div class="info-2"><div class="info-item-1">参考内容：《[野火]uCOS-III内核实现与应用开发实战指南——基于STM32》第 13 章。 1 数据类型定义和宏定义 1.1 时基列表相关宏定义和全局变量（os_cfg_app.h/c &amp; os.h） 在 os_cfg_app.h 中，宏定义时基列表的大小，其推荐值为任务数/4，推荐使用质数，不推荐使用偶数。如果算出来的大小是偶数，则需加 1 变成质数。 12/* 时基列表大小 */#define OS_CFG_TICK_WHEEL_SIZE			17u 接下来在 os_cfg_app.c 中，定义两个全局变量，分别是时基列表（数组）和时基列表的大小。注意需要在 os.h 中声明。 12OS_TICK_SPOKE		OSCfg_TickWheel[OS_CFG_TICK_WHEEL_SIZE];		/* 时基列表 */OS_OBJ_QTY	const	OSCfg_TickWheelSize = (OS_OBJ_QTY)OS_CFG_TICK_WHEEL_SIZE;	/* 时基列表大小 */ 在 os.h 中定义 32 位的 Tick 计数器，即 SysTick 周期...</div></div></div></a><a class="pagination-related" href="/posts/26d23c92.html" title="uCOS-III 学习记录（5）——临界段"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2022-01-28</div><div class="info-item-2">uCOS-III 学习记录（5）——临界段</div></div><div class="info-2"><div class="info-item-1">参考内容：《[野火]uCOS-III内核实现与应用开发实战指南——基于STM32》第 10 章。 1 临界段 临界段，又叫做临界区。对于多线程而言，它是一段不可分割、不可上下文切换的代码。对于 uCOS 而言，它是一段不可被中断的代码。临界段是不能被中断的，需要关中断或锁调度器（OSSched）以保护临界段。 什么情况下临界段代码会被打断？由刚才的描述可知，临界段被打断有两种情况：  外部中断。 系统调度。在系统调度中会产生 PendSV 异常中断，最终也可以归结为中断。  因此，对临界段保护的实质就是控制中断的开启和关闭。 uCOS 定义了进入临界段的宏和退出临界段的宏，这两个宏分别实现了中断的开启和关闭。  OS_CRITICAL_ENTER() 或 CPU_CRITICAL_ENTER() OS_CRITICAL_EXIT() 或 CPU_CRITICAL_EXIT()  还有一个宏，用于存储中断的状态：  CPU_SR_ALLOC()  2 临界段的保护 2.1 Cortex-M 内核的中断指令 在 CM 内核中，中断是通过 CPS 指令来控制的。 1234CPSID I...</div></div></div></a><a class="pagination-related" href="/posts/37e731d0.html" title="uCOS-III 学习记录（4）——时间戳"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2022-01-27</div><div class="info-item-2">uCOS-III 学习记录（4）——时间戳</div></div><div class="info-2"><div class="info-item-1">参考内容：《[野火]uCOS-III内核实现与应用开发实战指南——基于STM32》第 9 章。 1 时间戳 在 uCOS 中，如果要测量一段代码 A 的时间，那么可以在代码段 A 运行前记录一个时间点 TimeStart，在代码段 A 运行完记录一个时间点 TimeEnd，那么代码段 A 的运行时间 TimeUse 就等于 TimeEnd 减去 TimeStart。这里面的两个时间点 TimeEnd 和 TimeStart，就叫作时间戳（Timestamp，简称ts），时间戳实际上就是一个时间点。 比如，在下面的代码中，在需要开始测量的地方调用OS_TS_GET()，在需要结束测量的地方再次调用OS_TS_GET()，则两次调用之间的代码即为被测量的时间长度。 1234TimeStart = OS_TS_GET();OSTimeDly (20);	TimeEnd = OS_TS_GET();TimeUse = TimeEnd - TimeStart; 如果 Tick = 10ms，那么 TimeUse 测量到的是 200ms。 现在的问题是：如何实现时间戳呢？DWT 要出场了。 ...</div></div></div></a></div></div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info text-center"><div class="avatar-img"><img src="/img/avatar.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info-name">Mount256</div><div class="author-info-description">记录生活</div><div class="site-data"><a href="/archives/"><div class="headline">文章</div><div class="length-num">13</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">4</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">3</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/Mount256"><i class="fab fa-github"></i><span>Follow Me</span></a></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">暂无公告。</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#1-%E4%BC%98%E5%85%88%E7%BA%A7%E8%A1%A8%E7%9A%84%E5%AE%9A%E4%B9%89-OSPrioTbl%EF%BC%88os-prio-c%EF%BC%89"><span class="toc-number">1.</span> <span class="toc-text">1 优先级表的定义 OSPrioTbl（os_prio.c）</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-1-CPU-DATA%E2%80%94%E2%80%94%E4%B8%80%E4%B8%AA%E6%95%B0%E7%BB%84%E5%85%83%E7%B4%A0%E7%9A%84%E6%95%B0%E6%8D%AE%E9%95%BF%E5%BA%A6%E4%B8%BA%E5%A4%9A%E5%B0%91%EF%BC%9F%EF%BC%88cpu-h%EF%BC%89"><span class="toc-number">1.1.</span> <span class="toc-text">1.1 CPU_DATA——一个数组元素的数据长度为多少？（cpu.h）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-2-OS-PRIO-TBL-SIZE%E2%80%94%E2%80%94%E6%95%B0%E7%BB%84%E6%9C%89%E5%A4%9A%E5%A4%A7%EF%BC%9F%EF%BC%88os-h%EF%BC%89"><span class="toc-number">1.2.</span> <span class="toc-text">1.2 OS_PRIO_TBL_SIZE——数组有多大？（os.h）</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#1-2-1-OS-CFG-PRIO-MAX%E2%80%94%E2%80%94%E6%94%AF%E6%8C%81%E5%A4%9A%E5%B0%91%E4%B8%AA%E4%BC%98%E5%85%88%E7%BA%A7%EF%BC%9F%EF%BC%88os-cfg-h%EF%BC%89"><span class="toc-number">1.2.1.</span> <span class="toc-text">1.2.1 OS_CFG_PRIO_MAX——支持多少个优先级？（os_cfg.h）</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#1-2-2-DEF-INT-CPU-NBR-BITS%E2%80%94%E2%80%94CPU-%E6%95%B4%E5%9E%8B%E6%95%B0%E6%8D%AE%E6%9C%89%E5%A4%9A%E5%B0%91%E4%BD%8D%EF%BC%9F%EF%BC%88cpu-def-h%EF%BC%89"><span class="toc-number">1.2.2.</span> <span class="toc-text">1.2.2 DEF_INT_CPU_NBR_BITS——CPU 整型数据有多少位？（cpu_def.h）</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-3-%E4%BC%98%E5%85%88%E7%BA%A7%E8%A1%A8%E7%9A%84%E7%BB%93%E6%9E%84%E2%80%94%E2%80%94%E5%AE%9A%E4%B9%89%E5%A5%BD%E4%BA%86%E4%BB%A5%E5%90%8E%EF%BC%9F"><span class="toc-number">1.3.</span> <span class="toc-text">1.3 优先级表的结构——定义好了以后？</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-%E5%88%9D%E5%A7%8B%E5%8C%96%E4%BC%98%E5%85%88%E7%BA%A7%E8%A1%A8-OS-PrioInit-%EF%BC%88os-prio-c%EF%BC%89"><span class="toc-number">2.</span> <span class="toc-text">2 初始化优先级表 OS_PrioInit()（os_prio.c）</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#3-%E7%BD%AE%E4%BD%8D%E4%BC%98%E5%85%88%E7%BA%A7%E8%A1%A8%E4%B8%AD%E7%9A%84%E7%9B%B8%E5%BA%94%E4%BD%8D-OS-PrioInsert-%EF%BC%88os-prio-c%EF%BC%89"><span class="toc-number">3.</span> <span class="toc-text">3 置位优先级表中的相应位 OS_PrioInsert()（os_prio.c）</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%BD%8D%E8%BF%90%E7%AE%97%E6%B1%82%E4%BD%99%E2%80%94%E2%80%94%E4%B8%BA%E4%BB%80%E4%B9%88%E6%B1%82%E4%BD%99%E6%93%8D%E4%BD%9C%E5%8F%AF%E4%BB%A5%E8%BF%99%E4%B9%88%E5%86%99%EF%BC%9F"><span class="toc-number">3.1.</span> <span class="toc-text">位运算求余——为什么求余操作可以这么写？</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#4-%E6%B8%85%E9%99%A4%E4%BC%98%E5%85%88%E7%BA%A7%E8%A1%A8%E7%9A%84%E7%9B%B8%E5%BA%94%E4%BD%8D%E7%BD%AE-OS-PrioRemove-%EF%BC%88os-prio-c%EF%BC%89"><span class="toc-number">4.</span> <span class="toc-text">4 清除优先级表的相应位置 OS_PrioRemove()（os_prio.c）</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#5-%E6%9F%A5%E6%89%BE%E6%9C%80%E9%AB%98%E4%BC%98%E5%85%88%E7%BA%A7-OS-PrioGetHighest-%EF%BC%88os-prio-c%EF%BC%89"><span class="toc-number">5.</span> <span class="toc-text">5 查找最高优先级 OS_PrioGetHighest()（os_prio.c）</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#5-1-%E5%89%8D%E5%AF%BC%E9%9B%B6%E5%92%8C%E5%90%8E%E5%AF%BC%E9%9B%B6"><span class="toc-number">5.1.</span> <span class="toc-text">5.1 前导零和后导零</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-2-%E7%94%B1-C-%E8%AF%AD%E8%A8%80%E5%AE%9E%E7%8E%B0%E5%89%8D%E5%AF%BC%E9%9B%B6-CPU-CntLeadZeros%EF%BC%88cpu-core-c%EF%BC%89"><span class="toc-number">5.2.</span> <span class="toc-text">5.2 由 C 语言实现前导零 CPU_CntLeadZeros（cpu_core.c）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-3-%E7%94%B1%E6%B1%87%E7%BC%96%E8%AF%AD%E8%A8%80%E5%AE%9E%E7%8E%B0%E5%89%8D%E5%AF%BC%E9%9B%B6-CPU-CntLeadZeros%EF%BC%88cpu-a-asm%EF%BC%89"><span class="toc-number">5.3.</span> <span class="toc-text">5.3 由汇编语言实现前导零 CPU_CntLeadZeros（cpu_a.asm）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-4-%E5%AE%8C%E6%88%90%E5%89%A9%E4%BD%99%E7%9A%84%E5%B7%A5%E4%BD%9C"><span class="toc-number">5.4.</span> <span class="toc-text">5.4 完成剩余的工作</span></a></li></ol></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/19615f2a.html" title="Front-matter 示例及页面测试">Front-matter 示例及页面测试</a><time datetime="2026-06-11T09:05:49.000Z" title="发表于 2026-06-11 17:05:49">2026-06-11</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/4a17b156.html" title="Hello World">Hello World</a><time datetime="2026-06-10T09:45:35.762Z" title="发表于 2026-06-10 17:45:35">2026-06-10</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/c1b0db6a.html" title="uCOS-III 学习记录（11）——任务管理">uCOS-III 学习记录（11）——任务管理</a><time datetime="2022-02-12T16:00:00.000Z" title="发表于 2022-02-13 00:00:00">2022-02-13</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/10e09851.html" title="uCOS-III 学习记录（10）——时间片轮转调度">uCOS-III 学习记录（10）——时间片轮转调度</a><time datetime="2022-02-10T16:00:00.000Z" title="发表于 2022-02-11 00:00:00">2022-02-11</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/7cfbb3ed.html" title="uCOS-III 学习记录（9）——时基列表">uCOS-III 学习记录（9）——时基列表</a><time datetime="2022-02-10T16:00:00.000Z" title="发表于 2022-02-11 00:00:00">2022-02-11</time></div></div></div></div></div></div></main><footer id="footer" style="background-image: url(/img/top.jpg);"><div class="footer-other"><div class="footer-copyright"><span class="copyright">&copy;&nbsp;2025 - 2026 By Mount256</span><span class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo 8.1.2</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly 5.5.5</a></span></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="日间和夜间模式切换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js?v=5.5.5"></script><script src="/js/main.js?v=5.5.5"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui@6.1.14/dist/fancybox/fancybox.umd.min.js"></script><div class="js-pjax"><script>(() => {
+  const parseViewBox = viewBox => {
+    if (!viewBox) return null
+    const parts = viewBox.trim().split(/[\s,]+/).map(n => Number(n))
+    if (parts.length !== 4 || parts.some(n => Number.isNaN(n))) return null
+    return parts
+  }
+
+  const getSvgViewBox = svg => {
+    const attr = parseViewBox(svg.getAttribute('viewBox'))
+    if (attr) return attr
+
+    // Fallback: use bbox to build a viewBox
+    try {
+      const bbox = svg.getBBox()
+      if (bbox && bbox.width && bbox.height) return [bbox.x, bbox.y, bbox.width, bbox.height]
+    } catch (e) {
+      // getBBox may fail on some edge cases; ignore
+    }
+
+    const w = Number(svg.getAttribute('width')) || 0
+    const h = Number(svg.getAttribute('height')) || 0
+    if (w > 0 && h > 0) return [0, 0, w, h]
+    return [0, 0, 100, 100]
+  }
+
+  const setSvgViewBox = (svg, vb) => {
+    svg.setAttribute('viewBox', `${vb[0]} ${vb[1]} ${vb[2]} ${vb[3]}`)
+  }
+
+  const clamp = (v, min, max) => Math.max(min, Math.min(max, v))
+
+  const openSvgInNewTab = ({ source, initViewBox }) => {
+    const getClonedSvg = () => {
+      if (typeof source === 'string') {
+        const template = document.createElement('template')
+        template.innerHTML = source.trim()
+        const svg = template.content.querySelector('svg')
+        return svg ? svg.cloneNode(true) : null
+      }
+      if (source && typeof source.cloneNode === 'function') {
+        return source.cloneNode(true)
+      }
+      return null
+    }
+
+    const clone = getClonedSvg()
+    if (!clone) return
+    if (initViewBox && initViewBox.length === 4) {
+      clone.setAttribute('viewBox', initViewBox.join(' '))
+    }
+    if (!clone.getAttribute('xmlns')) clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg')
+    if (!clone.getAttribute('xmlns:xlink') && clone.outerHTML.includes('xlink:')) {
+      clone.setAttribute('xmlns:xlink', 'http://www.w3.org/1999/xlink')
+    }
+    // inject background to match current theme
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark'
+    const bg = getComputedStyle(document.body).backgroundColor || (isDark ? '#1e1e1e' : '#ffffff')
+    if (!clone.style.background) clone.style.background = bg
+
+    const serializer = new XMLSerializer()
+    const svgSource = serializer.serializeToString(clone)
+    const htmlSource = `<!doctype html><html><head><meta charset="utf-8" />
+      <style>
+        html, body { width: 100%; height: 100%; margin: 0; display: flex; align-items: center; justify-content: center; background: ${bg}; }
+        svg { max-width: 100%; max-height: 100%; height: auto; width: auto; }
+      </style>
+      </head><body>${svgSource}</body></html>`
+    const blob = new Blob([htmlSource], { type: 'text/html;charset=utf-8' })
+    const url = URL.createObjectURL(blob)
+    window.open(url, '_blank', 'noopener')
+    setTimeout(() => URL.revokeObjectURL(url), 30000)
+  }
+
+  const attachMermaidViewerButton = wrap => {
+    let btn = wrap.querySelector('.mermaid-open-btn')
+    if (!btn) {
+      btn = document.createElement('button')
+      btn.type = 'button'
+      btn.className = 'mermaid-open-btn'
+      wrap.appendChild(btn)
+    }
+
+    btn.innerHTML = '<i class="fa fa-search fa-fw" aria-hidden="true"></i>'
+
+    if (!btn.__mermaidViewerBound) {
+      btn.addEventListener('click', e => {
+        e.preventDefault()
+        e.stopPropagation()
+        const svg = wrap.__mermaidOriginalSvg || wrap.querySelector('svg')
+        if (!svg) return
+        const initViewBox = wrap.__mermaidInitViewBox
+        if (typeof svg === 'string') {
+          openSvgInNewTab({ source: svg, initViewBox })
+          return
+        }
+        openSvgInNewTab({ source: svg, initViewBox })
+      })
+      btn.__mermaidViewerBound = true
+    }
+  }
+
+  // Zoom around a point (px, py) in the SVG viewport (in viewBox coordinates)
+  const zoomAtPoint = (vb, factor, px, py) => {
+    const w = vb[2] * factor
+    const h = vb[3] * factor
+    const nx = px - (px - vb[0]) * factor
+    const ny = py - (py - vb[1]) * factor
+    return [nx, ny, w, h]
+  }
+
+  const initMermaidGestures = wrap => {
+    const svg = wrap.querySelector('svg')
+    if (!svg) return
+
+    // Ensure viewBox exists so gestures always work
+    const initVb = getSvgViewBox(svg)
+    wrap.__mermaidInitViewBox = initVb
+    wrap.__mermaidCurViewBox = initVb.slice()
+    setSvgViewBox(svg, initVb)
+
+    // Avoid binding multiple times on themeChange/pjax
+    if (wrap.__mermaidGestureBound) return
+    wrap.__mermaidGestureBound = true
+
+    // Helper: map client (viewport) coordinate -> viewBox coordinate
+    const clientToViewBox = (clientX, clientY) => {
+      const rect = svg.getBoundingClientRect()
+      const vb = wrap.__mermaidCurViewBox || getSvgViewBox(svg)
+      const x = vb[0] + (clientX - rect.left) * (vb[2] / rect.width)
+      const y = vb[1] + (clientY - rect.top) * (vb[3] / rect.height)
+      return { x, y, rect, vb }
+    }
+
+    const state = {
+      pointers: new Map(),
+      startVb: null,
+      startDist: 0,
+      startCenter: null
+    }
+
+    const clampVb = vb => {
+      const init = wrap.__mermaidInitViewBox || vb
+      const minW = init[2] * 0.1
+      const maxW = init[2] * 10
+      const minH = init[3] * 0.1
+      const maxH = init[3] * 10
+      vb[2] = clamp(vb[2], minW, maxW)
+      vb[3] = clamp(vb[3], minH, maxH)
+      return vb
+    }
+
+    const setCurVb = vb => {
+      vb = clampVb(vb)
+      wrap.__mermaidCurViewBox = vb
+      setSvgViewBox(svg, vb)
+    }
+
+    const onPointerDown = e => {
+      // Allow only primary button for mouse
+      if (e.pointerType === 'mouse' && e.button !== 0) return
+      svg.setPointerCapture(e.pointerId)
+      state.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY })
+
+      if (state.pointers.size === 1) {
+        state.startVb = (wrap.__mermaidCurViewBox || getSvgViewBox(svg)).slice()
+      } else if (state.pointers.size === 2) {
+        const pts = [...state.pointers.values()]
+        const dx = pts[0].x - pts[1].x
+        const dy = pts[0].y - pts[1].y
+        state.startDist = Math.hypot(dx, dy)
+        state.startVb = (wrap.__mermaidCurViewBox || getSvgViewBox(svg)).slice()
+        state.startCenter = { x: (pts[0].x + pts[1].x) / 2, y: (pts[0].y + pts[1].y) / 2 }
+      }
+    }
+
+    const onPointerMove = e => {
+      if (!state.pointers.has(e.pointerId)) return
+      state.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY })
+
+      // Pan with 1 pointer
+      if (state.pointers.size === 1 && state.startVb) {
+        const p = [...state.pointers.values()][0]
+        const prev = { x: e.clientX - e.movementX, y: e.clientY - e.movementY }
+        // movementX/Y unreliable on touch, compute from stored last position
+        const last = wrap.__mermaidLastSinglePointer || p
+        const dxClient = p.x - last.x
+        const dyClient = p.y - last.y
+        wrap.__mermaidLastSinglePointer = p
+
+        const { rect } = clientToViewBox(p.x, p.y)
+        const vb = (wrap.__mermaidCurViewBox || getSvgViewBox(svg)).slice()
+        const dx = dxClient * (vb[2] / rect.width)
+        const dy = dyClient * (vb[3] / rect.height)
+        setCurVb([vb[0] - dx, vb[1] - dy, vb[2], vb[3]])
+        return
+      }
+
+      // Pinch zoom with 2 pointers
+      if (state.pointers.size === 2 && state.startVb && state.startDist > 0) {
+        const pts = [...state.pointers.values()]
+        const dx = pts[0].x - pts[1].x
+        const dy = pts[0].y - pts[1].y
+        const dist = Math.hypot(dx, dy)
+        if (!dist) return
+        const factor = state.startDist / dist // dist bigger => zoom in (viewBox smaller)
+
+        const cx = (pts[0].x + pts[1].x) / 2
+        const cy = (pts[0].y + pts[1].y) / 2
+        const centerClient = { x: cx, y: cy }
+
+        const pxy = clientToViewBox(centerClient.x, centerClient.y)
+        const cpx = pxy.x
+        const cpy = pxy.y
+
+        const vb = zoomAtPoint(state.startVb, factor, cpx, cpy)
+        setCurVb(vb)
+      }
+    }
+
+    const onPointerUpOrCancel = e => {
+      state.pointers.delete(e.pointerId)
+      if (state.pointers.size === 0) {
+        state.startVb = null
+        state.startDist = 0
+        state.startCenter = null
+        wrap.__mermaidLastSinglePointer = null
+      } else if (state.pointers.size === 1) {
+        // reset single pointer baseline to avoid jump
+        wrap.__mermaidLastSinglePointer = [...state.pointers.values()][0]
+      }
+    }
+
+    // Wheel zoom (mouse/trackpad)
+    const onWheel = e => {
+      // ctrlKey on mac trackpad pinch; we treat both as zoom
+      e.preventDefault()
+      const delta = e.deltaY
+      const zoomFactor = delta > 0 ? 1.1 : 0.9
+      const { x, y } = clientToViewBox(e.clientX, e.clientY)
+      const vb = (wrap.__mermaidCurViewBox || getSvgViewBox(svg)).slice()
+      setCurVb(zoomAtPoint(vb, zoomFactor, x, y))
+    }
+
+    const onDblClick = () => {
+      const init = wrap.__mermaidInitViewBox
+      if (!init) return
+      wrap.__mermaidCurViewBox = init.slice()
+      setSvgViewBox(svg, init)
+    }
+
+    svg.addEventListener('pointerdown', onPointerDown)
+    svg.addEventListener('pointermove', onPointerMove)
+    svg.addEventListener('pointerup', onPointerUpOrCancel)
+    svg.addEventListener('pointercancel', onPointerUpOrCancel)
+    svg.addEventListener('wheel', onWheel, { passive: false })
+    svg.addEventListener('dblclick', onDblClick)
+  }
+
+  const runMermaid = ele => {
+    window.loadMermaid = true
+    const theme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default'
+
+    ele.forEach((item, index) => {
+      const mermaidSrc = item.firstElementChild
+
+      // Clear old render (themeChange/pjax will rerun)
+      const oldSvg = item.querySelector('svg')
+      if (oldSvg) oldSvg.remove()
+      item.__mermaidGestureBound = false
+
+      const config = mermaidSrc.dataset.config ? JSON.parse(mermaidSrc.dataset.config) : {}
+      if (!config.theme) {
+        config.theme = theme
+      }
+      const mermaidThemeConfig = `%%{init: ${JSON.stringify(config)}}%%\n`
+      const mermaidID = `mermaid-${index}`
+      const mermaidDefinition = mermaidThemeConfig + mermaidSrc.textContent
+
+      const renderFn = mermaid.render(mermaidID, mermaidDefinition)
+      const renderMermaid = svg => {
+        mermaidSrc.insertAdjacentHTML('afterend', svg)
+        if (true) initMermaidGestures(item)
+        item.__mermaidOriginalSvg = svg
+        if (true) attachMermaidViewerButton(item)
+      }
+
+
+      // mermaid v9 and v10 compatibility
+      typeof renderFn === 'string' ? renderMermaid(renderFn) : renderFn.then(({ svg }) => renderMermaid(svg))
+    })
+  }
+
+  const codeToMermaid = () => {
+    const codeMermaidEle = document.querySelectorAll('pre > code.mermaid')
+    if (codeMermaidEle.length === 0) return
+
+    codeMermaidEle.forEach(ele => {
+      const preEle = document.createElement('pre')
+      preEle.className = 'mermaid-src'
+      preEle.hidden = true
+      preEle.textContent = ele.textContent
+      const newEle = document.createElement('div')
+      newEle.className = 'mermaid-wrap'
+      newEle.appendChild(preEle)
+      ele.parentNode.replaceWith(newEle)
+    })
+  }
+
+  const loadMermaid = () => {
+    if (true) codeToMermaid()
+    const $mermaid = document.querySelectorAll('#article-container .mermaid-wrap')
+    if ($mermaid.length === 0) return
+
+    const runMermaidFn = () => runMermaid($mermaid)
+    btf.addGlobalFn('themeChange', runMermaidFn, 'mermaid')
+    window.loadMermaid ? runMermaidFn() : btf.getScript('https://cdn.jsdelivr.net/npm/mermaid@11.15.0/dist/mermaid.min.js').then(runMermaidFn)
+  }
+
+  btf.addGlobalFn('encrypt', loadMermaid, 'mermaid')
+  window.pjax ? loadMermaid() : document.addEventListener('DOMContentLoaded', loadMermaid)
+})()</script></div><script id="click-heart" src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/dist/click-heart.min.js" async="async" mobile="true"></script><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script><div id="local-search"><div class="search-dialog"><nav class="search-nav"><span class="search-dialog-title">搜索</span><i class="fas fa-spinner fa-pulse" id="loading-status" hidden="hidden"></i><button class="search-close-button"><i class="fas fa-times"></i></button></nav><div class="text-center" id="loading-database"><i class="fas fa-spinner fa-pulse"></i><span>  数据加载中</span></div><div class="local-search-input"><input placeholder="输入关键词…" type="text"/></div><hr/><div id="local-search-results"></div><div class="ais-Pagination" id="local-search-pagination" style="display:none;"><ul class="ais-Pagination-list"></ul></div><div id="local-search-stats"></div></div><div id="search-mask"></div><script src="/js/search/local-search.js?v=5.5.5"></script></div></div></body></html>

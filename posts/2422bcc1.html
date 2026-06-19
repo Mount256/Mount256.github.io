@@ -1,0 +1,592 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>uCOS-III 学习记录（3）——空闲任务和阻塞延时 | Mount256的博客</title><meta name="author" content="Mount256"><meta name="copyright" content="Mount256"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="参考内容：《[野火]uCOS-III内核实现与应用开发实战指南——基于STM32》第 8 章。 1. 空闲任务 不知道有没有注意到这样一个问题：我在学习 x86 汇编语言的时候，曾详细研读过系统内核的代码，内核本身也是有自己的 TCB 的，内核可作为一个“任务管理器”来对其他任务进行创建、删除等操作。那么 uCOS 作为一个实时操作系统，内核也应该需要自己的任务和 TCB，因此我们需要创建一个空闲">
+<meta property="og:type" content="article">
+<meta property="og:title" content="uCOS-III 学习记录（3）——空闲任务和阻塞延时">
+<meta property="og:url" content="http://example.com/posts/2422bcc1.html">
+<meta property="og:site_name" content="Mount256的博客">
+<meta property="og:description" content="参考内容：《[野火]uCOS-III内核实现与应用开发实战指南——基于STM32》第 8 章。 1. 空闲任务 不知道有没有注意到这样一个问题：我在学习 x86 汇编语言的时候，曾详细研读过系统内核的代码，内核本身也是有自己的 TCB 的，内核可作为一个“任务管理器”来对其他任务进行创建、删除等操作。那么 uCOS 作为一个实时操作系统，内核也应该需要自己的任务和 TCB，因此我们需要创建一个空闲">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/img/avatar.png">
+<meta property="article:published_time" content="2022-01-18T16:00:00.000Z">
+<meta property="article:modified_time" content="2026-06-18T16:00:00.000Z">
+<meta property="article:author" content="Mount256">
+<meta property="article:tag" content="STM32">
+<meta property="article:tag" content="uCOS">
+<meta property="article:tag" content="嵌入式">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/img/avatar.png"><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "uCOS-III 学习记录（3）——空闲任务和阻塞延时",
+  "url": "http://example.com/posts/2422bcc1.html",
+  "image": "http://example.com/img/avatar.png",
+  "datePublished": "2022-01-18T16:00:00.000Z",
+  "dateModified": "2026-06-18T16:00:00.000Z",
+  "author": [
+    {
+      "@type": "Person",
+      "name": "Mount256",
+      "url": "http://example.com"
+    }
+  ]
+}</script><link rel="shortcut icon" href="/img/favicon.png"><link rel="canonical" href="http://example.com/posts/2422bcc1.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css?v=5.5.5"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@7.2.0/css/all.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/ui@6.1.14/dist/fancybox/fancybox.min.css" media="print" onload="this.media='all'"><script>
+    (() => {
+      
+    const saveToLocal = {
+      set: (key, value, ttl) => {
+        if (!ttl) return
+        const expiry = Date.now() + ttl * 86400000
+        localStorage.setItem(key, JSON.stringify({ value, expiry }))
+      },
+      get: key => {
+        const itemStr = localStorage.getItem(key)
+        if (!itemStr) return undefined
+        const { value, expiry } = JSON.parse(itemStr)
+        if (Date.now() > expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return value
+      }
+    }
+
+    window.btf = {
+      saveToLocal,
+      getScript: (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        Object.entries(attr).forEach(([key, val]) => script.setAttribute(key, val))
+        script.onload = script.onreadystatechange = () => {
+          if (!script.readyState || /loaded|complete/.test(script.readyState)) resolve()
+        }
+        script.onerror = reject
+        document.head.appendChild(script)
+      }),
+      getCSS: (url, id) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onload = link.onreadystatechange = () => {
+          if (!link.readyState || /loaded|complete/.test(link.readyState)) resolve()
+        }
+        link.onerror = reject
+        document.head.appendChild(link)
+      }),
+      addGlobalFn: (key, fn, name = false, parent = window) => {
+        if (!false && key.startsWith('pjax')) return
+        const globalFn = parent.globalFn || {}
+        globalFn[key] = globalFn[key] || {}
+        globalFn[key][name || Object.keys(globalFn[key]).length] = fn
+        parent.globalFn = globalFn
+      }
+    }
+  
+      
+      const activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      const activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+
+      btf.activateDarkMode = activateDarkMode
+      btf.activateLightMode = activateLightMode
+
+      const theme = saveToLocal.get('theme')
+    
+          theme === 'dark' ? activateDarkMode() : theme === 'light' ? activateLightMode() : null
+        
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        document.documentElement.classList.toggle('hide-aside', asideStatus === 'hide')
+      }
+    
+      
+    const detectApple = () => {
+      if (/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)) {
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+  
+    })()
+  </script><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: {"path":"/search.xml","preload":false,"top_n_per_article":1,"unescape":false,"pagination":{"enable":false,"hitsPerPage":8},"languages":{"hits_empty":"未找到符合您查询的内容：${query}","hits_stats":"共找到 ${hits} 篇文章"}},
+  translate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false,"highlightFullpage":false,"highlightMacStyle":false},
+  copy: {
+    success: '复制成功',
+    error: '复制失败',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'fancybox',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid@4.13.0/dist/infinitegrid.min.js',
+    buttonText: '加载更多'
+  },
+  isPhotoFigcaption: false,
+  islazyloadPlugin: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'uCOS-III 学习记录（3）——空闲任务和阻塞延时',
+  isHighlightShrink: false,
+  isToc: true,
+  pageType: 'post'
+}</script><!-- hexo injector head_end start -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.css">
+<!-- hexo injector head_end end --><meta name="generator" content="Hexo 8.1.2"></head><body><div class="bg-animation" id="web_bg" style="background-color: #87CEEB;"></div><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img text-center"><img src="/img/avatar.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data text-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">13</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">4</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">3</div></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 链接</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header" style="background-image: url(/img/top.jpg);"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><span class="site-name">Mount256的博客</span></a><a class="nav-page-title" href="/"><span class="site-name">uCOS-III 学习记录（3）——空闲任务和阻塞延时</span><span class="site-name"><i class="fa-solid fa-circle-arrow-left"></i><span>  返回首页</span></span></a></span><div id="menus"><div id="search-button"><span class="site-page social-icon search"><i class="fas fa-search fa-fw"></i><span> 搜索</span></span></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 链接</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于</span></a></div></div><div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div></div></nav><div id="post-info"><h1 class="post-title">uCOS-III 学习记录（3）——空闲任务和阻塞延时</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2022-01-18T16:00:00.000Z" title="发表于 2022-01-19 00:00:00">2022-01-19</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2026-06-18T16:00:00.000Z" title="更新于 2026-06-19 00:00:00">2026-06-19</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/%E5%B5%8C%E5%85%A5%E5%BC%8F%E5%BC%80%E5%8F%91/">嵌入式开发</a><i class="fas fa-angle-right post-meta-separator"></i><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/%E5%B5%8C%E5%85%A5%E5%BC%8F%E5%BC%80%E5%8F%91/uCOS-III/">uCOS-III</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-wordcount"><i class="far fa-file-word fa-fw post-meta-icon"></i><span class="post-meta-label">总字数:</span><span class="word-count">3.1k</span><span class="post-meta-separator">|</span><i class="far fa-clock fa-fw post-meta-icon"></i><span class="post-meta-label">阅读时长:</span><span>11分钟</span></span><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title=""><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">浏览量:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="container post-content" id="article-container"><p>参考内容：《[野火]uCOS-III内核实现与应用开发实战指南——基于STM32》第 8 章。</p>
+<h2 id="1-空闲任务">1. 空闲任务</h2>
+<p>不知道有没有注意到这样一个问题：我在学习 x86 汇编语言的时候，曾详细研读过系统内核的代码，内核本身也是有自己的 TCB 的，内核可作为一个“任务管理器”来对其他任务进行创建、删除等操作。那么 uCOS 作为一个实时操作系统，内核也应该需要自己的任务和 TCB，因此我们需要创建一个空闲任务给内核，这样，在没有任务的时候，内核空转运行空闲任务，同时检查各个任务的状态以做出相应的操作（因此 uCOS 内核也可视为“任务管理器”）。</p>
+<h3 id="1-1-数据类型定义">1.1 数据类型定义</h3>
+<p>空闲任务虽然与其他任务的作用不同，但它的本质依然是一个任务，TCB、任务栈一个都不能少。</p>
+<h4 id="1-1-1-空闲任务-TCB-os-h">1.1.1 空闲任务 TCB (os.h)</h4>
+<p>在 os.h 中定义 TCB：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">OS_EXT  OS_TCB			OSIdleTaskTCB;</span><br></pre></td></tr></table></figure>
+<h4 id="1-1-2-空闲任务栈-os-cfg-app-c">1.1.2 空闲任务栈 (os_cfg_app.c)</h4>
+<p>有关空闲任务栈的定义，并不在 os.h 中。</p>
+<p>首先在 os_cfg_app.h 中定义了空闲任务栈的大小（感觉叫栈尺寸更合适？栈粒度应该是 4 字节）：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/* 空闲任务栈大小 */</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> OS_CFG_IDLE_TASK_STK_SIZE		128u</span></span><br></pre></td></tr></table></figure>
+<p>然后，在 os_cfg_app.c 中定义栈和栈大小：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">CPU_STK 	OSCfg_IdleTaskStk[OS_CFG_IDLE_TASK_STK_SIZE]; 		<span class="comment">/* 空闲任务栈 */</span></span><br><span class="line"></span><br><span class="line">CPU_STK		*<span class="type">const</span> 	OSCfg_IdleTaskStkBasePtr = (CPU_STK *) &amp;OSCfg_IdleTaskStk[<span class="number">0</span>];	<span class="comment">/* 空闲任务栈的起始地址 */</span></span><br><span class="line">CPU_STK		 <span class="type">const</span>	OSCfg_IdleTaskStkSize	 = (CPU_STK_SIZE) OS_CFG_IDLE_TASK_STK_SIZE;	<span class="comment">/* 空闲任务栈的大小 */</span></span><br></pre></td></tr></table></figure>
+<h3 id="1-2-空闲任务函数-OS-IdleTask-os-core-c">1.2 空闲任务函数 OS_IdleTask (os_core.c)</h3>
+<p>作为一个任务，任务主体是不能缺的。</p>
+<p>按照书上的教程，它定义了一个全局变量（OSIdleTaskCtr），用来计数。我不知道这个计数是干什么用的，我觉得在目前的学习阶段而言，空闲任务函数可以什么都不做。可能是作者觉得内核干一些无意义的事也好过什么事也不干吧。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">typedef</span>   CPU_INT32U	  OS_IDLE_CTR;</span><br><span class="line"></span><br><span class="line">OS_EXT  OS_IDLE_CTR		OSIdleTaskCtr;</span><br></pre></td></tr></table></figure>
+<p>注意：</p>
+<ul>
+<li>本函数不允许用户调用。</li>
+</ul>
+<p>以下是空闲任务函数，用来无聊的计数：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/* 空闲任务 */</span>	</span><br><span class="line"><span class="type">void</span> <span class="title function_">OS_IdleTask</span> <span class="params">(<span class="type">void</span> *p_arg)</span></span><br><span class="line">&#123;</span><br><span class="line">	p_arg = p_arg;</span><br><span class="line">	</span><br><span class="line">	<span class="comment">/* 空闲任务什么都不做，只对全局变量OSIdleTaskCtr ++ 操作 */</span></span><br><span class="line">	<span class="keyword">for</span> (;;)</span><br><span class="line">	&#123;</span><br><span class="line">		OSIdleTaskCtr++;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="1-3-空闲任务初始化函数-os-core-c">1.3 空闲任务初始化函数 (os_core.c)</h3>
+<p>很简单，就完成两个功能：</p>
+<ul>
+<li>创建空闲任务：调用 OSTaskCreate 即可。</li>
+<li>计数清零：将 OSIdleTaskCtr 清零，为无聊的计数做准备。</li>
+</ul>
+<p>注意：</p>
+<ul>
+<li>本函数不允许用户调用。</li>
+</ul>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/* 空闲任务初始化函数 */</span> </span><br><span class="line"><span class="type">void</span> <span class="title function_">OS_IdleTaskInit</span> <span class="params">(OS_ERR *p_err)</span></span><br><span class="line">&#123;</span><br><span class="line">	OSIdleTaskCtr = (OS_IDLE_CTR) <span class="number">0</span>;		<span class="comment">/* 计数器清零 */</span></span><br><span class="line">	</span><br><span class="line">	OSTaskCreate ((OS_TCB*)      &amp;OSIdleTaskTCB, </span><br><span class="line">	              (OS_TASK_PTR)  OS_IdleTask, </span><br><span class="line">	              (<span class="type">void</span> *)       <span class="number">0</span>,</span><br><span class="line">	              (CPU_STK *)    OSCfg_IdleTaskStkBasePtr,</span><br><span class="line">	              (CPU_STK_SIZE) OSCfg_IdleTaskStkSize,</span><br><span class="line">	              (OS_ERR *)     &amp;p_err);		<span class="comment">/* 创建空闲任务 */</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>那么，在 OS 初始化的时候，调用该函数即可完成空闲任务的创建：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/* OS 系统初始化，用于初始化全局变量 */</span></span><br><span class="line"><span class="type">void</span> <span class="title function_">OSInit</span> <span class="params">(OS_ERR *p_err)</span></span><br><span class="line">&#123;</span><br><span class="line">	<span class="comment">/* 系统用一个全局变量 OSRunning 来指示系统的运行状态。系统初始化时，默认为停止状态，即 OS_STATE_OS_STOPPED */</span></span><br><span class="line">	OSRunning = OS_STATE_OS_STOPPED;</span><br><span class="line">	</span><br><span class="line">	OSTCBCurPtr 	= (OS_TCB *) <span class="number">0</span>; <span class="comment">/* 指向当前正在运行的任务的 TCB 指针 */</span></span><br><span class="line">	OSTCBHighRdyPtr = (OS_TCB *) <span class="number">0</span>; <span class="comment">/* 指向就绪任务中优先级最高的任务的 TCB */</span></span><br><span class="line">	</span><br><span class="line">	OS_RdyListInit();  <span class="comment">/* 初始化就绪列表 */</span></span><br><span class="line">	</span><br><span class="line">	OS_IdleTaskInit(p_err); <span class="comment">/* ----&gt; 初始化空闲任务 */</span></span><br><span class="line">	</span><br><span class="line">	<span class="keyword">if</span> (*p_err != OS_ERR_NONE) &#123;</span><br><span class="line">		<span class="keyword">return</span>;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="2-阻塞延时">2 阻塞延时</h2>
+<p>很多时候，某些任务运行到某处就需要延时一段时间，什么都不做。比如驱动某外设，需要按照时序，延时一段时间，再去访问接口。为了能榨干 CPU 的性能，不让它空转，在延时的这段时间内，还是要去完成其他的任务。</p>
+<p>任务自行发起的延时，会使得任务自身发生阻塞，不再运行下去，这种延时就叫阻塞延时。而在阻塞延时期间，我们不让 CPU 闲着干等着，所以就有了任务切换（任务调度）。如果没有别的任务可以切换（调度），那就切换到内核的空闲任务。无论怎样，只要别让 CPU 闲着就行了。</p>
+<h3 id="2-1-数据类型定义">2.1 数据类型定义</h3>
+<p>在 TCB 中加入了记录延时长度的成员，最小单位为 1 个 Tick，之前在上一篇笔记中我们初始化一个 Tick 为 10ms，因此最小单位为 10ms。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/* TCB 重命名为大写字母格式 */</span></span><br><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span> <span class="title">os_tcb</span>	<span class="title">OS_TCB</span>;</span></span><br><span class="line"></span><br><span class="line"><span class="comment">/* TCB 数据类型声明 */</span></span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">os_tcb</span>&#123;</span></span><br><span class="line">	CPU_STK			*StkPtr;</span><br><span class="line">	CPU_STK_SIZE	StkSize;</span><br><span class="line">	OS_TICK			TaskDelayTicks;		<span class="comment">/* 任务延时多少个 Ticks，注意 1 个 Ticks 为 10ms */</span></span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<p>下面来实现阻塞延时的函数。</p>
+<h3 id="2-2-阻塞延时函数-OSTimeDly-os-time-c">2.2 阻塞延时函数 OSTimeDly (os_time.c)</h3>
+<p>一旦我们在任务中发起延时，那么在阻塞延时函数中完成两件事：</p>
+<ul>
+<li>延时长度记录到当前运行任务的 TCB 中，方便系统查看。</li>
+<li>发起任务切换（更准确的说法是任务调度）。</li>
+</ul>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/* 阻塞延时 */</span></span><br><span class="line"><span class="type">void</span> <span class="title function_">OSTimeDly</span> <span class="params">(OS_TICK dly)</span></span><br><span class="line">&#123;</span><br><span class="line">	<span class="comment">/* 延时时间 */</span></span><br><span class="line">	OSTCBCurPtr-&gt;TaskDelayTicks = dly;</span><br><span class="line">	<span class="comment">/* 任务切换 */</span></span><br><span class="line">	OSSched();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>特别需要注意，阻塞延时函数跟软延时 Delay 的本质是不同的。软延时是 CPU 真的会卡在 for 循环里，什么事都干不了；而阻塞延时函数的实质是 CPU 设置了一下延时时间，然后就去忙别的了。那谁负责计时？当然是我们的 SysTick 了。</p>
+<h3 id="2-3-SysTick-发起中断后调用-OSTimeTick-os-time-c">2.3 SysTick 发起中断后调用 OSTimeTick (os_time.c)</h3>
+<p>之前已提及，阻塞延时函数负责设置延时时间，书承上节内容，在 SysTick 发起一次中断时，表明一次 Tick 已经到来（在本案例中是 已经过去了 10ms），此时，把 TCB 中记录延时的数值减去 1，表示已经过去了一个 Tick（即过去了 10ms）。之后，还要发起一次任务调度，看看有没有任务已经延时结束的。</p>
+<p>因此，实际上该函数起了这么一个作用：每隔 10ms，我帮你计数一次，起到了一个延时计数的功能。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">void</span> <span class="title function_">OSTimeTick</span> <span class="params">(<span class="type">void</span>)</span></span><br><span class="line">&#123;</span><br><span class="line">	OS_PRIO i;</span><br><span class="line">	</span><br><span class="line">	<span class="comment">/* 遍历整个就绪列表，如果延时未到时，则减 1 */</span></span><br><span class="line">	<span class="keyword">for</span> ( i = <span class="number">0u</span>; i &lt; OS_CFG_PRIO_MAX; i++)</span><br><span class="line">	&#123;</span><br><span class="line">		<span class="keyword">if</span> ( OSRdyList[i].HeadPtr-&gt;TaskDelayTicks &gt; <span class="number">0u</span> )</span><br><span class="line">		&#123;</span><br><span class="line">			OSRdyList[i].HeadPtr-&gt;TaskDelayTicks --;</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">	</span><br><span class="line">	<span class="comment">/* 任务调度 */</span></span><br><span class="line">	OSSched();  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="2-4-任务调度-OSChed-os-core-c">2.4 任务调度 OSChed (os_core.c)</h3>
+<p>从现在起，该函数不再叫任务切换了，而是叫任务调度器，因为已经有三个任务了。</p>
+<p>我们实现的任务调度的算法很简单，也很朴素，就是去一个个检查其他其他任务是否延时结束，如果某个任务延时结束了，那么就切换到这个任务去运行。如果找不到一个任务延时结束，那么就维持当前任务运行。</p>
+<p>在这里，我们实现了两个用户任务，一个空闲任务。那么，SysTick 每发起一次中断就会调用本函数，检查的步骤为：</p>
+<ul>
+<li>如果当前任务为空闲任务，那么检查任务 1 和任务 2 是否延时结束。如果任务 1 延时结束，那么就运行任务 1 （OSTCBHighRdyPtr 指向任务 1 的 TCB）；如果任务 2 延时结束，那么就运行任务 2 （OSTCBHighRdyPtr 指向任务 2 的 TCB）。</li>
+<li>如果当前任务为任务 1，那么检查任务 1 自己和任务 2 是否延时结束。如果任务 2 延时结束，那么就运行任务 2 （OSTCBHighRdyPtr 指向任务 2 的 TCB）；如果任务 1 自己未延时结束，那么就运行空闲任务（OSTCBHighRdyPtr 指向空闲任务的 TCB）。</li>
+<li>如果当前任务为任务 2，那么检查任务 2 自己和任务 1 是否延时结束。如果任务 1 延时结束，那么就运行任务 1 （OSTCBHighRdyPtr 指向任务 1 的 TCB）；如果任务 2 自己未延时结束，那么就运行空闲任务（OSTCBHighRdyPtr 指向空闲任务的 TCB）。</li>
+<li>最后，触发 PendSV 异常，保存上文，使 OSTCBCurPtr 获得 OSTCBHighRdyPtr，切换下文。</li>
+</ul>
+<p>以上，就是我们实现的简单的调度算法。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/* 任务调度 */</span></span><br><span class="line"><span class="type">void</span> <span class="title function_">OSSched</span> <span class="params">(<span class="type">void</span>)</span></span><br><span class="line">&#123;</span><br><span class="line">	<span class="keyword">if</span> ( OSTCBCurPtr == &amp;OSIdleTaskTCB )	<span class="comment">/* (a) 假如现在的任务是空闲任务 */</span></span><br><span class="line">	&#123;</span><br><span class="line">		<span class="keyword">if</span> ( OSRdyList[<span class="number">0</span>].HeadPtr-&gt;TaskDelayTicks == <span class="number">0</span> )	<span class="comment">/* 如果任务 1 延时结束 */</span></span><br><span class="line">		&#123;</span><br><span class="line">			OSTCBHighRdyPtr = OSRdyList[<span class="number">0</span>].HeadPtr;</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">else</span> <span class="keyword">if</span> ( OSRdyList[<span class="number">1</span>].HeadPtr-&gt;TaskDelayTicks == <span class="number">0</span> )	<span class="comment">/* 如果任务 2 延时结束 */</span></span><br><span class="line">		&#123;</span><br><span class="line">			OSTCBHighRdyPtr = OSRdyList[<span class="number">1</span>].HeadPtr;</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">else</span></span><br><span class="line">		&#123;</span><br><span class="line">			<span class="keyword">return</span>;</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">else</span> <span class="keyword">if</span> ( OSTCBCurPtr == OSRdyList[<span class="number">0</span>].HeadPtr )	<span class="comment">/* (b) 假如现在的任务是任务 1 */</span></span><br><span class="line">	&#123;</span><br><span class="line">		<span class="keyword">if</span> ( OSRdyList[<span class="number">1</span>].HeadPtr-&gt;TaskDelayTicks == <span class="number">0</span> )	<span class="comment">/* 如果任务 2 延时结束 */</span></span><br><span class="line">		&#123;</span><br><span class="line">			OSTCBHighRdyPtr = OSRdyList[<span class="number">1</span>].HeadPtr;</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">else</span> <span class="keyword">if</span> ( OSTCBCurPtr-&gt;TaskDelayTicks != <span class="number">0</span> )	<span class="comment">/* 如果任务 1 自己还在延时 */</span></span><br><span class="line">		&#123;</span><br><span class="line">			OSTCBHighRdyPtr = &amp;OSIdleTaskTCB;</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">else</span></span><br><span class="line">		&#123;</span><br><span class="line">			<span class="keyword">return</span>;</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">else</span> <span class="keyword">if</span> ( OSTCBCurPtr == OSRdyList[<span class="number">1</span>].HeadPtr )	<span class="comment">/* (c) 假如现在的任务是任务 2 */</span></span><br><span class="line">	&#123;</span><br><span class="line">		<span class="keyword">if</span> ( OSRdyList[<span class="number">0</span>].HeadPtr-&gt;TaskDelayTicks == <span class="number">0</span> )	<span class="comment">/* 如果任务 1 延时结束 */</span></span><br><span class="line">		&#123;</span><br><span class="line">			OSTCBHighRdyPtr = OSRdyList[<span class="number">0</span>].HeadPtr;</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">else</span> <span class="keyword">if</span> ( OSTCBCurPtr-&gt;TaskDelayTicks != <span class="number">0</span> )	<span class="comment">/* 如果任务 2 自己还在延时 */</span></span><br><span class="line">		&#123;</span><br><span class="line">			OSTCBHighRdyPtr = &amp;OSIdleTaskTCB;</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">else</span></span><br><span class="line">		&#123;</span><br><span class="line">			<span class="keyword">return</span>;</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">	</span><br><span class="line">	OS_TASK_SW();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>最后一个困惑：为什么要将 TCB 指针赋值给 OSTCBHighRdyPtr 而不是 OSTCBCurPtr 呢？我个人理解：因为 uCOS 是抢占式多任务，将任务 A 赋值给最高优先级时，当前任务会被切换为该任务 A。而且可以看看 PendSV 异常汇编程序，你会发现它实现的最核心的东西其实是 OSTCBCurPtr = OSTCBHighRdyPtr。我现在不是很懂，也许学到后面会逐渐明白的吧。</p>
+<h2 id="3-实验：阻塞延时的运用">3 实验：阻塞延时的运用</h2>
+<h3 id="3-1-主函数-app-c">3.1 主函数 (app.c)</h3>
+<p>在任务中，实现了阻塞延时，去掉了软件延时和手动切换任务。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&quot;ARMCM3.h&quot;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&quot;os.h&quot;</span></span></span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="keyword">define</span>  TASK1_STK_SIZE       20</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span>  TASK2_STK_SIZE       20</span></span><br><span class="line"></span><br><span class="line"><span class="type">static</span>   CPU_STK   Task1Stk[TASK1_STK_SIZE];</span><br><span class="line"><span class="type">static</span>   CPU_STK   Task2Stk[TASK2_STK_SIZE];</span><br><span class="line"></span><br><span class="line"><span class="type">static</span>   OS_TCB    Task1TCB;</span><br><span class="line"><span class="type">static</span>   OS_TCB    Task2TCB;</span><br><span class="line"></span><br><span class="line"><span class="type">uint32_t</span> flag1;</span><br><span class="line"><span class="type">uint32_t</span> flag2;</span><br><span class="line"></span><br><span class="line"><span class="type">void</span> <span class="title function_">Task1</span> <span class="params">(<span class="type">void</span> *p_arg)</span>;</span><br><span class="line"><span class="type">void</span> <span class="title function_">Task2</span> <span class="params">(<span class="type">void</span> *p_arg)</span>;</span><br><span class="line"><span class="type">void</span> <span class="title function_">delay</span><span class="params">(<span class="type">uint32_t</span> count)</span>;</span><br><span class="line"></span><br><span class="line"><span class="type">int</span> <span class="title function_">main</span> <span class="params">(<span class="type">void</span>)</span></span><br><span class="line">&#123;</span><br><span class="line">	OS_ERR err;</span><br><span class="line">	</span><br><span class="line">	<span class="comment">/* 初始化相关的全局变量，创建空闲任务 */</span></span><br><span class="line">	OSInit(&amp;err);</span><br><span class="line">	</span><br><span class="line">	<span class="comment">/* 关中断，因为此时 OS 未启动，若开启中断，那么 SysTick 将会引发中断 */</span></span><br><span class="line">	CPU_IntDis();</span><br><span class="line">	</span><br><span class="line">	<span class="comment">/* 初始化 SysTick，配置 SysTick 为 10ms 中断一次，Tick = 10ms */</span></span><br><span class="line">	OS_CPU_SysTickInit(<span class="number">10</span>);</span><br><span class="line">	</span><br><span class="line">	<span class="comment">/* 创建任务 */</span></span><br><span class="line">	OSTaskCreate ((OS_TCB*)      &amp;Task1TCB, </span><br><span class="line">	              (OS_TASK_PTR) Task1, </span><br><span class="line">	              (<span class="type">void</span> *)       <span class="number">0</span>,</span><br><span class="line">	              (CPU_STK*)     &amp;Task1Stk[<span class="number">0</span>],</span><br><span class="line">	              (CPU_STK_SIZE) TASK1_STK_SIZE,</span><br><span class="line">	              (OS_ERR *)     &amp;err);</span><br><span class="line"></span><br><span class="line">	OSTaskCreate ((OS_TCB*)      &amp;Task2TCB, </span><br><span class="line">	              (OS_TASK_PTR) Task2, </span><br><span class="line">	              (<span class="type">void</span> *)       <span class="number">0</span>,</span><br><span class="line">	              (CPU_STK*)     &amp;Task2Stk[<span class="number">0</span>],</span><br><span class="line">	              (CPU_STK_SIZE) TASK2_STK_SIZE,</span><br><span class="line">	              (OS_ERR *)     &amp;err);</span><br><span class="line">				  </span><br><span class="line">	<span class="comment">/* 将任务加入到就绪列表 */</span></span><br><span class="line">	OSRdyList[<span class="number">0</span>].HeadPtr = &amp;Task1TCB;</span><br><span class="line">	OSRdyList[<span class="number">1</span>].HeadPtr = &amp;Task2TCB;</span><br><span class="line">	</span><br><span class="line">	<span class="comment">/* 启动OS，将不再返回 */</span>				</span><br><span class="line">	OSStart(&amp;err);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="type">void</span> <span class="title function_">Task1</span> <span class="params">(<span class="type">void</span> *p_arg)</span></span><br><span class="line">&#123;</span><br><span class="line">	<span class="keyword">for</span> (;;)</span><br><span class="line">	&#123;</span><br><span class="line">		flag1 = <span class="number">1</span>;</span><br><span class="line">		OSTimeDly (<span class="number">2</span>);	<span class="comment">// 20ms</span></span><br><span class="line">		flag1 = <span class="number">0</span>;</span><br><span class="line">		OSTimeDly (<span class="number">2</span>);</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="comment">// 不用手动任务切换</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="type">void</span> <span class="title function_">Task2</span> <span class="params">(<span class="type">void</span> *p_arg)</span></span><br><span class="line">&#123;</span><br><span class="line">	<span class="keyword">for</span> (;;)</span><br><span class="line">	&#123;</span><br><span class="line">		flag2 = <span class="number">1</span>;</span><br><span class="line">		OSTimeDly (<span class="number">2</span>);		</span><br><span class="line">		flag2 = <span class="number">0</span>;</span><br><span class="line">		OSTimeDly (<span class="number">2</span>);</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="comment">// 不用手动任务切换</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><strong>（1）初始化流程如下：</strong></p>
+<ul>
+<li>OS 初始化：完成就绪列表和空闲任务的初始化。</li>
+<li>关闭中断。</li>
+<li>SysTick 初始化：设置一个滴答为 10ms。</li>
+<li>创建任务。</li>
+<li>将任务加入就绪列表。</li>
+<li>OS 启动：启动任务切换，先运行就绪列表里的第一个任务 Task1。</li>
+</ul>
+<p><strong>（2）在第一个任务 Task1 中，执行 Flag1 = 1 后，执行到 OSTimeDly：</strong></p>
+<ul>
+<li>将当前任务 TCB 的记录延时成员设置好。</li>
+<li>由 OSSched 进行任务调度。</li>
+<li>因为此时没有别的任务运行，所以会被切换到 Task2。</li>
+</ul>
+<p><strong>（3）在 Task2 中，执行 Flag2 = 1 后，也执行到 OSTimeDly：</strong></p>
+<ul>
+<li>将当前任务 TCB 的记录延时成员设置好。</li>
+<li>由 OSSched 进行任务调度。</li>
+<li>因为此时 Task1 仍处于阻塞状态，所以会被切换到空闲任务。</li>
+</ul>
+<p><strong>（4）在运行空闲任务的同时，SysTick 也在工作中：</strong></p>
+<ul>
+<li>发现一个 Tick 到来了，说明 10ms 间隔已到，发起中断 SysTick_Handler。</li>
+<li>执行函数 OSTimeTick，将所有任务 TCB 中的延时时长全部减 1，表示已过去了 10ms。</li>
+<li>发起 OSSched 进行任务调度。</li>
+<li>因为这时两个任务仍在阻塞中，所以继续切换到空闲任务。</li>
+<li>这样，每发起一次 Tick，都会减去 1，同时去检查两个任务是否还在阻塞中，CPU 一直运行空闲任务。直到，当两个任务同时阻塞完毕的时候（因为我们设置的两个任务阻塞时间相同），又是一次 Tick 的到来，此时空闲任务将切换到 Task1（因为任务调度函数中判断 Task1 是否阻塞是写在前面的）。此时你发现又回到了第（2）个步骤，只不过这一次是 Flag1 = 0，后面的运行过程就不多说了。</li>
+</ul>
+<h3 id="3-2-实验现象">3.2 实验现象</h3>
+<img src="/posts/2422bcc1/1.jpg" class="">
+<p>可以发现，因为我们延时的长度一样，所以两个任务几乎是同时进行的，按照上面的分析，确实就是这个样子，看起来就像是并行线程，很神奇吧！</p>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>文章作者: </span><span class="post-copyright-info"><a href="http://example.com">Mount256</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>文章链接: </span><span class="post-copyright-info"><a href="http://example.com/posts/2422bcc1.html">http://example.com/posts/2422bcc1.html</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来源 <a href="http://example.com" target="_blank">Mount256的博客</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/%E5%B5%8C%E5%85%A5%E5%BC%8F/">嵌入式</a><a class="post-meta__tags" href="/tags/uCOS/">uCOS</a><a class="post-meta__tags" href="/tags/STM32/">STM32</a></div><div class="post-share"><div class="social-share" data-image="/img/avatar.png" data-sites="facebook,x,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><a class="pagination-related" href="/posts/37e731d0.html" title="uCOS-III 学习记录（4）——时间戳"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info"><div class="info-1"><div class="info-item-1">上一篇</div><div class="info-item-2">uCOS-III 学习记录（4）——时间戳</div></div><div class="info-2"><div class="info-item-1">参考内容：《[野火]uCOS-III内核实现与应用开发实战指南——基于STM32》第 9 章。 1 时间戳 在 uCOS 中，如果要测量一段代码 A 的时间，那么可以在代码段 A 运行前记录一个时间点 TimeStart，在代码段 A 运行完记录一个时间点 TimeEnd，那么代码段 A 的运行时间 TimeUse 就等于 TimeEnd 减去 TimeStart。这里面的两个时间点 TimeEnd 和 TimeStart，就叫作时间戳（Timestamp，简称ts），时间戳实际上就是一个时间点。 比如，在下面的代码中，在需要开始测量的地方调用OS_TS_GET()，在需要结束测量的地方再次调用OS_TS_GET()，则两次调用之间的代码即为被测量的时间长度。 1234TimeStart = OS_TS_GET();OSTimeDly (20);	TimeEnd = OS_TS_GET();TimeUse = TimeEnd - TimeStart; 如果 Tick = 10ms，那么 TimeUse 测量到的是 200ms。 现在的问题是：如何实现时间戳呢？DWT 要出场了。 ...</div></div></div></a><a class="pagination-related" href="/posts/194bbd1b.html" title="uCOS-III 学习记录（2）——任务时间片运行"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-right"><div class="info-1"><div class="info-item-1">下一篇</div><div class="info-item-2">uCOS-III 学习记录（2）——任务时间片运行</div></div><div class="info-2"><div class="info-item-1">参考内容：《[野火]uCOS-III内核实现与应用开发实战指南——基于STM32》第 7 章。 这章的内容是：每隔一定的时间间隔，就会进行一次任务切换，使每个任务都能均等享有 CPU 控制权，这种不停地上下文切换的过程，有点像多进程。同是任务切换，与第一篇笔记不同的是：第一篇笔记是任务自己主动切换，这篇是 SysTick 发起的切换。 1 初始化 SysTick 1.1 SysTick 初始化函数 OS_CPU_SysTickInit (os_cpu_c.c) 由于 SysTick 属于内核外设，所以在 os_cpu_c.c 中定义该函数。实现方法其实很简单，就是我们之前在 STM32 所学的 SysTick 那样进行初始化。 其中函数参数为 ms，意思是经过多少 ms 后触发 SysTick 中断。之后在中断程序内，进行任务切换即可。 123456789101112131415/* 初始化SysTick */void OS_CPU_SysTickInit (CPU_INT32U ms)&#123; 	SysTick-&gt;LOAD  = ms * SystemCoreCloc...</div></div></div></a></nav><div class="relatedPosts"><div class="headline"><i class="fas fa-thumbs-up fa-fw"></i><span>相关推荐</span></div><div class="relatedPosts-list"><a class="pagination-related" href="/posts/26d23c92.html" title="uCOS-III 学习记录（5）——临界段"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2022-01-28</div><div class="info-item-2">uCOS-III 学习记录（5）——临界段</div></div><div class="info-2"><div class="info-item-1">参考内容：《[野火]uCOS-III内核实现与应用开发实战指南——基于STM32》第 10 章。 1 临界段 临界段，又叫做临界区。对于多线程而言，它是一段不可分割、不可上下文切换的代码。对于 uCOS 而言，它是一段不可被中断的代码。临界段是不能被中断的，需要关中断或锁调度器（OSSched）以保护临界段。 什么情况下临界段代码会被打断？由刚才的描述可知，临界段被打断有两种情况：  外部中断。 系统调度。在系统调度中会产生 PendSV 异常中断，最终也可以归结为中断。  因此，对临界段保护的实质就是控制中断的开启和关闭。 uCOS 定义了进入临界段的宏和退出临界段的宏，这两个宏分别实现了中断的开启和关闭。  OS_CRITICAL_ENTER() 或 CPU_CRITICAL_ENTER() OS_CRITICAL_EXIT() 或 CPU_CRITICAL_EXIT()  还有一个宏，用于存储中断的状态：  CPU_SR_ALLOC()  2 临界段的保护 2.1 Cortex-M 内核的中断指令 在 CM 内核中，中断是通过 CPS 指令来控制的。 1234CPSID I...</div></div></div></a><a class="pagination-related" href="/posts/7cfbb3ed.html" title="uCOS-III 学习记录（9）——时基列表"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2022-02-11</div><div class="info-item-2">uCOS-III 学习记录（9）——时基列表</div></div><div class="info-2"><div class="info-item-1">参考内容：《[野火]uCOS-III内核实现与应用开发实战指南——基于STM32》第 13 章。 1 数据类型定义和宏定义 1.1 时基列表相关宏定义和全局变量（os_cfg_app.h/c &amp; os.h） 在 os_cfg_app.h 中，宏定义时基列表的大小，其推荐值为任务数/4，推荐使用质数，不推荐使用偶数。如果算出来的大小是偶数，则需加 1 变成质数。 12/* 时基列表大小 */#define OS_CFG_TICK_WHEEL_SIZE			17u 接下来在 os_cfg_app.c 中，定义两个全局变量，分别是时基列表（数组）和时基列表的大小。注意需要在 os.h 中声明。 12OS_TICK_SPOKE		OSCfg_TickWheel[OS_CFG_TICK_WHEEL_SIZE];		/* 时基列表 */OS_OBJ_QTY	const	OSCfg_TickWheelSize = (OS_OBJ_QTY)OS_CFG_TICK_WHEEL_SIZE;	/* 时基列表大小 */ 在 os.h 中定义 32 位的 Tick 计数器，即 SysTick 周期...</div></div></div></a><a class="pagination-related" href="/posts/194bbd1b.html" title="uCOS-III 学习记录（2）——任务时间片运行"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2022-01-19</div><div class="info-item-2">uCOS-III 学习记录（2）——任务时间片运行</div></div><div class="info-2"><div class="info-item-1">参考内容：《[野火]uCOS-III内核实现与应用开发实战指南——基于STM32》第 7 章。 这章的内容是：每隔一定的时间间隔，就会进行一次任务切换，使每个任务都能均等享有 CPU 控制权，这种不停地上下文切换的过程，有点像多进程。同是任务切换，与第一篇笔记不同的是：第一篇笔记是任务自己主动切换，这篇是 SysTick 发起的切换。 1 初始化 SysTick 1.1 SysTick 初始化函数 OS_CPU_SysTickInit (os_cpu_c.c) 由于 SysTick 属于内核外设，所以在 os_cpu_c.c 中定义该函数。实现方法其实很简单，就是我们之前在 STM32 所学的 SysTick 那样进行初始化。 其中函数参数为 ms，意思是经过多少 ms 后触发 SysTick 中断。之后在中断程序内，进行任务切换即可。 123456789101112131415/* 初始化SysTick */void OS_CPU_SysTickInit (CPU_INT32U ms)&#123; 	SysTick-&gt;LOAD  = ms * SystemCoreCloc...</div></div></div></a><a class="pagination-related" href="/posts/c6617a77.html" title="uCOS-III 学习记录（7）——就序列表"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2022-01-31</div><div class="info-item-2">uCOS-III 学习记录（7）——就序列表</div></div><div class="info-2"><div class="info-item-1">参考内容：《[野火]uCOS-III内核实现与应用开发实战指南——基于STM32》第 11 章。 1 就绪列表和任务控制块的定义（os.h） 1.1 任务控制块链表 OS_TCB 在定义就绪列表之前，先修改一下 TCB 的内容。 TCB 是一条双向链表，每个节点都包含以下内容：  任务栈指针 StkPtr； 任务栈大小 StkSize； 任务阻塞时长 TaskDelayTicks； 任务的优先级 Prio； 前向指针域 PrevPtr 和后向指针域 NextPtr。  12345678910111213141516/*----------------------TCB---------------------------*//* TCB 重命名为大写字母格式 */typedef struct os_tcb	OS_TCB;/* TCB 数据类型声明 */struct os_tcb&#123;	CPU_STK			*StkPtr;	CPU_STK_SIZE	StkSize;		OS_TICK			TaskDelayTicks;		/* 任务延时多少个 Ticks，注意 1 个 Tic...</div></div></div></a><a class="pagination-related" href="/posts/2a53dec.html" title="uCOS-III 学习记录（1）——任务的创建、切换和OS的启动"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2022-01-18</div><div class="info-item-2">uCOS-III 学习记录（1）——任务的创建、切换和OS的启动</div></div><div class="info-2"><div class="info-item-1">参考内容：《[野火]uCOS-III内核实现与应用开发实战指南——基于STM32》第 6 章。 前排提醒  每一节标题最后的括号是表明该数据类型或函数位于哪个文件中。 按照 μC/OS-III 中的函数命名规则，以大小的 OS 开头，表示这是一个外部函数，可以由用户调用，以 OS_ 开头的函数表示内部函数，只能由 μC/OS-III 内部使用。紧接着是文件名，表示该函数放在哪个文件，最后是函数功能名称。例如：OSTaskCreate，说明允许用户调用，位于 os_task.c 文件中。 extern 的巧妙定义 (os.h)：  12345#ifdef 	OS_GLOBALS	#define OS_EXT#else	#define OS_EXT	extern#endif  在 cpu.h 和 os_type.h 中：  1234567891011121314151617181920212223242526272829#ifndef CPU_H#define CPU_Htypedef unsigned short  CPU_INT16U;typedef unsigned int  ...</div></div></div></a><a class="pagination-related" href="/posts/10e09851.html" title="uCOS-III 学习记录（10）——时间片轮转调度"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2022-02-11</div><div class="info-item-2">uCOS-III 学习记录（10）——时间片轮转调度</div></div><div class="info-2"><div class="info-item-1">参考内容：《[野火]uCOS-III内核实现与应用开发实战指南——基于STM32》第 14 章。 0 时间片轮转调度的意义 我们现在实现的 uCOS 内核，包含了就绪列表和时基列表。就绪列表的插入规则与优先级有关，而时基列表的插入规则与时基计数器和延时时间有关。上一篇文章中，已经实现了时基列表的任务调度。但是我们写的内核还有一些缺陷，当不进行任务调度时（注意：任务调度的实质是切换到高优先级的任务去执行），系统只能执行就绪列表下的双向链表头指针对应的任务，那么相同优先级的其他任务就执行不到了。因此，我们希望相同优先级的多个任务都可以执行到，其中一个办法就是每隔一段时间就切换到相同优先级上的任务，这样这些任务都有机会被运行到。 时间片轮转调度用于解决相同优先级下多个任务的运行问题。现在假设 A 优先级下有任务 1、任务 2、任务 3，B 优先级有任务 4 且被阻塞 6 个时间片的长度，所以现在要运行 A 优先级下的任务。  如果不实现时间片轮转，那么 A 优先级排在最前面的任务 1 将运行 6 个时间片，即独占了这 6 个时间片。 如果实现时间片轮转，那么 A 优先级下的任务可以商量...</div></div></div></a></div></div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info text-center"><div class="avatar-img"><img src="/img/avatar.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info-name">Mount256</div><div class="author-info-description">记录生活</div><div class="site-data"><a href="/archives/"><div class="headline">文章</div><div class="length-num">13</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">4</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">3</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/Mount256"><i class="fab fa-github"></i><span>Follow Me</span></a></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">暂无公告。</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#1-%E7%A9%BA%E9%97%B2%E4%BB%BB%E5%8A%A1"><span class="toc-number">1.</span> <span class="toc-text">1. 空闲任务</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-1-%E6%95%B0%E6%8D%AE%E7%B1%BB%E5%9E%8B%E5%AE%9A%E4%B9%89"><span class="toc-number">1.1.</span> <span class="toc-text">1.1 数据类型定义</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#1-1-1-%E7%A9%BA%E9%97%B2%E4%BB%BB%E5%8A%A1-TCB-os-h"><span class="toc-number">1.1.1.</span> <span class="toc-text">1.1.1 空闲任务 TCB (os.h)</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#1-1-2-%E7%A9%BA%E9%97%B2%E4%BB%BB%E5%8A%A1%E6%A0%88-os-cfg-app-c"><span class="toc-number">1.1.2.</span> <span class="toc-text">1.1.2 空闲任务栈 (os_cfg_app.c)</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-2-%E7%A9%BA%E9%97%B2%E4%BB%BB%E5%8A%A1%E5%87%BD%E6%95%B0-OS-IdleTask-os-core-c"><span class="toc-number">1.2.</span> <span class="toc-text">1.2 空闲任务函数 OS_IdleTask (os_core.c)</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-3-%E7%A9%BA%E9%97%B2%E4%BB%BB%E5%8A%A1%E5%88%9D%E5%A7%8B%E5%8C%96%E5%87%BD%E6%95%B0-os-core-c"><span class="toc-number">1.3.</span> <span class="toc-text">1.3 空闲任务初始化函数 (os_core.c)</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-%E9%98%BB%E5%A1%9E%E5%BB%B6%E6%97%B6"><span class="toc-number">2.</span> <span class="toc-text">2 阻塞延时</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#2-1-%E6%95%B0%E6%8D%AE%E7%B1%BB%E5%9E%8B%E5%AE%9A%E4%B9%89"><span class="toc-number">2.1.</span> <span class="toc-text">2.1 数据类型定义</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-2-%E9%98%BB%E5%A1%9E%E5%BB%B6%E6%97%B6%E5%87%BD%E6%95%B0-OSTimeDly-os-time-c"><span class="toc-number">2.2.</span> <span class="toc-text">2.2 阻塞延时函数 OSTimeDly (os_time.c)</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-3-SysTick-%E5%8F%91%E8%B5%B7%E4%B8%AD%E6%96%AD%E5%90%8E%E8%B0%83%E7%94%A8-OSTimeTick-os-time-c"><span class="toc-number">2.3.</span> <span class="toc-text">2.3 SysTick 发起中断后调用 OSTimeTick (os_time.c)</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-4-%E4%BB%BB%E5%8A%A1%E8%B0%83%E5%BA%A6-OSChed-os-core-c"><span class="toc-number">2.4.</span> <span class="toc-text">2.4 任务调度 OSChed (os_core.c)</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#3-%E5%AE%9E%E9%AA%8C%EF%BC%9A%E9%98%BB%E5%A1%9E%E5%BB%B6%E6%97%B6%E7%9A%84%E8%BF%90%E7%94%A8"><span class="toc-number">3.</span> <span class="toc-text">3 实验：阻塞延时的运用</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#3-1-%E4%B8%BB%E5%87%BD%E6%95%B0-app-c"><span class="toc-number">3.1.</span> <span class="toc-text">3.1 主函数 (app.c)</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-2-%E5%AE%9E%E9%AA%8C%E7%8E%B0%E8%B1%A1"><span class="toc-number">3.2.</span> <span class="toc-text">3.2 实验现象</span></a></li></ol></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/19615f2a.html" title="Front-matter 示例及页面测试">Front-matter 示例及页面测试</a><time datetime="2026-06-11T09:05:49.000Z" title="发表于 2026-06-11 17:05:49">2026-06-11</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/4a17b156.html" title="Hello World">Hello World</a><time datetime="2026-06-10T09:45:35.762Z" title="发表于 2026-06-10 17:45:35">2026-06-10</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/c1b0db6a.html" title="uCOS-III 学习记录（11）——任务管理">uCOS-III 学习记录（11）——任务管理</a><time datetime="2022-02-12T16:00:00.000Z" title="发表于 2022-02-13 00:00:00">2022-02-13</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/10e09851.html" title="uCOS-III 学习记录（10）——时间片轮转调度">uCOS-III 学习记录（10）——时间片轮转调度</a><time datetime="2022-02-10T16:00:00.000Z" title="发表于 2022-02-11 00:00:00">2022-02-11</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/7cfbb3ed.html" title="uCOS-III 学习记录（9）——时基列表">uCOS-III 学习记录（9）——时基列表</a><time datetime="2022-02-10T16:00:00.000Z" title="发表于 2022-02-11 00:00:00">2022-02-11</time></div></div></div></div></div></div></main><footer id="footer" style="background-image: url(/img/top.jpg);"><div class="footer-other"><div class="footer-copyright"><span class="copyright">&copy;&nbsp;2025 - 2026 By Mount256</span><span class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo 8.1.2</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly 5.5.5</a></span></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="日间和夜间模式切换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js?v=5.5.5"></script><script src="/js/main.js?v=5.5.5"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui@6.1.14/dist/fancybox/fancybox.umd.min.js"></script><div class="js-pjax"><script>(() => {
+  const parseViewBox = viewBox => {
+    if (!viewBox) return null
+    const parts = viewBox.trim().split(/[\s,]+/).map(n => Number(n))
+    if (parts.length !== 4 || parts.some(n => Number.isNaN(n))) return null
+    return parts
+  }
+
+  const getSvgViewBox = svg => {
+    const attr = parseViewBox(svg.getAttribute('viewBox'))
+    if (attr) return attr
+
+    // Fallback: use bbox to build a viewBox
+    try {
+      const bbox = svg.getBBox()
+      if (bbox && bbox.width && bbox.height) return [bbox.x, bbox.y, bbox.width, bbox.height]
+    } catch (e) {
+      // getBBox may fail on some edge cases; ignore
+    }
+
+    const w = Number(svg.getAttribute('width')) || 0
+    const h = Number(svg.getAttribute('height')) || 0
+    if (w > 0 && h > 0) return [0, 0, w, h]
+    return [0, 0, 100, 100]
+  }
+
+  const setSvgViewBox = (svg, vb) => {
+    svg.setAttribute('viewBox', `${vb[0]} ${vb[1]} ${vb[2]} ${vb[3]}`)
+  }
+
+  const clamp = (v, min, max) => Math.max(min, Math.min(max, v))
+
+  const openSvgInNewTab = ({ source, initViewBox }) => {
+    const getClonedSvg = () => {
+      if (typeof source === 'string') {
+        const template = document.createElement('template')
+        template.innerHTML = source.trim()
+        const svg = template.content.querySelector('svg')
+        return svg ? svg.cloneNode(true) : null
+      }
+      if (source && typeof source.cloneNode === 'function') {
+        return source.cloneNode(true)
+      }
+      return null
+    }
+
+    const clone = getClonedSvg()
+    if (!clone) return
+    if (initViewBox && initViewBox.length === 4) {
+      clone.setAttribute('viewBox', initViewBox.join(' '))
+    }
+    if (!clone.getAttribute('xmlns')) clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg')
+    if (!clone.getAttribute('xmlns:xlink') && clone.outerHTML.includes('xlink:')) {
+      clone.setAttribute('xmlns:xlink', 'http://www.w3.org/1999/xlink')
+    }
+    // inject background to match current theme
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark'
+    const bg = getComputedStyle(document.body).backgroundColor || (isDark ? '#1e1e1e' : '#ffffff')
+    if (!clone.style.background) clone.style.background = bg
+
+    const serializer = new XMLSerializer()
+    const svgSource = serializer.serializeToString(clone)
+    const htmlSource = `<!doctype html><html><head><meta charset="utf-8" />
+      <style>
+        html, body { width: 100%; height: 100%; margin: 0; display: flex; align-items: center; justify-content: center; background: ${bg}; }
+        svg { max-width: 100%; max-height: 100%; height: auto; width: auto; }
+      </style>
+      </head><body>${svgSource}</body></html>`
+    const blob = new Blob([htmlSource], { type: 'text/html;charset=utf-8' })
+    const url = URL.createObjectURL(blob)
+    window.open(url, '_blank', 'noopener')
+    setTimeout(() => URL.revokeObjectURL(url), 30000)
+  }
+
+  const attachMermaidViewerButton = wrap => {
+    let btn = wrap.querySelector('.mermaid-open-btn')
+    if (!btn) {
+      btn = document.createElement('button')
+      btn.type = 'button'
+      btn.className = 'mermaid-open-btn'
+      wrap.appendChild(btn)
+    }
+
+    btn.innerHTML = '<i class="fa fa-search fa-fw" aria-hidden="true"></i>'
+
+    if (!btn.__mermaidViewerBound) {
+      btn.addEventListener('click', e => {
+        e.preventDefault()
+        e.stopPropagation()
+        const svg = wrap.__mermaidOriginalSvg || wrap.querySelector('svg')
+        if (!svg) return
+        const initViewBox = wrap.__mermaidInitViewBox
+        if (typeof svg === 'string') {
+          openSvgInNewTab({ source: svg, initViewBox })
+          return
+        }
+        openSvgInNewTab({ source: svg, initViewBox })
+      })
+      btn.__mermaidViewerBound = true
+    }
+  }
+
+  // Zoom around a point (px, py) in the SVG viewport (in viewBox coordinates)
+  const zoomAtPoint = (vb, factor, px, py) => {
+    const w = vb[2] * factor
+    const h = vb[3] * factor
+    const nx = px - (px - vb[0]) * factor
+    const ny = py - (py - vb[1]) * factor
+    return [nx, ny, w, h]
+  }
+
+  const initMermaidGestures = wrap => {
+    const svg = wrap.querySelector('svg')
+    if (!svg) return
+
+    // Ensure viewBox exists so gestures always work
+    const initVb = getSvgViewBox(svg)
+    wrap.__mermaidInitViewBox = initVb
+    wrap.__mermaidCurViewBox = initVb.slice()
+    setSvgViewBox(svg, initVb)
+
+    // Avoid binding multiple times on themeChange/pjax
+    if (wrap.__mermaidGestureBound) return
+    wrap.__mermaidGestureBound = true
+
+    // Helper: map client (viewport) coordinate -> viewBox coordinate
+    const clientToViewBox = (clientX, clientY) => {
+      const rect = svg.getBoundingClientRect()
+      const vb = wrap.__mermaidCurViewBox || getSvgViewBox(svg)
+      const x = vb[0] + (clientX - rect.left) * (vb[2] / rect.width)
+      const y = vb[1] + (clientY - rect.top) * (vb[3] / rect.height)
+      return { x, y, rect, vb }
+    }
+
+    const state = {
+      pointers: new Map(),
+      startVb: null,
+      startDist: 0,
+      startCenter: null
+    }
+
+    const clampVb = vb => {
+      const init = wrap.__mermaidInitViewBox || vb
+      const minW = init[2] * 0.1
+      const maxW = init[2] * 10
+      const minH = init[3] * 0.1
+      const maxH = init[3] * 10
+      vb[2] = clamp(vb[2], minW, maxW)
+      vb[3] = clamp(vb[3], minH, maxH)
+      return vb
+    }
+
+    const setCurVb = vb => {
+      vb = clampVb(vb)
+      wrap.__mermaidCurViewBox = vb
+      setSvgViewBox(svg, vb)
+    }
+
+    const onPointerDown = e => {
+      // Allow only primary button for mouse
+      if (e.pointerType === 'mouse' && e.button !== 0) return
+      svg.setPointerCapture(e.pointerId)
+      state.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY })
+
+      if (state.pointers.size === 1) {
+        state.startVb = (wrap.__mermaidCurViewBox || getSvgViewBox(svg)).slice()
+      } else if (state.pointers.size === 2) {
+        const pts = [...state.pointers.values()]
+        const dx = pts[0].x - pts[1].x
+        const dy = pts[0].y - pts[1].y
+        state.startDist = Math.hypot(dx, dy)
+        state.startVb = (wrap.__mermaidCurViewBox || getSvgViewBox(svg)).slice()
+        state.startCenter = { x: (pts[0].x + pts[1].x) / 2, y: (pts[0].y + pts[1].y) / 2 }
+      }
+    }
+
+    const onPointerMove = e => {
+      if (!state.pointers.has(e.pointerId)) return
+      state.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY })
+
+      // Pan with 1 pointer
+      if (state.pointers.size === 1 && state.startVb) {
+        const p = [...state.pointers.values()][0]
+        const prev = { x: e.clientX - e.movementX, y: e.clientY - e.movementY }
+        // movementX/Y unreliable on touch, compute from stored last position
+        const last = wrap.__mermaidLastSinglePointer || p
+        const dxClient = p.x - last.x
+        const dyClient = p.y - last.y
+        wrap.__mermaidLastSinglePointer = p
+
+        const { rect } = clientToViewBox(p.x, p.y)
+        const vb = (wrap.__mermaidCurViewBox || getSvgViewBox(svg)).slice()
+        const dx = dxClient * (vb[2] / rect.width)
+        const dy = dyClient * (vb[3] / rect.height)
+        setCurVb([vb[0] - dx, vb[1] - dy, vb[2], vb[3]])
+        return
+      }
+
+      // Pinch zoom with 2 pointers
+      if (state.pointers.size === 2 && state.startVb && state.startDist > 0) {
+        const pts = [...state.pointers.values()]
+        const dx = pts[0].x - pts[1].x
+        const dy = pts[0].y - pts[1].y
+        const dist = Math.hypot(dx, dy)
+        if (!dist) return
+        const factor = state.startDist / dist // dist bigger => zoom in (viewBox smaller)
+
+        const cx = (pts[0].x + pts[1].x) / 2
+        const cy = (pts[0].y + pts[1].y) / 2
+        const centerClient = { x: cx, y: cy }
+
+        const pxy = clientToViewBox(centerClient.x, centerClient.y)
+        const cpx = pxy.x
+        const cpy = pxy.y
+
+        const vb = zoomAtPoint(state.startVb, factor, cpx, cpy)
+        setCurVb(vb)
+      }
+    }
+
+    const onPointerUpOrCancel = e => {
+      state.pointers.delete(e.pointerId)
+      if (state.pointers.size === 0) {
+        state.startVb = null
+        state.startDist = 0
+        state.startCenter = null
+        wrap.__mermaidLastSinglePointer = null
+      } else if (state.pointers.size === 1) {
+        // reset single pointer baseline to avoid jump
+        wrap.__mermaidLastSinglePointer = [...state.pointers.values()][0]
+      }
+    }
+
+    // Wheel zoom (mouse/trackpad)
+    const onWheel = e => {
+      // ctrlKey on mac trackpad pinch; we treat both as zoom
+      e.preventDefault()
+      const delta = e.deltaY
+      const zoomFactor = delta > 0 ? 1.1 : 0.9
+      const { x, y } = clientToViewBox(e.clientX, e.clientY)
+      const vb = (wrap.__mermaidCurViewBox || getSvgViewBox(svg)).slice()
+      setCurVb(zoomAtPoint(vb, zoomFactor, x, y))
+    }
+
+    const onDblClick = () => {
+      const init = wrap.__mermaidInitViewBox
+      if (!init) return
+      wrap.__mermaidCurViewBox = init.slice()
+      setSvgViewBox(svg, init)
+    }
+
+    svg.addEventListener('pointerdown', onPointerDown)
+    svg.addEventListener('pointermove', onPointerMove)
+    svg.addEventListener('pointerup', onPointerUpOrCancel)
+    svg.addEventListener('pointercancel', onPointerUpOrCancel)
+    svg.addEventListener('wheel', onWheel, { passive: false })
+    svg.addEventListener('dblclick', onDblClick)
+  }
+
+  const runMermaid = ele => {
+    window.loadMermaid = true
+    const theme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default'
+
+    ele.forEach((item, index) => {
+      const mermaidSrc = item.firstElementChild
+
+      // Clear old render (themeChange/pjax will rerun)
+      const oldSvg = item.querySelector('svg')
+      if (oldSvg) oldSvg.remove()
+      item.__mermaidGestureBound = false
+
+      const config = mermaidSrc.dataset.config ? JSON.parse(mermaidSrc.dataset.config) : {}
+      if (!config.theme) {
+        config.theme = theme
+      }
+      const mermaidThemeConfig = `%%{init: ${JSON.stringify(config)}}%%\n`
+      const mermaidID = `mermaid-${index}`
+      const mermaidDefinition = mermaidThemeConfig + mermaidSrc.textContent
+
+      const renderFn = mermaid.render(mermaidID, mermaidDefinition)
+      const renderMermaid = svg => {
+        mermaidSrc.insertAdjacentHTML('afterend', svg)
+        if (true) initMermaidGestures(item)
+        item.__mermaidOriginalSvg = svg
+        if (true) attachMermaidViewerButton(item)
+      }
+
+
+      // mermaid v9 and v10 compatibility
+      typeof renderFn === 'string' ? renderMermaid(renderFn) : renderFn.then(({ svg }) => renderMermaid(svg))
+    })
+  }
+
+  const codeToMermaid = () => {
+    const codeMermaidEle = document.querySelectorAll('pre > code.mermaid')
+    if (codeMermaidEle.length === 0) return
+
+    codeMermaidEle.forEach(ele => {
+      const preEle = document.createElement('pre')
+      preEle.className = 'mermaid-src'
+      preEle.hidden = true
+      preEle.textContent = ele.textContent
+      const newEle = document.createElement('div')
+      newEle.className = 'mermaid-wrap'
+      newEle.appendChild(preEle)
+      ele.parentNode.replaceWith(newEle)
+    })
+  }
+
+  const loadMermaid = () => {
+    if (true) codeToMermaid()
+    const $mermaid = document.querySelectorAll('#article-container .mermaid-wrap')
+    if ($mermaid.length === 0) return
+
+    const runMermaidFn = () => runMermaid($mermaid)
+    btf.addGlobalFn('themeChange', runMermaidFn, 'mermaid')
+    window.loadMermaid ? runMermaidFn() : btf.getScript('https://cdn.jsdelivr.net/npm/mermaid@11.15.0/dist/mermaid.min.js').then(runMermaidFn)
+  }
+
+  btf.addGlobalFn('encrypt', loadMermaid, 'mermaid')
+  window.pjax ? loadMermaid() : document.addEventListener('DOMContentLoaded', loadMermaid)
+})()</script></div><script id="click-heart" src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/dist/click-heart.min.js" async="async" mobile="true"></script><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script><div id="local-search"><div class="search-dialog"><nav class="search-nav"><span class="search-dialog-title">搜索</span><i class="fas fa-spinner fa-pulse" id="loading-status" hidden="hidden"></i><button class="search-close-button"><i class="fas fa-times"></i></button></nav><div class="text-center" id="loading-database"><i class="fas fa-spinner fa-pulse"></i><span>  数据加载中</span></div><div class="local-search-input"><input placeholder="输入关键词…" type="text"/></div><hr/><div id="local-search-results"></div><div class="ais-Pagination" id="local-search-pagination" style="display:none;"><ul class="ais-Pagination-list"></ul></div><div id="local-search-stats"></div></div><div id="search-mask"></div><script src="/js/search/local-search.js?v=5.5.5"></script></div></div></body></html>
