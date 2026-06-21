@@ -1,0 +1,693 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>C++学习笔记（5）——标准模板库STL之概述 | Mount256的博客</title><meta name="author" content="Mount256"><meta name="copyright" content="Mount256"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="STL指的是C++的标准模板库（Standard Template Library，STL），本篇将介绍STL的基本概念。 一、容器 容器是用于存放数据的类模板。我们在使用容器类模板时，要将它实例化，指明容器中存放的元素是什么类型。 1.容器的分类 容器有以下几种分类： （1）顺序容器 元素在容器中的位置与元素的值无关，你想在什么位置插入元素就在什么位置插入。顺序容器分为三种：可变长动态数组vec">
+<meta property="og:type" content="article">
+<meta property="og:title" content="C++学习笔记（5）——标准模板库STL之概述">
+<meta property="og:url" content="http://mount256.github.io/posts/2384b33f.html">
+<meta property="og:site_name" content="Mount256的博客">
+<meta property="og:description" content="STL指的是C++的标准模板库（Standard Template Library，STL），本篇将介绍STL的基本概念。 一、容器 容器是用于存放数据的类模板。我们在使用容器类模板时，要将它实例化，指明容器中存放的元素是什么类型。 1.容器的分类 容器有以下几种分类： （1）顺序容器 元素在容器中的位置与元素的值无关，你想在什么位置插入元素就在什么位置插入。顺序容器分为三种：可变长动态数组vec">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://mount256.github.io/img/avatar.png">
+<meta property="article:published_time" content="2020-07-27T16:00:00.000Z">
+<meta property="article:modified_time" content="2026-06-19T16:00:00.000Z">
+<meta property="article:author" content="Mount256">
+<meta property="article:tag" content="STL">
+<meta property="article:tag" content="容器">
+<meta property="article:tag" content="迭代器">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://mount256.github.io/img/avatar.png"><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "C++学习笔记（5）——标准模板库STL之概述",
+  "url": "http://mount256.github.io/posts/2384b33f.html",
+  "image": "http://mount256.github.io/img/avatar.png",
+  "datePublished": "2020-07-27T16:00:00.000Z",
+  "dateModified": "2026-06-19T16:00:00.000Z",
+  "author": [
+    {
+      "@type": "Person",
+      "name": "Mount256",
+      "url": "http://mount256.github.io"
+    }
+  ]
+}</script><link rel="shortcut icon" href="/img/favicon.png"><link rel="canonical" href="http://mount256.github.io/posts/2384b33f.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css?v=5.5.5"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@7.2.0/css/all.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/ui@6.1.14/dist/fancybox/fancybox.min.css" media="print" onload="this.media='all'"><script>
+    (() => {
+      
+    const saveToLocal = {
+      set: (key, value, ttl) => {
+        if (!ttl) return
+        const expiry = Date.now() + ttl * 86400000
+        localStorage.setItem(key, JSON.stringify({ value, expiry }))
+      },
+      get: key => {
+        const itemStr = localStorage.getItem(key)
+        if (!itemStr) return undefined
+        const { value, expiry } = JSON.parse(itemStr)
+        if (Date.now() > expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return value
+      }
+    }
+
+    window.btf = {
+      saveToLocal,
+      getScript: (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        Object.entries(attr).forEach(([key, val]) => script.setAttribute(key, val))
+        script.onload = script.onreadystatechange = () => {
+          if (!script.readyState || /loaded|complete/.test(script.readyState)) resolve()
+        }
+        script.onerror = reject
+        document.head.appendChild(script)
+      }),
+      getCSS: (url, id) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onload = link.onreadystatechange = () => {
+          if (!link.readyState || /loaded|complete/.test(link.readyState)) resolve()
+        }
+        link.onerror = reject
+        document.head.appendChild(link)
+      }),
+      addGlobalFn: (key, fn, name = false, parent = window) => {
+        if (!false && key.startsWith('pjax')) return
+        const globalFn = parent.globalFn || {}
+        globalFn[key] = globalFn[key] || {}
+        globalFn[key][name || Object.keys(globalFn[key]).length] = fn
+        parent.globalFn = globalFn
+      }
+    }
+  
+      
+      const activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      const activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+
+      btf.activateDarkMode = activateDarkMode
+      btf.activateLightMode = activateLightMode
+
+      const theme = saveToLocal.get('theme')
+    
+          theme === 'dark' ? activateDarkMode() : theme === 'light' ? activateLightMode() : null
+        
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        document.documentElement.classList.toggle('hide-aside', asideStatus === 'hide')
+      }
+    
+      
+    const detectApple = () => {
+      if (/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)) {
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+  
+    })()
+  </script><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: {"path":"/search.xml","preload":false,"top_n_per_article":1,"unescape":false,"pagination":{"enable":false,"hitsPerPage":8},"languages":{"hits_empty":"未找到符合您查询的内容：${query}","hits_stats":"共找到 ${hits} 篇文章"}},
+  translate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false,"highlightFullpage":false,"highlightMacStyle":false},
+  copy: {
+    success: '复制成功',
+    error: '复制失败',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'fancybox',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid@4.13.0/dist/infinitegrid.min.js',
+    buttonText: '加载更多'
+  },
+  isPhotoFigcaption: false,
+  islazyloadPlugin: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'C++学习笔记（5）——标准模板库STL之概述',
+  isHighlightShrink: false,
+  isToc: true,
+  pageType: 'post'
+}</script><!-- hexo injector head_end start -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.css">
+<!-- hexo injector head_end end --><meta name="generator" content="Hexo 8.1.2"></head><body><div class="bg-animation" id="web_bg" style="background-color: #87CEEB;"></div><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img text-center"><img src="/img/avatar.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data text-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">52</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">61</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">13</div></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 链接</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header" style="background-image: url(/img/top.jpg);"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><span class="site-name">Mount256的博客</span></a><a class="nav-page-title" href="/"><span class="site-name">C++学习笔记（5）——标准模板库STL之概述</span><span class="site-name"><i class="fa-solid fa-circle-arrow-left"></i><span>  返回首页</span></span></a></span><div id="menus"><div id="search-button"><span class="site-page social-icon search"><i class="fas fa-search fa-fw"></i><span> 搜索</span></span></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 链接</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于</span></a></div></div><div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div></div></nav><div id="post-info"><h1 class="post-title">C++学习笔记（5）——标准模板库STL之概述</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2020-07-27T16:00:00.000Z" title="发表于 2020-07-28 00:00:00">2020-07-28</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2026-06-19T16:00:00.000Z" title="更新于 2026-06-20 00:00:00">2026-06-20</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/C%E5%92%8CC/">C和C++</a><i class="fas fa-angle-right post-meta-separator"></i><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/C%E5%92%8CC/%E6%B3%9B%E5%9E%8B%E7%BC%96%E7%A8%8B/">泛型编程</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-wordcount"><i class="far fa-file-word fa-fw post-meta-icon"></i><span class="post-meta-label">总字数:</span><span class="word-count">2.2k</span><span class="post-meta-separator">|</span><i class="far fa-clock fa-fw post-meta-icon"></i><span class="post-meta-label">阅读时长:</span><span>7分钟</span></span><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title=""><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">浏览量:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="container post-content" id="article-container"><p>STL指的是C++的标准模板库（Standard Template Library，STL），本篇将介绍STL的基本概念。</p>
+<h2 id="一、容器">一、容器</h2>
+<p>容器是用于存放数据的类模板。我们在使用容器类模板时，要将它实例化，指明容器中存放的元素是什么类型。</p>
+<h3 id="1-容器的分类">1.容器的分类</h3>
+<p>容器有以下几种分类：</p>
+<p><strong>（1）顺序容器</strong></p>
+<p>元素在容器中的位置与元素的值无关，你想在什么位置插入元素就在什么位置插入。顺序容器分为三种：可变长动态数组vector、双端队列deque、双向链表list。</p>
+<p><strong>（2）关联容器</strong></p>
+<p>关联容器内的元素是排好序的，它是按照某种规则将元素插入到合适的位置上。因为是排好序的，所以关联容器在查找时具有非常好的性能。关联容器有四种：set、multiset、map、multimap。</p>
+<p><strong>（3）容器适配器</strong></p>
+<p>STL还在两类容器的基础上屏蔽了一部分功能，突出或增加另一部分的功能，实现了容器适配器。容器适配器分为三种：栈stack、队列queue、优先级队列priority_queue。</p>
+<h3 id="2-容器对象的定义方法">2.容器对象的定义方法</h3>
+<p>如何定义一个容器对象呢？跟以前所说的模板类似，写成例如<code>vector&lt;int&gt; a;</code>就行了，其中<code>vector&lt;int&gt;</code>叫容器类的名字。这样就定义了一个容器对象a。</p>
+<h3 id="3-容器的成员函数">3.容器的成员函数</h3>
+<p>所有容器有以下成员函数：</p>
+<table>
+<thead>
+<tr>
+<th>成员函数</th>
+<th>用途</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>size()</td>
+<td>返回容器对象中元素的个数，返回值类型是int</td>
+</tr>
+<tr>
+<td>empty()</td>
+<td>判断容器对象是否为空，返回值类型是bool</td>
+</tr>
+<tr>
+<td>顺序容器和关联容器还有以下成员函数：</td>
+<td></td>
+</tr>
+<tr>
+<td>成员函数</td>
+<td>用途</td>
+</tr>
+<tr>
+<td>–</td>
+<td>–</td>
+</tr>
+<tr>
+<td>begin()</td>
+<td>返回指向容器中第一个元素的迭代器</td>
+</tr>
+<tr>
+<td>end()</td>
+<td>返回指向容器中<strong>最后一个元素后面的位置</strong>的迭代器</td>
+</tr>
+<tr>
+<td>rbegin()</td>
+<td>返回指向容器中最后一个元素的反向迭代器</td>
+</tr>
+<tr>
+<td>rend()</td>
+<td>返回指向容器中<strong>第一个元素前面的位置</strong>的迭代器</td>
+</tr>
+<tr>
+<td>erase(…)</td>
+<td>从容器中删除一个或几个元素</td>
+</tr>
+<tr>
+<td>clear()</td>
+<td>从容器中删除所有元素</td>
+</tr>
+<tr>
+<td>顺序容器还有以下成员函数：</td>
+<td></td>
+</tr>
+<tr>
+<td>成员函数</td>
+<td>用途</td>
+</tr>
+<tr>
+<td>–</td>
+<td>–</td>
+</tr>
+<tr>
+<td>front()</td>
+<td>返回容器中第一个元素的引用</td>
+</tr>
+<tr>
+<td>back()</td>
+<td>返回容器中最后一个元素的引用</td>
+</tr>
+<tr>
+<td>push_back()</td>
+<td>在容器末尾增加新元素</td>
+</tr>
+<tr>
+<td>pop_back()</td>
+<td>删除容器末尾的元素</td>
+</tr>
+<tr>
+<td>insert(…)</td>
+<td>插入一个或多个元素</td>
+</tr>
+</tbody>
+</table>
+<h3 id="4-容器对象的比较">4.容器对象的比较</h3>
+<p>任何两个容器对象，只要类型相同，就可以用大于号、小于号、…等进行词典一样的比较运算。<strong>总之就是跟字符串的比较方式一样就是了！</strong></p>
+<h2 id="二、迭代器">二、迭代器</h2>
+<p>要访问顺序容器和关联容器中的元素，就要用到迭代器了。迭代器与指针比较类似，指到哪就能访问哪的元素。</p>
+<h3 id="1-迭代器的定义方法">1.迭代器的定义方法</h3>
+<p>迭代器分为四种：</p>
+<ul>
+<li>正向迭代器：格式为<code>容器类名::iterator 迭代器名;</code>，例如<code>vector&lt;int&gt;::iterator i;</code>，这是一个可变长数组的正向迭代器，下面的类似</li>
+<li>反向迭代器：例如<code>vector&lt;int&gt;::reverse_iterator i;</code></li>
+<li>常量正向迭代器：例如<code>vector&lt;int&gt;::const_iterator i;</code>，这个只能访问容器内的元素而不能修改，下同</li>
+<li>常量反向迭代器：例如<code>vector&lt;int&gt;::const_reverse_iterator i;</code></li>
+</ul>
+<p>访问迭代器指向的元素的格式：<code>* 迭代器名</code>。假如i是一个非常量正向迭代器，则访问方式为：<code>* i</code>。对于非常量的迭代器可以修改其元素变量的值，例如：<code>* i++</code>能修改元素的值。而<code>i++</code>表示迭代器指向后面一个元素了。</p>
+<h3 id="2-迭代器的功能分类">2.迭代器的功能分类</h3>
+<p>迭代器的功能分类，按功能强弱分为输入、输出、正向、双向、随机访问，我们只说最常用的三种：</p>
+<p><strong>（1）正向迭代器</strong></p>
+<p>假设p和q是一个正向迭代器且同类型，则它可以实现：<code>++p</code>，<code>p++</code>，<code>*p</code>，<code>p = q</code>。还可以实现比较：<code>p == q</code>，<code>p !=  q</code>。注意，&lt;、&gt;这些符号不能实现！。</p>
+<p><strong>（2）双向迭代器</strong></p>
+<p>双向迭代器具有正向迭代器的全部功能。除此之外，还能实现：<code>--p</code>，<code>p--</code>。<code>p--</code>就是朝着与<code>p++</code>相反的方向进行移动。</p>
+<p><strong>（3）随机访问迭代器</strong></p>
+<p>随机访问迭代器具有双向迭代器的全部功能。除此之外，还能实现这些操作：<code>p += i</code>，p往后移动一个元素；<code>p + i</code>，返回p后面第i个元素的迭代器；<code>p[i]</code>，返回p后面第i个元素的引用。<code>p -= i</code>和<code>p -  i</code>是相似的，不再重复。</p>
+<p>除此之外，两个随机访问迭代器还能进行运算符比较操作（大于小于这些也可以实现了）。它们还能进行相减操作：<code>q - p</code>，含义是q指向的元素序号和p指向的元素序号之差。</p>
+<p>不同容器所支持的迭代器功能不同：</p>
+<table>
+<thead>
+<tr>
+<th>容器</th>
+<th>迭代器功能</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>vector</td>
+<td>随机访问</td>
+</tr>
+<tr>
+<td>deque</td>
+<td>随机访问</td>
+</tr>
+<tr>
+<td>list</td>
+<td>双向</td>
+</tr>
+<tr>
+<td>set/multiset</td>
+<td>双向</td>
+</tr>
+<tr>
+<td>map/multimap</td>
+<td>双向</td>
+</tr>
+<tr>
+<td>stack</td>
+<td>不支持迭代器</td>
+</tr>
+<tr>
+<td>queue</td>
+<td>不支持迭代器</td>
+</tr>
+<tr>
+<td>priority_queue</td>
+<td>不支持迭代器</td>
+</tr>
+</tbody>
+</table>
+<h3 id="3-迭代器的辅助函数">3.迭代器的辅助函数</h3>
+<p>注意，调用下面的函数模板需要头文件algorithm。</p>
+<table>
+<thead>
+<tr>
+<th>函数模板</th>
+<th>用途</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>advance(p, n)</td>
+<td>使迭代器p向前或向后移动n个元素</td>
+</tr>
+<tr>
+<td>distance(p, q)</td>
+<td>计算两个迭代器的距离，即迭代器p经过多少次++操作后和迭代器q相等</td>
+</tr>
+<tr>
+<td>iter_swap(p, q)</td>
+<td>交换迭代器p和q指向的值</td>
+</tr>
+</tbody>
+</table>
+<h1>三、算法</h1>
+<p>STL提供各种容器中通用的算法，其实质是函数模板。</p>
+<p>算法可以操作容器，也可以操作数组。</p>
+<p>如果算法操作的是一个容器，那么操作的是容器内的某个区间，这要用到两个参数：区间的起点元素a的迭代器和终点元素b后面位置的迭代器，其实质就是一个左闭右开的区间[a, b)。</p>
+<p>有的算法会返回一个迭代器，有的返回是一个数值。</p>
+<p>想知道有什么算法，或者算法怎么用，可以自己上网查，或者查手册。</p>
+<h2 id="四、函数对象">四、函数对象</h2>
+<p>C++的函数对象就好比C的函数指针，如果一个类将“（）”运算符重载为成员函数，这个类就称为函数对象类，这个类的对象就是函数对象。总之，函数对象与函数指针很类似。例如：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span><span class="string">&lt;iostream&gt;</span></span></span><br><span class="line"><span class="keyword">using</span> <span class="keyword">namespace</span> std;</span><br><span class="line"></span><br><span class="line"><span class="keyword">template</span> &lt;<span class="keyword">class</span> <span class="title class_">T</span>&gt;</span><br><span class="line"><span class="keyword">class</span> <span class="title class_">Accumlate</span>&#123;</span><br><span class="line">	<span class="keyword">private</span>:</span><br><span class="line">		T init;</span><br><span class="line">	<span class="keyword">public</span>:</span><br><span class="line">		<span class="built_in">Accumlate</span>(T _init):<span class="built_in">init</span>(_init)&#123;&#125;</span><br><span class="line">		<span class="function">T <span class="title">operator</span><span class="params">()</span> <span class="params">(T a)</span></span></span><br><span class="line"><span class="function">		</span>&#123;</span><br><span class="line">			init = init + a;</span><br><span class="line">			<span class="keyword">return</span> init;</span><br><span class="line">		&#125;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">int</span> <span class="title">main</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="function">Accumlate&lt;<span class="type">int</span>&gt; <span class="title">accumlate_1</span><span class="params">(<span class="number">10</span>)</span></span>;</span><br><span class="line">	cout&lt;&lt;<span class="built_in">accumlate_1</span>(<span class="number">6</span>)&lt;&lt;<span class="string">&quot; &quot;</span>;</span><br><span class="line">	cout&lt;&lt;<span class="built_in">accumlate_1</span>(<span class="number">10</span>)&lt;&lt;endl;</span><br><span class="line">	</span><br><span class="line">	<span class="function">Accumlate&lt;<span class="type">double</span>&gt; <span class="title">accumlate_2</span><span class="params">(<span class="number">1.5</span>)</span></span>;</span><br><span class="line">	cout&lt;&lt;<span class="built_in">accumlate_2</span>(<span class="number">3.5</span>)&lt;&lt;<span class="string">&quot; &quot;</span>;</span><br><span class="line">	cout&lt;&lt;<span class="built_in">accumlate_2</span>(<span class="number">4.5</span>)&lt;&lt;endl;</span><br><span class="line">	<span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>程序输出结果：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="number">16</span> <span class="number">26</span></span><br><span class="line"><span class="number">5</span> <span class="number">9.5</span></span><br></pre></td></tr></table></figure>
+<p>我们可以看到，这个函数对象做了一个类似累加的工作，比如 <code>accumlate_1</code>，其初始值为10，通过反复调用<code>accumlate_1.operator()</code>函数，达到了累加的效果。值得注意的是，这个程序我定义了两个不同的函数对象，初始值和类型都不同，这有点类似于函数模板——但有所不同的是，函数模板替换的是类型，而函数对象“替换”的是值和类型，功能更加强大。</p>
+<p>普通函数能不能做到像函数对象那样能初始化不同的值？能！但是比较麻烦，而且不易维护程序。对于普通函数有两种办法：</p>
+<p>一、把初始化的参数写进形参内，例如上面程序我可以写成<code>T accumlate(T init, T a)</code>，这样做似乎代码量减少了，但是如果函数的初始化变量很多，那这个形参就变得又臭又长，而且增加了阅读量，每次调用都要写那么一长串。为了达到累加的效果，你不得不再定义一个静态变量，把init的值赋值给它。</p>
+<p>二、直接定义一个全局变量用来记录累加的和。这个主意更加不妙，因为这个全局变量与累加函数分离了，不好维护，也不符合逻辑，而且如果你想像上面的程序一样——A数据累加在一起，B数据累加在一起，而且两者互不干扰——你不得不再设置一个全局变量，既浪费空间，又减慢效率。</p>
+<p>因此，函数对象的成员函数可以根据对象内部的不同状态来执行不同的操作，而普通函数无法做到这一点。毫无疑问，函数对象的功能比普通函数更强大。</p>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>文章作者: </span><span class="post-copyright-info"><a href="http://mount256.github.io">Mount256</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>文章链接: </span><span class="post-copyright-info"><a href="http://mount256.github.io/posts/2384b33f.html">http://mount256.github.io/posts/2384b33f.html</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来源 <a href="http://mount256.github.io" target="_blank">Mount256的博客</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/STL/">STL</a><a class="post-meta__tags" href="/tags/%E5%AE%B9%E5%99%A8/">容器</a><a class="post-meta__tags" href="/tags/%E8%BF%AD%E4%BB%A3%E5%99%A8/">迭代器</a></div><div class="post-share"><div class="social-share" data-image="/img/avatar.png" data-sites="facebook,x,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><a class="pagination-related" href="/posts/113d1622.html" title="【POJ C++题目】魔兽世界之一：备战"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info"><div class="info-1"><div class="info-item-1">上一篇</div><div class="info-item-2">【POJ C++题目】魔兽世界之一：备战</div></div><div class="info-2"><div class="info-item-1">一、题目描述 描述 魔兽世界的西面是红魔军的司令部，东面是蓝魔军的司令部。两个司令部之间是依次排列的若干城市。 红司令部，City 1，City 2，……，City n，蓝司令部 两军的司令部都会制造武士。武士一共有 dragon 、ninja、iceman、lion、wolf 五种。每种武士都有编号、生命值、攻击力这三种属性。 双方的武士编号都是从1开始计算。红方制造出来的第n个武士，编号就是n。同样，蓝方制造出来的第n个武士，编号也是n。 武士在刚降生的时候有一个生命值。 在每个整点，双方的司令部中各有一个武士降生。 红方司令部按照iceman、lion、wolf、ninja、dragon的顺序循环制造武士。 蓝方司令部按照lion、dragon、ninja、iceman、wolf的顺序循环制造武士。 制造武士需要生命元。 制造一个初始生命值为m的武士，司令部中的生命元就要减少m个。 如果司令部中的生命元不足以制造某个按顺序应该制造的武士，那么司令部就试图制造下一个。如果所有武士都不能制造了，则司令部停止制造武士。 给定一个时间，和双方司令部的初始生命元数目，要求你将从0点0...</div></div></div></a><a class="pagination-related" href="/posts/9d678393.html" title="C++学习笔记（4）——模板"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-right"><div class="info-1"><div class="info-item-1">下一篇</div><div class="info-item-2">C++学习笔记（4）——模板</div></div><div class="info-2"><div class="info-item-1">一、函数模板 函数模板格式（其中class可以替换为typename）： 12345template &lt;class 类型参数1, class 类型参数2, ...&gt;返回值类型 模板名(参数名)&#123;	函数体;&#125; 例如： 123456789101112131415161718192021222324252627282930313233#include&lt;iostream&gt;using namespace std;template &lt;typename T&gt; //typename可以替换为classvoid cswap(T &amp;x, T &amp;y) //交换数值&#123;	T tmp = x;	x = y;	y = tmp;&#125;template &lt;typename T&gt;T test(T o)&#123;	return o+1;&#125;int main()&#123;	int n = 1, m = 2;	cswap(n, m); //模板被替换为cswap(int &amp;x, int &amp;y)，...</div></div></div></a></nav><div class="relatedPosts"><div class="headline"><i class="fas fa-thumbs-up fa-fw"></i><span>相关推荐</span></div><div class="relatedPosts-list"><a class="pagination-related" href="/posts/e5d3ed0b.html" title="C++学习笔记（6）——标准模板库STL之vector和list"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2020-08-05</div><div class="info-item-2">C++学习笔记（6）——标准模板库STL之vector和list</div></div><div class="info-2"><div class="info-item-1">一、动态数组vector 1.初始化 初始化为空：vector&lt;int&gt; v; 用另一个vector来初始化，即构造一个副本：vector&lt;int&gt; v(v1); 大小为n，并全部初始化为元素i ：vector&lt;int&gt; v(n, i); 构造大小为n的容器，没有初始化里面的元素：vector&lt;int&gt; (n); 构造大小为4，并初始化里面的各个元素：vector&lt;int&gt; {1,2,3,4}; 数组a[0]到a[5]的内容放进v：vector&lt;int&gt; v(a, a+5); 2.元素个数 v.size(); //返回容器中元素的个数，返回类型是int v.capacity(); //返回容器中的容量，容器的预留空间也会计算在内 3.添加/插入元素 v.push_back(n); //将n加到容器末尾 v.insert(i, n); //将n插入到迭代器i指向的位置，并返回i v.insert(i, i_first, i_end); //将其他容器上的区间[i_first,i_end)中的元素插入到迭代器i指...</div></div></div></a><a class="pagination-related" href="/posts/50e8678c.html" title="C++学习笔记（7）——标准模板库STL之set和map"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2020-08-06</div><div class="info-item-2">C++学习笔记（7）——标准模板库STL之set和map</div></div><div class="info-2"><div class="info-item-1">零、pair类模板 pair与python中字典的键值对非常像。在C++中，pair的定义是： 12345template &lt;typename T1, typename T2&gt;struct pair&#123;	T1 first;	T2 second;	...下面都是各种构造函数重载版本，不写了 可以不写参数：pair&lt;string, double&gt; p 可以写参数（常用）：pair&lt;string, double&gt; p1(&quot;xiaoming&quot;, 78) 可以这样初始化：pair&lt;string, double&gt; p2(pair&lt;string, double&gt;(&quot;xiaoming&quot;, 78))，当这样写的时候，其实是用了定义中的函数模板，参数必须是pair模板类对象的引用。 也可以这样初始化：pair&lt;string, double&gt; p3 = make_pair(&quot;xiaoming&quot;, 78) 访问pair对象的“键”（Key）：p.first 访问pa...</div></div></div></a></div></div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info text-center"><div class="avatar-img"><img src="/img/avatar.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info-name">Mount256</div><div class="author-info-description">记录生活</div><div class="site-data"><a href="/archives/"><div class="headline">文章</div><div class="length-num">52</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">61</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">13</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/Mount256"><i class="fab fa-github"></i><span>Follow Me</span></a></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">暂无公告。</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%80%E3%80%81%E5%AE%B9%E5%99%A8"><span class="toc-text">一、容器</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-%E5%AE%B9%E5%99%A8%E7%9A%84%E5%88%86%E7%B1%BB"><span class="toc-text">1.容器的分类</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-%E5%AE%B9%E5%99%A8%E5%AF%B9%E8%B1%A1%E7%9A%84%E5%AE%9A%E4%B9%89%E6%96%B9%E6%B3%95"><span class="toc-text">2.容器对象的定义方法</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-%E5%AE%B9%E5%99%A8%E7%9A%84%E6%88%90%E5%91%98%E5%87%BD%E6%95%B0"><span class="toc-text">3.容器的成员函数</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-%E5%AE%B9%E5%99%A8%E5%AF%B9%E8%B1%A1%E7%9A%84%E6%AF%94%E8%BE%83"><span class="toc-text">4.容器对象的比较</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%8C%E3%80%81%E8%BF%AD%E4%BB%A3%E5%99%A8"><span class="toc-text">二、迭代器</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-%E8%BF%AD%E4%BB%A3%E5%99%A8%E7%9A%84%E5%AE%9A%E4%B9%89%E6%96%B9%E6%B3%95"><span class="toc-text">1.迭代器的定义方法</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-%E8%BF%AD%E4%BB%A3%E5%99%A8%E7%9A%84%E5%8A%9F%E8%83%BD%E5%88%86%E7%B1%BB"><span class="toc-text">2.迭代器的功能分类</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-%E8%BF%AD%E4%BB%A3%E5%99%A8%E7%9A%84%E8%BE%85%E5%8A%A9%E5%87%BD%E6%95%B0"><span class="toc-text">3.迭代器的辅助函数</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link"><span class="toc-text">三、算法</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%9B%9B%E3%80%81%E5%87%BD%E6%95%B0%E5%AF%B9%E8%B1%A1"><span class="toc-text">四、函数对象</span></a></li></ol></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/19615f2a.html" title="Front-matter 示例及页面测试">Front-matter 示例及页面测试</a><time datetime="2026-06-11T09:05:49.000Z" title="发表于 2026-06-11 17:05:49">2026-06-11</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/4a17b156.html" title="Hello World">Hello World</a><time datetime="2026-06-10T09:45:35.762Z" title="发表于 2026-06-10 17:45:35">2026-06-10</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/bd726e3.html" title="常数变易法求解非齐次线性微分方程">常数变易法求解非齐次线性微分方程</a><time datetime="2024-06-17T16:00:00.000Z" title="发表于 2024-06-18 00:00:00">2024-06-18</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/dd6f3f94.html" title="定积分的几何应用">定积分的几何应用</a><time datetime="2023-11-04T16:00:00.000Z" title="发表于 2023-11-05 00:00:00">2023-11-05</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/a82b41fa.html" title="合同变换法">合同变换法</a><time datetime="2023-11-02T16:00:00.000Z" title="发表于 2023-11-03 00:00:00">2023-11-03</time></div></div></div></div></div></div></main><footer id="footer" style="background-image: url(/img/top.jpg);"><div class="footer-other"><div class="footer-copyright"><span class="copyright">&copy;&nbsp;2025 - 2026 By Mount256</span><span class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo 8.1.2</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly 5.5.5</a></span></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="日间和夜间模式切换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js?v=5.5.5"></script><script src="/js/main.js?v=5.5.5"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui@6.1.14/dist/fancybox/fancybox.umd.min.js"></script><div class="js-pjax"><script>(() => {
+  const parseViewBox = viewBox => {
+    if (!viewBox) return null
+    const parts = viewBox.trim().split(/[\s,]+/).map(n => Number(n))
+    if (parts.length !== 4 || parts.some(n => Number.isNaN(n))) return null
+    return parts
+  }
+
+  const getSvgViewBox = svg => {
+    const attr = parseViewBox(svg.getAttribute('viewBox'))
+    if (attr) return attr
+
+    // Fallback: use bbox to build a viewBox
+    try {
+      const bbox = svg.getBBox()
+      if (bbox && bbox.width && bbox.height) return [bbox.x, bbox.y, bbox.width, bbox.height]
+    } catch (e) {
+      // getBBox may fail on some edge cases; ignore
+    }
+
+    const w = Number(svg.getAttribute('width')) || 0
+    const h = Number(svg.getAttribute('height')) || 0
+    if (w > 0 && h > 0) return [0, 0, w, h]
+    return [0, 0, 100, 100]
+  }
+
+  const setSvgViewBox = (svg, vb) => {
+    svg.setAttribute('viewBox', `${vb[0]} ${vb[1]} ${vb[2]} ${vb[3]}`)
+  }
+
+  const clamp = (v, min, max) => Math.max(min, Math.min(max, v))
+
+  const openSvgInNewTab = ({ source, initViewBox }) => {
+    const getClonedSvg = () => {
+      if (typeof source === 'string') {
+        const template = document.createElement('template')
+        template.innerHTML = source.trim()
+        const svg = template.content.querySelector('svg')
+        return svg ? svg.cloneNode(true) : null
+      }
+      if (source && typeof source.cloneNode === 'function') {
+        return source.cloneNode(true)
+      }
+      return null
+    }
+
+    const clone = getClonedSvg()
+    if (!clone) return
+    if (initViewBox && initViewBox.length === 4) {
+      clone.setAttribute('viewBox', initViewBox.join(' '))
+    }
+    if (!clone.getAttribute('xmlns')) clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg')
+    if (!clone.getAttribute('xmlns:xlink') && clone.outerHTML.includes('xlink:')) {
+      clone.setAttribute('xmlns:xlink', 'http://www.w3.org/1999/xlink')
+    }
+    // inject background to match current theme
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark'
+    const bg = getComputedStyle(document.body).backgroundColor || (isDark ? '#1e1e1e' : '#ffffff')
+    if (!clone.style.background) clone.style.background = bg
+
+    const serializer = new XMLSerializer()
+    const svgSource = serializer.serializeToString(clone)
+    const htmlSource = `<!doctype html><html><head><meta charset="utf-8" />
+      <style>
+        html, body { width: 100%; height: 100%; margin: 0; display: flex; align-items: center; justify-content: center; background: ${bg}; }
+        svg { max-width: 100%; max-height: 100%; height: auto; width: auto; }
+      </style>
+      </head><body>${svgSource}</body></html>`
+    const blob = new Blob([htmlSource], { type: 'text/html;charset=utf-8' })
+    const url = URL.createObjectURL(blob)
+    window.open(url, '_blank', 'noopener')
+    setTimeout(() => URL.revokeObjectURL(url), 30000)
+  }
+
+  const attachMermaidViewerButton = wrap => {
+    let btn = wrap.querySelector('.mermaid-open-btn')
+    if (!btn) {
+      btn = document.createElement('button')
+      btn.type = 'button'
+      btn.className = 'mermaid-open-btn'
+      wrap.appendChild(btn)
+    }
+
+    btn.innerHTML = '<i class="fa fa-search fa-fw" aria-hidden="true"></i>'
+
+    if (!btn.__mermaidViewerBound) {
+      btn.addEventListener('click', e => {
+        e.preventDefault()
+        e.stopPropagation()
+        const svg = wrap.__mermaidOriginalSvg || wrap.querySelector('svg')
+        if (!svg) return
+        const initViewBox = wrap.__mermaidInitViewBox
+        if (typeof svg === 'string') {
+          openSvgInNewTab({ source: svg, initViewBox })
+          return
+        }
+        openSvgInNewTab({ source: svg, initViewBox })
+      })
+      btn.__mermaidViewerBound = true
+    }
+  }
+
+  // Zoom around a point (px, py) in the SVG viewport (in viewBox coordinates)
+  const zoomAtPoint = (vb, factor, px, py) => {
+    const w = vb[2] * factor
+    const h = vb[3] * factor
+    const nx = px - (px - vb[0]) * factor
+    const ny = py - (py - vb[1]) * factor
+    return [nx, ny, w, h]
+  }
+
+  const initMermaidGestures = wrap => {
+    const svg = wrap.querySelector('svg')
+    if (!svg) return
+
+    // Ensure viewBox exists so gestures always work
+    const initVb = getSvgViewBox(svg)
+    wrap.__mermaidInitViewBox = initVb
+    wrap.__mermaidCurViewBox = initVb.slice()
+    setSvgViewBox(svg, initVb)
+
+    // Avoid binding multiple times on themeChange/pjax
+    if (wrap.__mermaidGestureBound) return
+    wrap.__mermaidGestureBound = true
+
+    // Helper: map client (viewport) coordinate -> viewBox coordinate
+    const clientToViewBox = (clientX, clientY) => {
+      const rect = svg.getBoundingClientRect()
+      const vb = wrap.__mermaidCurViewBox || getSvgViewBox(svg)
+      const x = vb[0] + (clientX - rect.left) * (vb[2] / rect.width)
+      const y = vb[1] + (clientY - rect.top) * (vb[3] / rect.height)
+      return { x, y, rect, vb }
+    }
+
+    const state = {
+      pointers: new Map(),
+      startVb: null,
+      startDist: 0,
+      startCenter: null
+    }
+
+    const clampVb = vb => {
+      const init = wrap.__mermaidInitViewBox || vb
+      const minW = init[2] * 0.1
+      const maxW = init[2] * 10
+      const minH = init[3] * 0.1
+      const maxH = init[3] * 10
+      vb[2] = clamp(vb[2], minW, maxW)
+      vb[3] = clamp(vb[3], minH, maxH)
+      return vb
+    }
+
+    const setCurVb = vb => {
+      vb = clampVb(vb)
+      wrap.__mermaidCurViewBox = vb
+      setSvgViewBox(svg, vb)
+    }
+
+    const onPointerDown = e => {
+      // Allow only primary button for mouse
+      if (e.pointerType === 'mouse' && e.button !== 0) return
+      svg.setPointerCapture(e.pointerId)
+      state.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY })
+
+      if (state.pointers.size === 1) {
+        state.startVb = (wrap.__mermaidCurViewBox || getSvgViewBox(svg)).slice()
+      } else if (state.pointers.size === 2) {
+        const pts = [...state.pointers.values()]
+        const dx = pts[0].x - pts[1].x
+        const dy = pts[0].y - pts[1].y
+        state.startDist = Math.hypot(dx, dy)
+        state.startVb = (wrap.__mermaidCurViewBox || getSvgViewBox(svg)).slice()
+        state.startCenter = { x: (pts[0].x + pts[1].x) / 2, y: (pts[0].y + pts[1].y) / 2 }
+      }
+    }
+
+    const onPointerMove = e => {
+      if (!state.pointers.has(e.pointerId)) return
+      state.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY })
+
+      // Pan with 1 pointer
+      if (state.pointers.size === 1 && state.startVb) {
+        const p = [...state.pointers.values()][0]
+        const prev = { x: e.clientX - e.movementX, y: e.clientY - e.movementY }
+        // movementX/Y unreliable on touch, compute from stored last position
+        const last = wrap.__mermaidLastSinglePointer || p
+        const dxClient = p.x - last.x
+        const dyClient = p.y - last.y
+        wrap.__mermaidLastSinglePointer = p
+
+        const { rect } = clientToViewBox(p.x, p.y)
+        const vb = (wrap.__mermaidCurViewBox || getSvgViewBox(svg)).slice()
+        const dx = dxClient * (vb[2] / rect.width)
+        const dy = dyClient * (vb[3] / rect.height)
+        setCurVb([vb[0] - dx, vb[1] - dy, vb[2], vb[3]])
+        return
+      }
+
+      // Pinch zoom with 2 pointers
+      if (state.pointers.size === 2 && state.startVb && state.startDist > 0) {
+        const pts = [...state.pointers.values()]
+        const dx = pts[0].x - pts[1].x
+        const dy = pts[0].y - pts[1].y
+        const dist = Math.hypot(dx, dy)
+        if (!dist) return
+        const factor = state.startDist / dist // dist bigger => zoom in (viewBox smaller)
+
+        const cx = (pts[0].x + pts[1].x) / 2
+        const cy = (pts[0].y + pts[1].y) / 2
+        const centerClient = { x: cx, y: cy }
+
+        const pxy = clientToViewBox(centerClient.x, centerClient.y)
+        const cpx = pxy.x
+        const cpy = pxy.y
+
+        const vb = zoomAtPoint(state.startVb, factor, cpx, cpy)
+        setCurVb(vb)
+      }
+    }
+
+    const onPointerUpOrCancel = e => {
+      state.pointers.delete(e.pointerId)
+      if (state.pointers.size === 0) {
+        state.startVb = null
+        state.startDist = 0
+        state.startCenter = null
+        wrap.__mermaidLastSinglePointer = null
+      } else if (state.pointers.size === 1) {
+        // reset single pointer baseline to avoid jump
+        wrap.__mermaidLastSinglePointer = [...state.pointers.values()][0]
+      }
+    }
+
+    // Wheel zoom (mouse/trackpad)
+    const onWheel = e => {
+      // ctrlKey on mac trackpad pinch; we treat both as zoom
+      e.preventDefault()
+      const delta = e.deltaY
+      const zoomFactor = delta > 0 ? 1.1 : 0.9
+      const { x, y } = clientToViewBox(e.clientX, e.clientY)
+      const vb = (wrap.__mermaidCurViewBox || getSvgViewBox(svg)).slice()
+      setCurVb(zoomAtPoint(vb, zoomFactor, x, y))
+    }
+
+    const onDblClick = () => {
+      const init = wrap.__mermaidInitViewBox
+      if (!init) return
+      wrap.__mermaidCurViewBox = init.slice()
+      setSvgViewBox(svg, init)
+    }
+
+    svg.addEventListener('pointerdown', onPointerDown)
+    svg.addEventListener('pointermove', onPointerMove)
+    svg.addEventListener('pointerup', onPointerUpOrCancel)
+    svg.addEventListener('pointercancel', onPointerUpOrCancel)
+    svg.addEventListener('wheel', onWheel, { passive: false })
+    svg.addEventListener('dblclick', onDblClick)
+  }
+
+  const runMermaid = ele => {
+    window.loadMermaid = true
+    const theme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default'
+
+    ele.forEach((item, index) => {
+      const mermaidSrc = item.firstElementChild
+
+      // Clear old render (themeChange/pjax will rerun)
+      const oldSvg = item.querySelector('svg')
+      if (oldSvg) oldSvg.remove()
+      item.__mermaidGestureBound = false
+
+      const config = mermaidSrc.dataset.config ? JSON.parse(mermaidSrc.dataset.config) : {}
+      if (!config.theme) {
+        config.theme = theme
+      }
+      const mermaidThemeConfig = `%%{init: ${JSON.stringify(config)}}%%\n`
+      const mermaidID = `mermaid-${index}`
+      const mermaidDefinition = mermaidThemeConfig + mermaidSrc.textContent
+
+      const renderFn = mermaid.render(mermaidID, mermaidDefinition)
+      const renderMermaid = svg => {
+        mermaidSrc.insertAdjacentHTML('afterend', svg)
+        if (true) initMermaidGestures(item)
+        item.__mermaidOriginalSvg = svg
+        if (true) attachMermaidViewerButton(item)
+      }
+
+
+      // mermaid v9 and v10 compatibility
+      typeof renderFn === 'string' ? renderMermaid(renderFn) : renderFn.then(({ svg }) => renderMermaid(svg))
+    })
+  }
+
+  const codeToMermaid = () => {
+    const codeMermaidEle = document.querySelectorAll('pre > code.mermaid')
+    if (codeMermaidEle.length === 0) return
+
+    codeMermaidEle.forEach(ele => {
+      const preEle = document.createElement('pre')
+      preEle.className = 'mermaid-src'
+      preEle.hidden = true
+      preEle.textContent = ele.textContent
+      const newEle = document.createElement('div')
+      newEle.className = 'mermaid-wrap'
+      newEle.appendChild(preEle)
+      ele.parentNode.replaceWith(newEle)
+    })
+  }
+
+  const loadMermaid = () => {
+    if (true) codeToMermaid()
+    const $mermaid = document.querySelectorAll('#article-container .mermaid-wrap')
+    if ($mermaid.length === 0) return
+
+    const runMermaidFn = () => runMermaid($mermaid)
+    btf.addGlobalFn('themeChange', runMermaidFn, 'mermaid')
+    window.loadMermaid ? runMermaidFn() : btf.getScript('https://cdn.jsdelivr.net/npm/mermaid@11.15.0/dist/mermaid.min.js').then(runMermaidFn)
+  }
+
+  btf.addGlobalFn('encrypt', loadMermaid, 'mermaid')
+  window.pjax ? loadMermaid() : document.addEventListener('DOMContentLoaded', loadMermaid)
+})()</script></div><script id="click-heart" src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/dist/click-heart.min.js" async="async" mobile="true"></script><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script><div id="local-search"><div class="search-dialog"><nav class="search-nav"><span class="search-dialog-title">搜索</span><i class="fas fa-spinner fa-pulse" id="loading-status" hidden="hidden"></i><button class="search-close-button"><i class="fas fa-times"></i></button></nav><div class="text-center" id="loading-database"><i class="fas fa-spinner fa-pulse"></i><span>  数据加载中</span></div><div class="local-search-input"><input placeholder="输入关键词…" type="text"/></div><hr/><div id="local-search-results"></div><div class="ais-Pagination" id="local-search-pagination" style="display:none;"><ul class="ais-Pagination-list"></ul></div><div id="local-search-stats"></div></div><div id="search-mask"></div><script src="/js/search/local-search.js?v=5.5.5"></script></div></div></body></html>

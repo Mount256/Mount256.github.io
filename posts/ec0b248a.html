@@ -1,0 +1,550 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>C++学习笔记（1）——类和对象 | Mount256的博客</title><meta name="author" content="Mount256"><meta name="copyright" content="Mount256"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="零、C++的指针  动态内存分配实例：  123456789&#x2F;&#x2F;分配出sizeof(int)大小的空间int *p;p &#x3D; new int;*p &#x3D; 5;&#x2F;&#x2F;分配出10*sizeof(int)大小的空间int *q;q &#x3D; new int[10];q[4] &#x3D; 5;  释放动态内存分配实例：  123delete p;delete [] q;delete q; &#x2F;&#x2F;出错！  定义常量指针实例：">
+<meta property="og:type" content="article">
+<meta property="og:title" content="C++学习笔记（1）——类和对象">
+<meta property="og:url" content="http://mount256.github.io/posts/ec0b248a.html">
+<meta property="og:site_name" content="Mount256的博客">
+<meta property="og:description" content="零、C++的指针  动态内存分配实例：  123456789&#x2F;&#x2F;分配出sizeof(int)大小的空间int *p;p &#x3D; new int;*p &#x3D; 5;&#x2F;&#x2F;分配出10*sizeof(int)大小的空间int *q;q &#x3D; new int[10];q[4] &#x3D; 5;  释放动态内存分配实例：  123delete p;delete [] q;delete q; &#x2F;&#x2F;出错！  定义常量指针实例：">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://mount256.github.io/img/avatar.png">
+<meta property="article:published_time" content="2020-07-18T16:00:00.000Z">
+<meta property="article:modified_time" content="2026-06-19T16:00:00.000Z">
+<meta property="article:author" content="Mount256">
+<meta property="article:tag" content="OOP">
+<meta property="article:tag" content="构造函数">
+<meta property="article:tag" content="析构函数">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://mount256.github.io/img/avatar.png"><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "C++学习笔记（1）——类和对象",
+  "url": "http://mount256.github.io/posts/ec0b248a.html",
+  "image": "http://mount256.github.io/img/avatar.png",
+  "datePublished": "2020-07-18T16:00:00.000Z",
+  "dateModified": "2026-06-19T16:00:00.000Z",
+  "author": [
+    {
+      "@type": "Person",
+      "name": "Mount256",
+      "url": "http://mount256.github.io"
+    }
+  ]
+}</script><link rel="shortcut icon" href="/img/favicon.png"><link rel="canonical" href="http://mount256.github.io/posts/ec0b248a.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css?v=5.5.5"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@7.2.0/css/all.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/ui@6.1.14/dist/fancybox/fancybox.min.css" media="print" onload="this.media='all'"><script>
+    (() => {
+      
+    const saveToLocal = {
+      set: (key, value, ttl) => {
+        if (!ttl) return
+        const expiry = Date.now() + ttl * 86400000
+        localStorage.setItem(key, JSON.stringify({ value, expiry }))
+      },
+      get: key => {
+        const itemStr = localStorage.getItem(key)
+        if (!itemStr) return undefined
+        const { value, expiry } = JSON.parse(itemStr)
+        if (Date.now() > expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return value
+      }
+    }
+
+    window.btf = {
+      saveToLocal,
+      getScript: (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        Object.entries(attr).forEach(([key, val]) => script.setAttribute(key, val))
+        script.onload = script.onreadystatechange = () => {
+          if (!script.readyState || /loaded|complete/.test(script.readyState)) resolve()
+        }
+        script.onerror = reject
+        document.head.appendChild(script)
+      }),
+      getCSS: (url, id) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onload = link.onreadystatechange = () => {
+          if (!link.readyState || /loaded|complete/.test(link.readyState)) resolve()
+        }
+        link.onerror = reject
+        document.head.appendChild(link)
+      }),
+      addGlobalFn: (key, fn, name = false, parent = window) => {
+        if (!false && key.startsWith('pjax')) return
+        const globalFn = parent.globalFn || {}
+        globalFn[key] = globalFn[key] || {}
+        globalFn[key][name || Object.keys(globalFn[key]).length] = fn
+        parent.globalFn = globalFn
+      }
+    }
+  
+      
+      const activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      const activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+
+      btf.activateDarkMode = activateDarkMode
+      btf.activateLightMode = activateLightMode
+
+      const theme = saveToLocal.get('theme')
+    
+          theme === 'dark' ? activateDarkMode() : theme === 'light' ? activateLightMode() : null
+        
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        document.documentElement.classList.toggle('hide-aside', asideStatus === 'hide')
+      }
+    
+      
+    const detectApple = () => {
+      if (/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)) {
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+  
+    })()
+  </script><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: {"path":"/search.xml","preload":false,"top_n_per_article":1,"unescape":false,"pagination":{"enable":false,"hitsPerPage":8},"languages":{"hits_empty":"未找到符合您查询的内容：${query}","hits_stats":"共找到 ${hits} 篇文章"}},
+  translate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false,"highlightFullpage":false,"highlightMacStyle":false},
+  copy: {
+    success: '复制成功',
+    error: '复制失败',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'fancybox',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid@4.13.0/dist/infinitegrid.min.js',
+    buttonText: '加载更多'
+  },
+  isPhotoFigcaption: false,
+  islazyloadPlugin: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'C++学习笔记（1）——类和对象',
+  isHighlightShrink: false,
+  isToc: true,
+  pageType: 'post'
+}</script><!-- hexo injector head_end start -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.css">
+<!-- hexo injector head_end end --><meta name="generator" content="Hexo 8.1.2"></head><body><div class="bg-animation" id="web_bg" style="background-color: #87CEEB;"></div><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img text-center"><img src="/img/avatar.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data text-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">52</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">61</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">13</div></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 链接</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header" style="background-image: url(/img/top.jpg);"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><span class="site-name">Mount256的博客</span></a><a class="nav-page-title" href="/"><span class="site-name">C++学习笔记（1）——类和对象</span><span class="site-name"><i class="fa-solid fa-circle-arrow-left"></i><span>  返回首页</span></span></a></span><div id="menus"><div id="search-button"><span class="site-page social-icon search"><i class="fas fa-search fa-fw"></i><span> 搜索</span></span></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 链接</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于</span></a></div></div><div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div></div></nav><div id="post-info"><h1 class="post-title">C++学习笔记（1）——类和对象</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2020-07-18T16:00:00.000Z" title="发表于 2020-07-19 00:00:00">2020-07-19</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2026-06-19T16:00:00.000Z" title="更新于 2026-06-20 00:00:00">2026-06-20</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/C%E5%92%8CC/">C和C++</a><i class="fas fa-angle-right post-meta-separator"></i><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/C%E5%92%8CC/%E9%9D%A2%E5%90%91%E5%AF%B9%E8%B1%A1%E7%BC%96%E7%A8%8B/">面向对象编程</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-wordcount"><i class="far fa-file-word fa-fw post-meta-icon"></i><span class="post-meta-label">总字数:</span><span class="word-count">3.3k</span><span class="post-meta-separator">|</span><i class="far fa-clock fa-fw post-meta-icon"></i><span class="post-meta-label">阅读时长:</span><span>12分钟</span></span><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title=""><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">浏览量:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="container post-content" id="article-container"><h2 id="零、C-的指针">零、C++的指针</h2>
+<ul>
+<li>动态内存分配实例：</li>
+</ul>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//分配出sizeof(int)大小的空间</span></span><br><span class="line"><span class="type">int</span> *p;</span><br><span class="line">p = <span class="keyword">new</span> <span class="type">int</span>;</span><br><span class="line">*p = <span class="number">5</span>;</span><br><span class="line"></span><br><span class="line"><span class="comment">//分配出10*sizeof(int)大小的空间</span></span><br><span class="line"><span class="type">int</span> *q;</span><br><span class="line">q = <span class="keyword">new</span> <span class="type">int</span>[<span class="number">10</span>];</span><br><span class="line">q[<span class="number">4</span>] = <span class="number">5</span>;</span><br></pre></td></tr></table></figure>
+<ul>
+<li>释放动态内存分配实例：</li>
+</ul>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">delete</span> p;</span><br><span class="line"><span class="keyword">delete</span> [] q;</span><br><span class="line"><span class="keyword">delete</span> q; <span class="comment">//出错！</span></span><br></pre></td></tr></table></figure>
+<ul>
+<li>定义<strong>常量指针</strong>实例：</li>
+</ul>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">int</span> a, b;</span><br><span class="line"><span class="type">const</span> <span class="type">int</span> *p = &amp;a;<span class="comment">//写成int const也行</span></span><br><span class="line">*p = <span class="number">1</span>;<span class="comment">//出错！不能通过常量指针修改指向的内容</span></span><br><span class="line">a = <span class="number">1</span>;</span><br><span class="line">*p = &amp;b;</span><br><span class="line"></span><br><span class="line"><span class="type">int</span> *q;</span><br><span class="line">p = q;</span><br><span class="line">q = p;<span class="comment">//出错！这样子的话q可以修改p指向的内容了</span></span><br></pre></td></tr></table></figure>
+<ul>
+<li>定义<strong>指针常量</strong>实例：</li>
+</ul>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">int</span> a;</span><br><span class="line"><span class="type">int</span> *<span class="type">const</span> p = &amp;a;<span class="comment">//不能再指向别的地址了！！！</span></span><br><span class="line"><span class="type">int</span> q;</span><br><span class="line">q = p;</span><br><span class="line">p = q;<span class="comment">//出错！</span></span><br></pre></td></tr></table></figure>
+<p><code>const*</code>不能通过指针修改变量值，<code>*const</code>不能指向别的地址。总之，<code>const</code>和<code>*</code>，谁在前面，谁就不允许改变。</p>
+<h2 id="一、构造函数-析构函数">一、构造函数&amp;析构函数</h2>
+<p>构造函数是用来初始化对象的参数的，那么析构函数就是对对象的消亡处理，<s>也就是我们所说的“处理后事”</s> 。个人的习惯是，如果是复杂的构造函数、复制构造函数、析构函数和成员函数都写在类外面，如果写在里面会显得类定义十分混乱。</p>
+<p>我们写了一个小程序说明什么是<strong>构造函数</strong>、<strong>复制构造函数</strong>（也叫做拷贝构造函数）和<strong>析构函数</strong>，以及详细说明它们在不同作用域的生存周期。搞清楚这些生存周期是至关重要的。</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span><span class="string">&lt;iostream&gt;</span></span></span><br><span class="line"><span class="keyword">using</span> <span class="keyword">namespace</span> std;</span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">A</span>&#123;</span><br><span class="line">	<span class="keyword">public</span>:</span><br><span class="line">		<span class="type">int</span> num;</span><br><span class="line">		<span class="comment">//构造函数，若不写的话即为无参构造函数，最好写上吧 </span></span><br><span class="line">		<span class="comment">//当只有一个参数的构造函数是类型转换构造函数，例如下面 </span></span><br><span class="line">		<span class="built_in">A</span>(<span class="type">int</span> _num)</span><br><span class="line">		&#123;</span><br><span class="line">			num = _num;</span><br><span class="line">			cout&lt;&lt;<span class="string">&quot;对象&quot;</span>&lt;&lt;num&lt;&lt;<span class="string">&quot; 构造啦&quot;</span>&lt;&lt;endl;</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="comment">//复制构造函数，个人认为如果没有这个需求就不要写</span></span><br><span class="line">		<span class="comment">//参数最好加const，防止初始化其他对象时误修改了被复制对象</span></span><br><span class="line">		<span class="comment">//如果不写，系统会调用默认复制构造函数 </span></span><br><span class="line">		<span class="built_in">A</span>(<span class="type">const</span> A &amp;a) </span><br><span class="line">		&#123;</span><br><span class="line">			cout&lt;&lt;<span class="string">&quot;对象&quot;</span>&lt;&lt;a.num&lt;&lt;<span class="string">&quot; 复制然后构造啦&quot;</span>&lt;&lt;endl;</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="comment">//析构函数，必须无参 </span></span><br><span class="line">		~<span class="built_in">A</span>()</span><br><span class="line">		&#123;</span><br><span class="line">			cout&lt;&lt;<span class="string">&quot;对象&quot;</span>&lt;&lt;num&lt;&lt;<span class="string">&quot; 毁灭啦&quot;</span>&lt;&lt;endl;</span><br><span class="line">		&#125;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="function">A <span class="title">a1</span><span class="params">(<span class="number">1</span>)</span></span>;<span class="comment">//定义了一个全局对象</span></span><br><span class="line"></span><br><span class="line"><span class="function">A <span class="title">Test</span><span class="params">(A a)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	cout&lt;&lt;endl&lt;&lt;<span class="string">&quot;Test函数开始噜！&quot;</span>&lt;&lt;endl;</span><br><span class="line">	<span class="function"><span class="type">static</span> A <span class="title">a6</span><span class="params">(<span class="number">6</span>)</span></span>;<span class="comment">//定义了静态对象，与python中的global用法类似</span></span><br><span class="line">	<span class="function">A <span class="title">a7</span><span class="params">(<span class="number">7</span>)</span></span>;</span><br><span class="line">	cout&lt;&lt;<span class="string">&quot;Test函数结束噜！&quot;</span>&lt;&lt;endl;</span><br><span class="line">	<span class="keyword">return</span> a7;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">int</span> <span class="title">main</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	cout&lt;&lt;endl&lt;&lt;<span class="string">&quot;main函数开始噜！&quot;</span>&lt;&lt;endl;</span><br><span class="line">	A a_array[<span class="number">3</span>]= &#123;<span class="number">2</span>, <span class="built_in">A</span>(<span class="number">3</span>), <span class="number">4</span>&#125;;<span class="comment">//这里2和4被转换成临时对象，调用了构造函数</span></span><br><span class="line">	<span class="function">A <span class="title">a5</span><span class="params">(<span class="number">5</span>)</span></span>;</span><br><span class="line">	a1 = <span class="number">100</span>;<span class="comment">//100也被转换为一个临时对象，调用了构造函数</span></span><br><span class="line">	<span class="comment">//然后临时对象会复制到对象a1，接着被销毁 </span></span><br><span class="line">	<span class="comment">//注意，只有类型转换构造函数才能这样写</span></span><br><span class="line">	cout&lt;&lt;<span class="string">&quot;Test函数输出结果：&quot;</span>&lt;&lt;<span class="built_in">Test</span>(a5).num&lt;&lt;endl&lt;&lt;endl;</span><br><span class="line"></span><br><span class="line">	<span class="function">A <span class="title">a8</span><span class="params">(<span class="number">8</span>)</span></span>;</span><br><span class="line">    a8 = a5;<span class="comment">//这里只是简单地复制，不会调用复制构造函数</span></span><br><span class="line">    cout&lt;&lt;endl;</span><br><span class="line">    </span><br><span class="line">	cout&lt;&lt;<span class="string">&quot;main函数结束噜！&quot;</span>&lt;&lt;endl&lt;&lt;endl;</span><br><span class="line">	<span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>输出结果如下（附上简要说明）：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line">对象<span class="number">1</span> 构造啦<span class="comment">//全局对象，首先被构造</span></span><br><span class="line"></span><br><span class="line">main函数开始噜！</span><br><span class="line">对象<span class="number">2</span> 构造啦</span><br><span class="line">对象<span class="number">3</span> 构造啦</span><br><span class="line">对象<span class="number">4</span> 构造啦</span><br><span class="line">对象<span class="number">5</span> 构造啦</span><br><span class="line">对象<span class="number">100</span> 构造啦<span class="comment">//100会被转换为一个临时对象，因此会调用构造函数 </span></span><br><span class="line">对象<span class="number">100</span> 毁灭啦</span><br><span class="line">对象<span class="number">5</span> 复制然后构造啦<span class="comment">//Test函数的形参是对象，在函数被调用时，生成的形参要用复制构造函数初始化</span></span><br><span class="line"></span><br><span class="line">Test函数开始噜！</span><br><span class="line">对象<span class="number">6</span> 构造啦</span><br><span class="line">对象<span class="number">7</span> 构造啦</span><br><span class="line">Test函数结束噜！</span><br><span class="line">Test函数输出结果：<span class="number">7</span></span><br><span class="line"><span class="comment">//函数返回值对象的生成原本也是由复制构造函数初始化的</span></span><br><span class="line"><span class="comment">//按道理讲应该还会有个复制过程</span></span><br><span class="line"><span class="comment">//不过Dev C++的编译器出于优化效率，就没有这个步骤了</span></span><br><span class="line"></span><br><span class="line">对象<span class="number">7</span> 毁灭啦<span class="comment">//对象7作用域：Test函数</span></span><br><span class="line">对象<span class="number">1</span> 毁灭啦<span class="comment">//唯一的不解之处：这个输出我不知道怎么来的</span></span><br><span class="line">对象<span class="number">8</span> 构造啦<span class="comment">//此处没有调用复制构造函数</span></span><br><span class="line"></span><br><span class="line">main函数结束噜！</span><br><span class="line"></span><br><span class="line">对象<span class="number">5</span> 毁灭啦<span class="comment">//对象a8消亡</span></span><br><span class="line">对象<span class="number">5</span> 毁灭啦</span><br><span class="line">对象<span class="number">4</span> 毁灭啦</span><br><span class="line">对象<span class="number">3</span> 毁灭啦</span><br><span class="line">对象<span class="number">2</span> 毁灭啦<span class="comment">//对象2~5作用域：main函数，首先被销毁</span></span><br><span class="line">对象<span class="number">6</span> 毁灭啦<span class="comment">//对象6作用域：整个文件，因此最后被销毁</span></span><br><span class="line">对象<span class="number">100</span> 毁灭啦<span class="comment">//对象1作用域：整个文件，因此最后被销毁</span></span><br></pre></td></tr></table></figure>
+<p><strong>注意：</strong> 下面这个程序，这是我们经常犯错的地方：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;iostream&gt;</span></span></span><br><span class="line"><span class="keyword">using</span> <span class="keyword">namespace</span> std;</span><br><span class="line"><span class="keyword">class</span> <span class="title class_">Sample</span> &#123;</span><br><span class="line">	<span class="keyword">public</span>:</span><br><span class="line">	<span class="type">int</span> v;</span><br><span class="line">	<span class="built_in">Sample</span>(<span class="type">int</span> x = <span class="number">0</span>)&#123; v = x; &#125;</span><br><span class="line">	<span class="built_in">Sample</span>(<span class="type">const</span> Sample &amp;o)&#123; v = o.v + <span class="number">2</span>; &#125;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">void</span> <span class="title">Print</span><span class="params">(Sample o)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	cout &lt;&lt; o.v&lt;&lt;endl;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">int</span> <span class="title">main</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="function">Sample <span class="title">a</span><span class="params">(<span class="number">5</span>)</span></span>;</span><br><span class="line">	<span class="built_in">Print</span>(a);</span><br><span class="line">	</span><br><span class="line">	<span class="function">Sample <span class="title">b</span><span class="params">(a)</span></span>;</span><br><span class="line">	<span class="built_in">Print</span>(b);</span><br><span class="line">	</span><br><span class="line">	<span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>输出结果不是我们预想的两个5，而是7和9。这是因为函数Print调用了复制构造函数，结果<code>a.v</code>的值就变成了7，<code>b.v</code>的值又在原来基础上加了2，就变成了9。解决办法：复制构造函数的函数体改成<code>v = o.v;</code>就行了。不要看这个例子很简单，当程序变得很复杂时极有可能疏忽这个小细节。</p>
+<p>写了这么多，我想说的是，一般情况下不要自己写复制构造函数，因为这可能会导致<strong>某函数体的return返回值与函数的返回值不相同</strong>（Dev C++的编译器没有这个问题，但是其他编译器比如VS2010编译器会有），除此之外还会导致<strong>函数的实参和形参不相等</strong>（这个问题基本上每个编译器都会有）。但是，在一些情况下必须要自己写，举个例子：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span><span class="string">&lt;iostream&gt;</span></span></span><br><span class="line"><span class="keyword">using</span> <span class="keyword">namespace</span> std;</span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">A</span>&#123;</span><br><span class="line">	<span class="keyword">public</span>:</span><br><span class="line">		<span class="type">int</span> *p;</span><br><span class="line">		<span class="built_in">A</span>()&#123; p = <span class="keyword">new</span> <span class="type">int</span>; &#125;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">int</span> <span class="title">main</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	A a1;</span><br><span class="line">	<span class="function">A <span class="title">a2</span><span class="params">(a1)</span></span>;</span><br><span class="line">	cout&lt;&lt;a<span class="number">1.</span>p&lt;&lt;<span class="string">&quot; &quot;</span>&lt;&lt;a<span class="number">2.</span>p&lt;&lt;endl;</span><br><span class="line">	<span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>一次的输出结果是：<code>0x396338 0x396338 </code>。</p>
+<p>这意味着<code>a1.p</code>、<code>a2.p</code>指向了同一个地址，<strong>这是十分危险的！</strong> 如果我在析构函数来个<code>delete a1.p</code>，那么<code>a2.p</code>就变成所谓的<strong>野指针</strong>了。事实上，默认复制构造函数是一种<strong>浅拷贝</strong>，因此当我们自己写复制函数的时候，就要是<strong>深拷贝</strong>，写的时候应当重新申请一片内存，再把要拷贝的值拷贝进去（相当于手动操作）。</p>
+<p>另外构造函数还可以添加初始化列表：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">A</span>&#123;</span><br><span class="line">	<span class="keyword">private</span>:</span><br><span class="line">		<span class="type">int</span> sth1;</span><br><span class="line">		<span class="type">int</span> sth2;</span><br><span class="line">	<span class="keyword">public</span>:</span><br><span class="line">		<span class="built_in">A</span>(<span class="type">int</span> s1, <span class="type">int</span> s2):<span class="built_in">sth1</span>(s1), <span class="built_in">sth2</span>(s2)&#123; ...&#125;</span><br><span class="line">		<span class="comment">//等价于 sth1 = s1; sth2 = s2;</span></span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<h2 id="二、封闭类">二、封闭类</h2>
+<p>一个类的成员变量如果是另一个类的对象，就称之为“成员对象”。包含成员对象的类叫<strong>封闭类</strong>。例如下面这个程序，对象A为封闭类对象，对象A1、A2为成员对象。</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span><span class="string">&lt;iostream&gt;</span></span></span><br><span class="line"><span class="keyword">using</span> <span class="keyword">namespace</span> std;</span><br><span class="line"><span class="keyword">class</span> <span class="title class_">A1</span>&#123;</span><br><span class="line">	<span class="keyword">public</span>:</span><br><span class="line">		<span class="built_in">A1</span>()&#123;cout&lt;&lt;<span class="string">&quot;对象A1建造&quot;</span>&lt;&lt;endl;&#125;</span><br><span class="line">		~<span class="built_in">A1</span>()&#123;cout&lt;&lt;<span class="string">&quot;对象A1消亡&quot;</span>&lt;&lt;endl;&#125;</span><br><span class="line">&#125;;</span><br><span class="line"><span class="keyword">class</span> <span class="title class_">A2</span>&#123;</span><br><span class="line">	<span class="keyword">public</span>:</span><br><span class="line">		<span class="built_in">A2</span>()&#123;cout&lt;&lt;<span class="string">&quot;对象A2建造&quot;</span>&lt;&lt;endl;&#125;</span><br><span class="line">		~<span class="built_in">A2</span>()&#123;cout&lt;&lt;<span class="string">&quot;对象A2消亡&quot;</span>&lt;&lt;endl;&#125;</span><br><span class="line">&#125;;</span><br><span class="line"><span class="keyword">class</span> <span class="title class_">A</span>&#123;</span><br><span class="line">	<span class="keyword">private</span>:</span><br><span class="line">		A1 a1;</span><br><span class="line">		A2 a2;</span><br><span class="line">	<span class="keyword">public</span>:</span><br><span class="line">		<span class="built_in">A</span>()&#123;cout&lt;&lt;<span class="string">&quot;对象A建造&quot;</span>&lt;&lt;endl;&#125;</span><br><span class="line">		~<span class="built_in">A</span>()&#123;cout&lt;&lt;<span class="string">&quot;对象A消亡&quot;</span>&lt;&lt;endl;&#125;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">int</span> <span class="title">main</span><span class="params">()</span></span>&#123;</span><br><span class="line">	A a;</span><br><span class="line">	<span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>输出结果如下：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">对象A1建造</span><br><span class="line">对象A2建造</span><br><span class="line">对象A建造</span><br><span class="line">对象A消亡</span><br><span class="line">对象A2消亡</span><br><span class="line">对象A1消亡</span><br></pre></td></tr></table></figure>
+<p>封闭类对象生成时，先运行所有成员对象的构造函数，然后才执行封闭类自己的构造函数；封闭类对象消亡时，则刚好相反，先执行封闭类的析构函数，然后再执行成员对象的析构函数。</p>
+<p>成员对象就相当于零件，封闭类对象就相当于一个完整的产品。零件造好了，完整的产品才能出来；拆解产品时，先将产品上的零件全部拿下来，然后再把零件拆了。</p>
+<h2 id="三、友元">三、友元</h2>
+<p>友元=友元函数+友元类。</p>
+<p><strong>1.友元函数</strong><br>
+一旦某个函数被某个类声明为<strong>友元函数</strong>（加修饰符<code>friend</code>），那么在友元函数内部可以访问该类对象的私有成员，甚至是改变其值。友元函数既可以是类里面的成员函数，也可以不是（即普通函数）。一个友元函数的例子：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span><span class="string">&lt;iostream&gt;</span></span></span><br><span class="line"><span class="keyword">using</span> <span class="keyword">namespace</span> std;</span><br><span class="line"><span class="keyword">class</span> <span class="title class_">A</span>;<span class="comment">//提前声明</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">B</span>&#123;</span><br><span class="line">	<span class="keyword">public</span>:</span><br><span class="line">		<span class="function"><span class="type">void</span> <span class="title">sth2</span><span class="params">(A a)</span></span>;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">A</span>&#123;</span><br><span class="line">	<span class="keyword">private</span>:</span><br><span class="line">		<span class="type">int</span> v;<span class="comment">//私有成员变量！！！</span></span><br><span class="line">	<span class="keyword">public</span>:</span><br><span class="line">		<span class="function"><span class="keyword">friend</span> <span class="type">void</span> <span class="title">sth1</span><span class="params">(A a)</span></span>;<span class="comment">//这两个友元函数随便访问A的私有成员 </span></span><br><span class="line">		<span class="function"><span class="keyword">friend</span> <span class="type">void</span> <span class="title">B::sth2</span><span class="params">(A a)</span></span>;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">void</span> <span class="title">sth1</span><span class="params">(A a)</span><span class="comment">//这个函数不属于任何一个类，</span></span></span><br><span class="line"><span class="function"><span class="comment">//但由于A声明了友元函数，它可以访问A的私有成员 </span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	a.v = <span class="number">1</span>;</span><br><span class="line">	cout&lt;&lt;<span class="string">&quot;friend! &quot;</span>&lt;&lt;a.v&lt;&lt;endl;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">void</span> <span class="title">B::sth2</span><span class="params">(A a)</span><span class="comment">//这个函数属于类B，</span></span></span><br><span class="line"><span class="function"><span class="comment">//但由于A声明了友元函数，它可以访问A的私有成员</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	a.v = <span class="number">2</span>; </span><br><span class="line">	cout&lt;&lt;<span class="string">&quot;friend!!! &quot;</span>&lt;&lt;a.v&lt;&lt;endl;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">int</span> <span class="title">main</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	A a;</span><br><span class="line">	<span class="built_in">sth1</span>(a);</span><br><span class="line">	</span><br><span class="line">	B b;</span><br><span class="line">	b.<span class="built_in">sth2</span>(a);</span><br><span class="line">	</span><br><span class="line">	<span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>输出结果如下：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">friend</span>! <span class="number">1</span></span><br><span class="line"><span class="keyword">friend</span>!!! <span class="number">2</span></span><br></pre></td></tr></table></figure>
+<p>注意，<strong>不能把其他类的私有成员函数声明为友元</strong>。这就相当于，我和你虽然是朋友（friend），但是我没经过你的允许，我就不能知道你的秘密（private），除非你愿意把秘密公开（public）。</p>
+<p><strong>2.友元类</strong><br>
+一个类A可以将另一个类B声明为自己的<strong>友元</strong>。这样类B的所有成员函数就可以访问类A的私有成员了。注意：友元类与封闭类是有区别的。封闭类的成员变量有其他类的对象，这些对象属于封闭类所有；而友元类只是被声明为友元，并不属于被声明的类里面。下面这个程序，类B声明了类A是自己的友元。</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span><span class="string">&lt;iostream&gt;</span></span></span><br><span class="line"><span class="keyword">using</span> <span class="keyword">namespace</span> std;</span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">B</span>&#123;</span><br><span class="line">	<span class="keyword">private</span>:</span><br><span class="line">		<span class="type">int</span> v;</span><br><span class="line">	<span class="keyword">public</span>:</span><br><span class="line">		<span class="keyword">friend</span> <span class="keyword">class</span> <span class="title class_">A</span>;<span class="comment">//声明类A为友元类</span></span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">A</span>&#123;</span><br><span class="line">	<span class="keyword">public</span>:</span><br><span class="line">		<span class="function"><span class="type">void</span> <span class="title">Test</span><span class="params">(B b)</span></span></span><br><span class="line"><span class="function">		</span>&#123;</span><br><span class="line">			b.v = <span class="number">100</span>;<span class="comment">//随便访问类B的成员</span></span><br><span class="line">			cout&lt;&lt;b.v&lt;&lt;endl;</span><br><span class="line">		&#125;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">int</span> <span class="title">main</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	A a;</span><br><span class="line">	B b;</span><br><span class="line">	a.<span class="built_in">Test</span>(b);</span><br><span class="line">	<span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>输出结果自然就是：100。<br>
+注意：在C++中友元不具有传递性。A是B的友元，B是C的友元，就不能推出A是C的友元。友元不是相互的，具有单向性，A声明B是它的友元，B就可以随意访问A，但是反过来A不能随便访问B。</p>
+<h2 id="四、静态成员-常量成员">四、静态成员&amp;常量成员</h2>
+<p><strong>1.静态成员</strong><br>
+无论是成员变量还是成员函数，只要前面加了<code>static</code>，它们就变成了静态的了。要注意，静态成员函数不能访问非静态成员变量，也不能调用非静态成员函数。原因在于，非静态成员函数不具体作用于某个对象。下面给出我自己的例子：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span><span class="string">&lt;iostream&gt;</span></span></span><br><span class="line"><span class="keyword">using</span> <span class="keyword">namespace</span> std;</span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">A</span>&#123;</span><br><span class="line">	<span class="keyword">private</span>:</span><br><span class="line">		<span class="type">int</span> n;</span><br><span class="line">		<span class="type">static</span> <span class="type">int</span> total;<span class="comment">//定义了静态成员变量，用于统计总数</span></span><br><span class="line">	<span class="keyword">public</span>:</span><br><span class="line">		<span class="built_in">A</span>(<span class="type">int</span> _n);</span><br><span class="line">		<span class="built_in">A</span>(<span class="type">const</span> A &amp;a);</span><br><span class="line">		<span class="function"><span class="type">static</span> <span class="type">void</span> <span class="title">Print</span><span class="params">()</span></span>;<span class="comment">//输出总数</span></span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line">A::<span class="built_in">A</span>(<span class="type">int</span> _n)<span class="comment">//构造函数</span></span><br><span class="line">&#123;</span><br><span class="line">	n = _n;</span><br><span class="line">	total += n;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">A::<span class="built_in">A</span>(<span class="type">const</span> A &amp;a)<span class="comment">//复制构造函数</span></span><br><span class="line">&#123;</span><br><span class="line">	total += a.n;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">void</span> <span class="title">A::Print</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	cout&lt;&lt;total&lt;&lt;endl;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="type">int</span> A::total = <span class="number">0</span>;<span class="comment">//必须在文件中（类定义外）进行声明或初始化</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">int</span> <span class="title">main</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="function">A <span class="title">num1</span><span class="params">(<span class="number">2</span>)</span>, <span class="title">num2</span><span class="params">(<span class="number">5</span>)</span></span>;</span><br><span class="line">	<span class="function">A <span class="title">num3</span><span class="params">(num2)</span></span>;<span class="comment">//调用复制构造函数</span></span><br><span class="line">	num<span class="number">1.</span><span class="built_in">Print</span>();<span class="comment">//写成num2(or 3).Print()也行</span></span><br><span class="line">	<span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<p>输出结果显而易见，是12。</p>
+<p><strong>2.常量对象和常量成员函数</strong><br>
+常量对象可以执行常量成员函数和静态成员函数，但是不能调用非常量成员函数。原因在于，非常量成员函数内部可能含有修改对象的语句。下面来看一个例子：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span><span class="string">&lt;iostream&gt;</span></span></span><br><span class="line"><span class="keyword">using</span> <span class="keyword">namespace</span> std;</span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">A</span>&#123;</span><br><span class="line">	<span class="keyword">public</span>:</span><br><span class="line">		<span class="function"><span class="type">void</span> <span class="title">az</span><span class="params">()</span> <span class="type">const</span><span class="comment">//如果这里去掉const，编译会出错</span></span></span><br><span class="line"><span class="function">		</span>&#123;</span><br><span class="line">			cout&lt;&lt;<span class="string">&quot;const&quot;</span>&lt;&lt;endl;</span><br><span class="line">		&#125;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">int</span> <span class="title">main</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="type">const</span> A a;</span><br><span class="line">	a.<span class="built_in">az</span>();</span><br><span class="line">	<span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>输出的是：const。</p>
+<p>如果某个成员函数中不需要调用非常量成员函数，也不需要修改成员变量的值，那么最好写成常量成员函数，这样不容易出错。</p>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>文章作者: </span><span class="post-copyright-info"><a href="http://mount256.github.io">Mount256</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>文章链接: </span><span class="post-copyright-info"><a href="http://mount256.github.io/posts/ec0b248a.html">http://mount256.github.io/posts/ec0b248a.html</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来源 <a href="http://mount256.github.io" target="_blank">Mount256的博客</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/OOP/">OOP</a><a class="post-meta__tags" href="/tags/%E6%9E%84%E9%80%A0%E5%87%BD%E6%95%B0/">构造函数</a><a class="post-meta__tags" href="/tags/%E6%9E%90%E6%9E%84%E5%87%BD%E6%95%B0/">析构函数</a></div><div class="post-share"><div class="social-share" data-image="/img/avatar.png" data-sites="facebook,x,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><a class="pagination-related full-width" href="/posts/ea52bda1.html" title="C++学习笔记（2）——继承与派生"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info"><div class="info-1"><div class="info-item-1">上一篇</div><div class="info-item-2">C++学习笔记（2）——继承与派生</div></div><div class="info-2"><div class="info-item-1">一、基本概念 从一个类派生出另一个类的格式如下： 12345678910class A//基类&#123;    public:	    int n1;&#125;; class B:public A//派生类，继承方式一般用public，当然也有其他方式 &#123;    public:	    int n2;&#125;; 此时类A派生出了类B，类A称为基类，类B称为派生类，派生类对象也是基类对象。 在公有派生的情况下，存在着三条赋值兼容规则（这个和C++三种传递方式（值传递、指针传递和引用传递）相对应）：  派生类对象可以赋值给基类对象； 派生类对象可以用来初始化基类引用； 派生类对象的地址（或派生类的指针）可以赋值给基类的指针。  注意，这三条规则仅限于公有派生，如果是私有派生和保护派生则不成立。 这个规则很好理解。基类没有派生类的全部成员，但派生类有基类的全部成员，因此派生类&gt;基类，基类对象当然可以接收派生类的值、址和引用了，但是反过来却不行。 下面这个例子（续上面的程序）展示了这三条规则： 1234567A a;B b;a = b;//派生类对象赋值给基类对象...</div></div></div></a></nav><div class="relatedPosts"><div class="headline"><i class="fas fa-thumbs-up fa-fw"></i><span>相关推荐</span></div><div class="relatedPosts-list"><a class="pagination-related" href="/posts/ea52bda1.html" title="C++学习笔记（2）——继承与派生"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2020-07-21</div><div class="info-item-2">C++学习笔记（2）——继承与派生</div></div><div class="info-2"><div class="info-item-1">一、基本概念 从一个类派生出另一个类的格式如下： 12345678910class A//基类&#123;    public:	    int n1;&#125;; class B:public A//派生类，继承方式一般用public，当然也有其他方式 &#123;    public:	    int n2;&#125;; 此时类A派生出了类B，类A称为基类，类B称为派生类，派生类对象也是基类对象。 在公有派生的情况下，存在着三条赋值兼容规则（这个和C++三种传递方式（值传递、指针传递和引用传递）相对应）：  派生类对象可以赋值给基类对象； 派生类对象可以用来初始化基类引用； 派生类对象的地址（或派生类的指针）可以赋值给基类的指针。  注意，这三条规则仅限于公有派生，如果是私有派生和保护派生则不成立。 这个规则很好理解。基类没有派生类的全部成员，但派生类有基类的全部成员，因此派生类&gt;基类，基类对象当然可以接收派生类的值、址和引用了，但是反过来却不行。 下面这个例子（续上面的程序）展示了这三条规则： 1234567A a;B b;a = b;//派生类对象赋值给基类对象...</div></div></div></a><a class="pagination-related" href="/posts/1614d066.html" title="C++学习笔记（3）——多态与虚函数"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2020-07-23</div><div class="info-item-2">C++学习笔记（3）——多态与虚函数</div></div><div class="info-2"><div class="info-item-1">零、为什么引入多态 这部分是我写完第一部分后再加进来的，因为在我写这篇笔记的时候，其实还是不太懂为什么要用多态这个玩意儿的，虽说多态在面向对象程序设计里十分重要，而且不可或缺。既然不知道为什么要用多态，那就自己来体验一下没有多态的感觉吧！ （本部分暂略） 一、多态的概念&amp;原理 “多态”指的是同一名字的事物可以完成不同的功能。多态可以分为两种：  编译时的多态：即函数、运算符的重载、对重载函数的调用，在编译时就能根据实参确定应该调用哪个函数 运行时的多态：与继承、虚函数有关  虚函数，就是在声明前加了virtual关键字的成员函数。静态成员函数不能是虚函数。包含虚函数的类称为“多态”。下面是一个程序例子： 1234567891011121314151617181920212223242526272829303132333435363738394041#include&lt;iostream&gt;using namespace std;class A&#123;	public: 		int n;		//一定要加virtual 		virtual void Print()&#...</div></div></div></a></div></div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info text-center"><div class="avatar-img"><img src="/img/avatar.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info-name">Mount256</div><div class="author-info-description">记录生活</div><div class="site-data"><a href="/archives/"><div class="headline">文章</div><div class="length-num">52</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">61</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">13</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/Mount256"><i class="fab fa-github"></i><span>Follow Me</span></a></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">暂无公告。</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E9%9B%B6%E3%80%81C-%E7%9A%84%E6%8C%87%E9%92%88"><span class="toc-text">零、C++的指针</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%80%E3%80%81%E6%9E%84%E9%80%A0%E5%87%BD%E6%95%B0-%E6%9E%90%E6%9E%84%E5%87%BD%E6%95%B0"><span class="toc-text">一、构造函数&amp;析构函数</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%8C%E3%80%81%E5%B0%81%E9%97%AD%E7%B1%BB"><span class="toc-text">二、封闭类</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%89%E3%80%81%E5%8F%8B%E5%85%83"><span class="toc-text">三、友元</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%9B%9B%E3%80%81%E9%9D%99%E6%80%81%E6%88%90%E5%91%98-%E5%B8%B8%E9%87%8F%E6%88%90%E5%91%98"><span class="toc-text">四、静态成员&amp;常量成员</span></a></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/19615f2a.html" title="Front-matter 示例及页面测试">Front-matter 示例及页面测试</a><time datetime="2026-06-11T09:05:49.000Z" title="发表于 2026-06-11 17:05:49">2026-06-11</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/4a17b156.html" title="Hello World">Hello World</a><time datetime="2026-06-10T09:45:35.762Z" title="发表于 2026-06-10 17:45:35">2026-06-10</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/bd726e3.html" title="常数变易法求解非齐次线性微分方程">常数变易法求解非齐次线性微分方程</a><time datetime="2024-06-17T16:00:00.000Z" title="发表于 2024-06-18 00:00:00">2024-06-18</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/dd6f3f94.html" title="定积分的几何应用">定积分的几何应用</a><time datetime="2023-11-04T16:00:00.000Z" title="发表于 2023-11-05 00:00:00">2023-11-05</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/a82b41fa.html" title="合同变换法">合同变换法</a><time datetime="2023-11-02T16:00:00.000Z" title="发表于 2023-11-03 00:00:00">2023-11-03</time></div></div></div></div></div></div></main><footer id="footer" style="background-image: url(/img/top.jpg);"><div class="footer-other"><div class="footer-copyright"><span class="copyright">&copy;&nbsp;2025 - 2026 By Mount256</span><span class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo 8.1.2</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly 5.5.5</a></span></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="日间和夜间模式切换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js?v=5.5.5"></script><script src="/js/main.js?v=5.5.5"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui@6.1.14/dist/fancybox/fancybox.umd.min.js"></script><div class="js-pjax"><script>(() => {
+  const parseViewBox = viewBox => {
+    if (!viewBox) return null
+    const parts = viewBox.trim().split(/[\s,]+/).map(n => Number(n))
+    if (parts.length !== 4 || parts.some(n => Number.isNaN(n))) return null
+    return parts
+  }
+
+  const getSvgViewBox = svg => {
+    const attr = parseViewBox(svg.getAttribute('viewBox'))
+    if (attr) return attr
+
+    // Fallback: use bbox to build a viewBox
+    try {
+      const bbox = svg.getBBox()
+      if (bbox && bbox.width && bbox.height) return [bbox.x, bbox.y, bbox.width, bbox.height]
+    } catch (e) {
+      // getBBox may fail on some edge cases; ignore
+    }
+
+    const w = Number(svg.getAttribute('width')) || 0
+    const h = Number(svg.getAttribute('height')) || 0
+    if (w > 0 && h > 0) return [0, 0, w, h]
+    return [0, 0, 100, 100]
+  }
+
+  const setSvgViewBox = (svg, vb) => {
+    svg.setAttribute('viewBox', `${vb[0]} ${vb[1]} ${vb[2]} ${vb[3]}`)
+  }
+
+  const clamp = (v, min, max) => Math.max(min, Math.min(max, v))
+
+  const openSvgInNewTab = ({ source, initViewBox }) => {
+    const getClonedSvg = () => {
+      if (typeof source === 'string') {
+        const template = document.createElement('template')
+        template.innerHTML = source.trim()
+        const svg = template.content.querySelector('svg')
+        return svg ? svg.cloneNode(true) : null
+      }
+      if (source && typeof source.cloneNode === 'function') {
+        return source.cloneNode(true)
+      }
+      return null
+    }
+
+    const clone = getClonedSvg()
+    if (!clone) return
+    if (initViewBox && initViewBox.length === 4) {
+      clone.setAttribute('viewBox', initViewBox.join(' '))
+    }
+    if (!clone.getAttribute('xmlns')) clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg')
+    if (!clone.getAttribute('xmlns:xlink') && clone.outerHTML.includes('xlink:')) {
+      clone.setAttribute('xmlns:xlink', 'http://www.w3.org/1999/xlink')
+    }
+    // inject background to match current theme
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark'
+    const bg = getComputedStyle(document.body).backgroundColor || (isDark ? '#1e1e1e' : '#ffffff')
+    if (!clone.style.background) clone.style.background = bg
+
+    const serializer = new XMLSerializer()
+    const svgSource = serializer.serializeToString(clone)
+    const htmlSource = `<!doctype html><html><head><meta charset="utf-8" />
+      <style>
+        html, body { width: 100%; height: 100%; margin: 0; display: flex; align-items: center; justify-content: center; background: ${bg}; }
+        svg { max-width: 100%; max-height: 100%; height: auto; width: auto; }
+      </style>
+      </head><body>${svgSource}</body></html>`
+    const blob = new Blob([htmlSource], { type: 'text/html;charset=utf-8' })
+    const url = URL.createObjectURL(blob)
+    window.open(url, '_blank', 'noopener')
+    setTimeout(() => URL.revokeObjectURL(url), 30000)
+  }
+
+  const attachMermaidViewerButton = wrap => {
+    let btn = wrap.querySelector('.mermaid-open-btn')
+    if (!btn) {
+      btn = document.createElement('button')
+      btn.type = 'button'
+      btn.className = 'mermaid-open-btn'
+      wrap.appendChild(btn)
+    }
+
+    btn.innerHTML = '<i class="fa fa-search fa-fw" aria-hidden="true"></i>'
+
+    if (!btn.__mermaidViewerBound) {
+      btn.addEventListener('click', e => {
+        e.preventDefault()
+        e.stopPropagation()
+        const svg = wrap.__mermaidOriginalSvg || wrap.querySelector('svg')
+        if (!svg) return
+        const initViewBox = wrap.__mermaidInitViewBox
+        if (typeof svg === 'string') {
+          openSvgInNewTab({ source: svg, initViewBox })
+          return
+        }
+        openSvgInNewTab({ source: svg, initViewBox })
+      })
+      btn.__mermaidViewerBound = true
+    }
+  }
+
+  // Zoom around a point (px, py) in the SVG viewport (in viewBox coordinates)
+  const zoomAtPoint = (vb, factor, px, py) => {
+    const w = vb[2] * factor
+    const h = vb[3] * factor
+    const nx = px - (px - vb[0]) * factor
+    const ny = py - (py - vb[1]) * factor
+    return [nx, ny, w, h]
+  }
+
+  const initMermaidGestures = wrap => {
+    const svg = wrap.querySelector('svg')
+    if (!svg) return
+
+    // Ensure viewBox exists so gestures always work
+    const initVb = getSvgViewBox(svg)
+    wrap.__mermaidInitViewBox = initVb
+    wrap.__mermaidCurViewBox = initVb.slice()
+    setSvgViewBox(svg, initVb)
+
+    // Avoid binding multiple times on themeChange/pjax
+    if (wrap.__mermaidGestureBound) return
+    wrap.__mermaidGestureBound = true
+
+    // Helper: map client (viewport) coordinate -> viewBox coordinate
+    const clientToViewBox = (clientX, clientY) => {
+      const rect = svg.getBoundingClientRect()
+      const vb = wrap.__mermaidCurViewBox || getSvgViewBox(svg)
+      const x = vb[0] + (clientX - rect.left) * (vb[2] / rect.width)
+      const y = vb[1] + (clientY - rect.top) * (vb[3] / rect.height)
+      return { x, y, rect, vb }
+    }
+
+    const state = {
+      pointers: new Map(),
+      startVb: null,
+      startDist: 0,
+      startCenter: null
+    }
+
+    const clampVb = vb => {
+      const init = wrap.__mermaidInitViewBox || vb
+      const minW = init[2] * 0.1
+      const maxW = init[2] * 10
+      const minH = init[3] * 0.1
+      const maxH = init[3] * 10
+      vb[2] = clamp(vb[2], minW, maxW)
+      vb[3] = clamp(vb[3], minH, maxH)
+      return vb
+    }
+
+    const setCurVb = vb => {
+      vb = clampVb(vb)
+      wrap.__mermaidCurViewBox = vb
+      setSvgViewBox(svg, vb)
+    }
+
+    const onPointerDown = e => {
+      // Allow only primary button for mouse
+      if (e.pointerType === 'mouse' && e.button !== 0) return
+      svg.setPointerCapture(e.pointerId)
+      state.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY })
+
+      if (state.pointers.size === 1) {
+        state.startVb = (wrap.__mermaidCurViewBox || getSvgViewBox(svg)).slice()
+      } else if (state.pointers.size === 2) {
+        const pts = [...state.pointers.values()]
+        const dx = pts[0].x - pts[1].x
+        const dy = pts[0].y - pts[1].y
+        state.startDist = Math.hypot(dx, dy)
+        state.startVb = (wrap.__mermaidCurViewBox || getSvgViewBox(svg)).slice()
+        state.startCenter = { x: (pts[0].x + pts[1].x) / 2, y: (pts[0].y + pts[1].y) / 2 }
+      }
+    }
+
+    const onPointerMove = e => {
+      if (!state.pointers.has(e.pointerId)) return
+      state.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY })
+
+      // Pan with 1 pointer
+      if (state.pointers.size === 1 && state.startVb) {
+        const p = [...state.pointers.values()][0]
+        const prev = { x: e.clientX - e.movementX, y: e.clientY - e.movementY }
+        // movementX/Y unreliable on touch, compute from stored last position
+        const last = wrap.__mermaidLastSinglePointer || p
+        const dxClient = p.x - last.x
+        const dyClient = p.y - last.y
+        wrap.__mermaidLastSinglePointer = p
+
+        const { rect } = clientToViewBox(p.x, p.y)
+        const vb = (wrap.__mermaidCurViewBox || getSvgViewBox(svg)).slice()
+        const dx = dxClient * (vb[2] / rect.width)
+        const dy = dyClient * (vb[3] / rect.height)
+        setCurVb([vb[0] - dx, vb[1] - dy, vb[2], vb[3]])
+        return
+      }
+
+      // Pinch zoom with 2 pointers
+      if (state.pointers.size === 2 && state.startVb && state.startDist > 0) {
+        const pts = [...state.pointers.values()]
+        const dx = pts[0].x - pts[1].x
+        const dy = pts[0].y - pts[1].y
+        const dist = Math.hypot(dx, dy)
+        if (!dist) return
+        const factor = state.startDist / dist // dist bigger => zoom in (viewBox smaller)
+
+        const cx = (pts[0].x + pts[1].x) / 2
+        const cy = (pts[0].y + pts[1].y) / 2
+        const centerClient = { x: cx, y: cy }
+
+        const pxy = clientToViewBox(centerClient.x, centerClient.y)
+        const cpx = pxy.x
+        const cpy = pxy.y
+
+        const vb = zoomAtPoint(state.startVb, factor, cpx, cpy)
+        setCurVb(vb)
+      }
+    }
+
+    const onPointerUpOrCancel = e => {
+      state.pointers.delete(e.pointerId)
+      if (state.pointers.size === 0) {
+        state.startVb = null
+        state.startDist = 0
+        state.startCenter = null
+        wrap.__mermaidLastSinglePointer = null
+      } else if (state.pointers.size === 1) {
+        // reset single pointer baseline to avoid jump
+        wrap.__mermaidLastSinglePointer = [...state.pointers.values()][0]
+      }
+    }
+
+    // Wheel zoom (mouse/trackpad)
+    const onWheel = e => {
+      // ctrlKey on mac trackpad pinch; we treat both as zoom
+      e.preventDefault()
+      const delta = e.deltaY
+      const zoomFactor = delta > 0 ? 1.1 : 0.9
+      const { x, y } = clientToViewBox(e.clientX, e.clientY)
+      const vb = (wrap.__mermaidCurViewBox || getSvgViewBox(svg)).slice()
+      setCurVb(zoomAtPoint(vb, zoomFactor, x, y))
+    }
+
+    const onDblClick = () => {
+      const init = wrap.__mermaidInitViewBox
+      if (!init) return
+      wrap.__mermaidCurViewBox = init.slice()
+      setSvgViewBox(svg, init)
+    }
+
+    svg.addEventListener('pointerdown', onPointerDown)
+    svg.addEventListener('pointermove', onPointerMove)
+    svg.addEventListener('pointerup', onPointerUpOrCancel)
+    svg.addEventListener('pointercancel', onPointerUpOrCancel)
+    svg.addEventListener('wheel', onWheel, { passive: false })
+    svg.addEventListener('dblclick', onDblClick)
+  }
+
+  const runMermaid = ele => {
+    window.loadMermaid = true
+    const theme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default'
+
+    ele.forEach((item, index) => {
+      const mermaidSrc = item.firstElementChild
+
+      // Clear old render (themeChange/pjax will rerun)
+      const oldSvg = item.querySelector('svg')
+      if (oldSvg) oldSvg.remove()
+      item.__mermaidGestureBound = false
+
+      const config = mermaidSrc.dataset.config ? JSON.parse(mermaidSrc.dataset.config) : {}
+      if (!config.theme) {
+        config.theme = theme
+      }
+      const mermaidThemeConfig = `%%{init: ${JSON.stringify(config)}}%%\n`
+      const mermaidID = `mermaid-${index}`
+      const mermaidDefinition = mermaidThemeConfig + mermaidSrc.textContent
+
+      const renderFn = mermaid.render(mermaidID, mermaidDefinition)
+      const renderMermaid = svg => {
+        mermaidSrc.insertAdjacentHTML('afterend', svg)
+        if (true) initMermaidGestures(item)
+        item.__mermaidOriginalSvg = svg
+        if (true) attachMermaidViewerButton(item)
+      }
+
+
+      // mermaid v9 and v10 compatibility
+      typeof renderFn === 'string' ? renderMermaid(renderFn) : renderFn.then(({ svg }) => renderMermaid(svg))
+    })
+  }
+
+  const codeToMermaid = () => {
+    const codeMermaidEle = document.querySelectorAll('pre > code.mermaid')
+    if (codeMermaidEle.length === 0) return
+
+    codeMermaidEle.forEach(ele => {
+      const preEle = document.createElement('pre')
+      preEle.className = 'mermaid-src'
+      preEle.hidden = true
+      preEle.textContent = ele.textContent
+      const newEle = document.createElement('div')
+      newEle.className = 'mermaid-wrap'
+      newEle.appendChild(preEle)
+      ele.parentNode.replaceWith(newEle)
+    })
+  }
+
+  const loadMermaid = () => {
+    if (true) codeToMermaid()
+    const $mermaid = document.querySelectorAll('#article-container .mermaid-wrap')
+    if ($mermaid.length === 0) return
+
+    const runMermaidFn = () => runMermaid($mermaid)
+    btf.addGlobalFn('themeChange', runMermaidFn, 'mermaid')
+    window.loadMermaid ? runMermaidFn() : btf.getScript('https://cdn.jsdelivr.net/npm/mermaid@11.15.0/dist/mermaid.min.js').then(runMermaidFn)
+  }
+
+  btf.addGlobalFn('encrypt', loadMermaid, 'mermaid')
+  window.pjax ? loadMermaid() : document.addEventListener('DOMContentLoaded', loadMermaid)
+})()</script></div><script id="click-heart" src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/dist/click-heart.min.js" async="async" mobile="true"></script><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script><div id="local-search"><div class="search-dialog"><nav class="search-nav"><span class="search-dialog-title">搜索</span><i class="fas fa-spinner fa-pulse" id="loading-status" hidden="hidden"></i><button class="search-close-button"><i class="fas fa-times"></i></button></nav><div class="text-center" id="loading-database"><i class="fas fa-spinner fa-pulse"></i><span>  数据加载中</span></div><div class="local-search-input"><input placeholder="输入关键词…" type="text"/></div><hr/><div id="local-search-results"></div><div class="ais-Pagination" id="local-search-pagination" style="display:none;"><ul class="ais-Pagination-list"></ul></div><div id="local-search-stats"></div></div><div id="search-mask"></div><script src="/js/search/local-search.js?v=5.5.5"></script></div></div></body></html>
