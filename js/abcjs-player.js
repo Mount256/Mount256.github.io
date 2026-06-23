@@ -1,14 +1,13 @@
-// Butterfly主题abcjs播放器 - 最终API兼容版
+// Butterfly主题abcjs播放器 - 官方最佳实践版
 window.initAbcjsPlayer = function() {
-    // 查找所有未初始化的乐谱元素
     const scoreElements = document.querySelectorAll('.abcjs-score:not(.abcjs-initialized)');
     
     scoreElements.forEach((element, index) => {
-        // 标记为已初始化，避免重复渲染
         element.classList.add('abcjs-initialized');
         
         const abcText = element.textContent.trim();
         const containerId = `abcjs-score-${Date.now()}-${index}`;
+        const audioId = `abcjs-audio-${Date.now()}-${index}`;
         
         // 创建包装容器
         const wrapper = document.createElement('div');
@@ -92,57 +91,16 @@ window.initAbcjsPlayer = function() {
         speedControl.appendChild(speedSlider);
         speedControl.appendChild(speedValue);
         
-        // 进度条容器
-        const progressContainer = document.createElement('div');
-        progressContainer.style.width = '100%';
-        progressContainer.style.margin = '15px 0';
-        progressContainer.style.display = 'flex';
-        progressContainer.style.alignItems = 'center';
-        progressContainer.style.gap = '10px';
-        
-        // 当前时间显示
-        const currentTime = document.createElement('span');
-        currentTime.textContent = '0:00';
-        currentTime.style.fontSize = '14px';
-        currentTime.style.color = 'var(--text-color)';
-        currentTime.style.minWidth = '40px';
-        currentTime.style.textAlign = 'right';
-        
-        // 进度条背景
-        const progressBar = document.createElement('div');
-        progressBar.style.flex = '1';
-        progressBar.style.height = '6px';
-        progressBar.style.background = 'var(--border-color)';
-        progressBar.style.borderRadius = '3px';
-        progressBar.style.cursor = 'pointer';
-        progressBar.style.overflow = 'hidden';
-        
-        // 进度条填充
-        const progressFill = document.createElement('div');
-        progressFill.style.height = '100%';
-        progressFill.style.width = '0%';
-        progressFill.style.background = 'var(--btn-bg)';
-        progressFill.style.borderRadius = '3px';
-        progressFill.style.transition = 'width 0.1s linear';
-        
-        progressBar.appendChild(progressFill);
-        
-        // 总时间显示
-        const totalTime = document.createElement('span');
-        totalTime.textContent = '0:00';
-        totalTime.style.fontSize = '14px';
-        totalTime.style.color = 'var(--text-color)';
-        totalTime.style.minWidth = '40px';
-        
-        progressContainer.appendChild(currentTime);
-        progressContainer.appendChild(progressBar);
-        progressContainer.appendChild(totalTime);
-        
-        // 添加所有元素到控制栏
+        // 添加按钮到控制栏
         controls.appendChild(playBtn);
         controls.appendChild(pauseBtn);
         controls.appendChild(stopBtn);
         controls.appendChild(speedControl);
+        
+        // 创建隐藏的音频容器
+        const audioContainer = document.createElement('div');
+        audioContainer.id = audioId;
+        audioContainer.style.display = 'none';
         
         // 创建乐谱容器
         const scoreContainer = document.createElement('div');
@@ -150,31 +108,16 @@ window.initAbcjsPlayer = function() {
         
         // 组装所有元素
         wrapper.appendChild(controls);
-        wrapper.appendChild(progressContainer);
+        wrapper.appendChild(audioContainer);
         wrapper.appendChild(scoreContainer);
         element.parentNode.replaceChild(wrapper, element);
         
         // 全局变量
-        let synthControl;
-        let visualObj;
-        let audioInitialized = false;
-        let totalDuration = 0;
-        let currentPosition = 0; // 毫秒
+        let synthControl = null;
+        let createSynth = null;
+        let visualObj = null;
         let isPlaying = false;
-        
-        // 格式化时间（秒 -> 分:秒）
-        function formatTime(seconds) {
-            const mins = Math.floor(seconds / 60);
-            const secs = Math.floor(seconds % 60);
-            return `${mins}:${secs.toString().padStart(2, '0')}`;
-        }
-        
-        // 更新进度条显示
-        function updateProgressDisplay() {
-            const progress = currentPosition / totalDuration;
-            progressFill.style.width = `${progress * 100}%`;
-            currentTime.textContent = formatTime(currentPosition / 1000);
-        }
+        let isInitialized = false;
         
         // 渲染乐谱
         function renderScore() {
@@ -184,33 +127,62 @@ window.initAbcjsPlayer = function() {
                 add_classes: true,
                 scale: 1.1,
                 clickListener: function(abcElem) {
-                    if (synthControl && audioInitialized) {
+                    if (synthControl && isPlaying) {
                         synthControl.seek(abcElem.startChar);
-                        currentPosition = abcElem.startTime;
-                        updateProgressDisplay();
                     }
                 }
             };
             
             visualObj = ABCJS.renderAbc(containerId, abcText, options)[0];
-            
-            // 计算总时长（毫秒）- 这是官方文档中明确支持的API
-            totalDuration = visualObj.getTotalTime();
-            totalTime.textContent = formatTime(totalDuration / 1000);
         }
         
-        // 初始化音频
+        // 完全停止并销毁所有音频资源
+        function hardStop() {
+            if (synthControl) {
+                try {
+                    synthControl.pause();
+                    synthControl.stop();
+                    
+                    // 销毁音频上下文
+                    if (synthControl.synth && synthControl.synth.audioContext) {
+                        synthControl.synth.audioContext.close();
+                    }
+                } catch (e) {}
+                synthControl = null;
+            }
+            
+            if (createSynth) {
+                createSynth = null;
+            }
+            
+            // 清除高亮
+            document.querySelectorAll(`#${containerId} .abcjs-note-highlight`).forEach(el => {
+                el.classList.remove('abcjs-note-highlight');
+            });
+            
+            // 重置状态
+            isPlaying = false;
+            isInitialized = false;
+            playBtn.disabled = false;
+            pauseBtn.disabled = true;
+            stopBtn.disabled = true;
+            playBtn.textContent = '播放';
+        }
+        
+        // 按照官方流程初始化音频
         async function initAudio() {
-            if (audioInitialized) return true;
+            if (isInitialized) return true;
             
             try {
-                const playerContainer = document.createElement('div');
-                playerContainer.style.display = 'none';
-                wrapper.appendChild(playerContainer);
+                // 检查浏览器音频支持
+                if (!ABCJS.synth.supportsAudio()) {
+                    throw new Error("您的浏览器不支持Web Audio API");
+                }
                 
+                // 1. 创建合成器控制器（官方步骤1）
                 synthControl = new ABCJS.synth.SynthController();
                 
-                synthControl.load(playerContainer, null, {
+                synthControl.load(`#${audioId}`, null, {
                     displayLoop: false,
                     displayRestart: false,
                     displayPlay: false,
@@ -219,59 +191,59 @@ window.initAbcjsPlayer = function() {
                     qpm: parseInt(speedSlider.value)
                 });
                 
+                // 2. 创建合成器实例（官方步骤2 - 关键！）
+                createSynth = new ABCJS.synth.CreateSynth();
+                
+                // 3. 初始化合成器（官方步骤3 - 关键！）
+                await createSynth.init({
+                    visualObj: visualObj,
+                    qpm: parseInt(speedSlider.value)
+                });
+                
+                // 4. 设置要播放的乐谱（官方步骤4）
                 await synthControl.setTune(visualObj, false, {
-                    // 关键修复：使用官方唯一支持的onEvent回调跟踪进度
                     onEvent: function(ev) {
                         if (ev.measureStart && ev.left === null) return;
                         
-                        // 清除之前的高亮
                         document.querySelectorAll(`#${containerId} .abcjs-note-highlight`).forEach(el => {
                             el.classList.remove('abcjs-note-highlight');
                         });
                         
-                        // 高亮当前音符并更新进度
-                        if (ev.elements && ev.startTime !== undefined) {
-                            currentPosition = ev.startTime;
-                            updateProgressDisplay();
-                            
+                        if (ev.elements) {
                             ev.elements.forEach(el => {
                                 el.classList.add('abcjs-note-highlight');
                             });
                         }
                     },
-                    // 播放结束回调
-                    onEnded: function() {
-                        isPlaying = false;
-                        currentPosition = totalDuration;
-                        updateProgressDisplay();
-                        
-                        playBtn.disabled = false;
-                        pauseBtn.disabled = true;
-                        stopBtn.disabled = true;
+                    onFinished: function() {
+                        hardStop();
                     }
                 });
                 
-                audioInitialized = true;
+                isInitialized = true;
                 return true;
             } catch (error) {
                 console.error('音频初始化失败:', error);
-                alert('音频初始化失败，请刷新页面后重试');
+                alert('音频初始化失败: ' + error.message);
+                hardStop();
                 return false;
             }
         }
         
         // 播放按钮事件
         playBtn.addEventListener('click', async function() {
-            if (!audioInitialized) {
-                const success = await initAudio();
-                if (!success) return;
+            if (isPlaying) {
+                // 暂停状态下点击继续
+                synthControl.play();
+                isPlaying = true;
+                playBtn.disabled = true;
+                pauseBtn.disabled = false;
+                return;
             }
             
-            // 如果已经播放到末尾，从头开始
-            if (currentPosition >= totalDuration) {
-                currentPosition = 0;
-                synthControl.seek(0);
-            }
+            // 第一次点击或停止后重新初始化
+            const success = await initAudio();
+            if (!success) return;
             
             synthControl.play();
             isPlaying = true;
@@ -282,50 +254,27 @@ window.initAbcjsPlayer = function() {
         
         // 暂停按钮事件
         pauseBtn.addEventListener('click', function() {
-            synthControl.pause();
-            isPlaying = false;
-            playBtn.disabled = false;
-            pauseBtn.disabled = true;
+            if (synthControl) {
+                synthControl.pause();
+                isPlaying = false;
+                playBtn.disabled = false;
+                pauseBtn.disabled = true;
+                playBtn.textContent = '继续';
+            }
         });
         
         // 停止按钮事件
         stopBtn.addEventListener('click', function() {
-            synthControl.stop();
-            isPlaying = false;
-            currentPosition = 0;
-            updateProgressDisplay();
-            
-            playBtn.disabled = false;
-            pauseBtn.disabled = true;
-            stopBtn.disabled = true;
-            
-            // 清除所有高亮
-            document.querySelectorAll(`#${containerId} .abcjs-note-highlight`).forEach(el => {
-                el.classList.remove('abcjs-note-highlight');
-            });
+            hardStop();
         });
         
         // 速度滑块事件
         speedSlider.addEventListener('input', function() {
             const speed = parseInt(this.value);
             speedValue.textContent = speed + ' BPM';
-            if (synthControl && audioInitialized) {
+            if (synthControl && isInitialized) {
                 synthControl.setQpm(speed);
             }
-        });
-        
-        // 进度条点击跳转事件
-        progressBar.addEventListener('click', function(e) {
-            if (!synthControl || !audioInitialized) return;
-            
-            const rect = progressBar.getBoundingClientRect();
-            const clickX = e.clientX - rect.left;
-            const progress = clickX / rect.width;
-            
-            // 跳转到对应位置
-            currentPosition = progress * totalDuration;
-            synthControl.seek(currentPosition);
-            updateProgressDisplay();
         });
         
         // 渲染乐谱
@@ -337,7 +286,7 @@ window.initAbcjsPlayer = function() {
         }
     });
     
-    // 添加全局CSS样式（只添加一次）
+    // 添加全局CSS样式
     if (!document.getElementById('abcjs-global-style')) {
         const style = document.createElement('style');
         style.id = 'abcjs-global-style';
@@ -368,5 +317,9 @@ window.initAbcjsPlayer = function() {
     }
 };
 
-// 脚本加载完成后立即执行一次
-window.initAbcjsPlayer();
+// 脚本加载完成后执行
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', window.initAbcjsPlayer);
+} else {
+    window.initAbcjsPlayer();
+}
