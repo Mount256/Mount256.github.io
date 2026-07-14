@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>页面已迁移 | 跳转至新站点</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+        }
+        body {
+            min-height: 100vh;
+            background: #0f172a;
+            color: #e2e8f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .progress-wrap {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: #334155;
+        }
+        .progress-bar {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #38bdf8, #a855f7);
+            transition: width 1s linear;
+        }
+        .card {
+            width: 100%;
+            max-width: 520px;
+            background: #1e293b;
+            border-radius: 16px;
+            padding: 48px 36px;
+            text-align: center;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            border: 1px solid #334155;
+        }
+        .icon {
+            font-size: 56px;
+            margin-bottom: 20px;
+        }
+        h1 {
+            font-size: 26px;
+            margin-bottom: 14px;
+            background: linear-gradient(90deg, #38bdf8, #a855f7);
+            -webkit-background-clip: text;
+            color: transparent;
+        }
+        .desc {
+            color: #94a3b8;
+            font-size: 15px;
+            line-height: 1.7;
+            margin-bottom: 12px;
+        }
+        .count-text {
+            color: #f87171;
+            font-size: 18px;
+            margin-bottom: 32px;
+            font-weight: 500;
+        }
+        .domain-box {
+            background: #0f172a;
+            padding: 14px 20px;
+            border-radius: 10px;
+            font-family: "Consolas", monospace;
+            color: #38bdf8;
+            font-size: 14px;
+            margin-bottom: 36px;
+            word-break: break-all;
+        }
+        .btn {
+            display: inline-block;
+            padding: 14px 32px;
+            background: linear-gradient(90deg, #38bdf8, #a855f7);
+            color: #fff;
+            text-decoration: none;
+            border-radius: 10px;
+            font-weight: 500;
+            transition: all 0.25s ease;
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(168, 85, 247, 0.35);
+        }
+        .tip {
+            margin-top: 28px;
+            font-size: 13px;
+            color: #64748b;
+        }
+    </style>
+</head>
+<body>
+    <div class="progress-wrap">
+        <div class="progress-bar" id="bar"></div>
+    </div>
+
+    <div class="card">
+        <div class="icon">📦</div>
+        <h1>该页面已迁移至新域名</h1>
+        <p class="desc">正在自动匹配对应文章页面</p>
+        <p class="count-text">页面将在 <span id="timer">10</span> 秒后自动跳转</p>
+        <div class="domain-box" id="targetUrl"></div>
+        <a id="jumpBtn" href="" class="btn">手动跳转页面</a>
+        <p class="tip">旧域名永久归档，不再发布新内容</p>
+    </div>
+
+<script>
+    const newHost = "https://blog.mount256.com/";
+    const fullUrl = newHost + window.location.pathname + window.location.search;
+    document.getElementById("targetUrl").innerText = fullUrl;
+    document.getElementById("jumpBtn").href = fullUrl;
+
+    // 统一10秒倒计时
+    const waitTotal = 10;
+    let remain = waitTotal;
+    const timerDom = document.getElementById("timer");
+    const bar = document.getElementById("bar");
+    bar.style.transitionDuration = waitTotal + "s";
+    setTimeout(() => bar.style.width = "100%", 50);
+
+    const timer = setInterval(() => {
+        remain--;
+        timerDom.innerText = remain;
+        if (remain <= 0) {
+            clearInterval(timer);
+            window.location.replace(fullUrl);
+        }
+    }, 1000);
+</script>
+</body>
+</html>
