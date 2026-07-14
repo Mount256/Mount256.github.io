@@ -1,0 +1,606 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>Mount256的个人小站 - 欢迎常来玩!</title><meta name="author" content="Mount256"><meta name="copyright" content="Mount256"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="心似河水，奔流依旧">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Mount256的个人小站">
+<meta property="og:url" content="https://blog.mount256.com/page/12/index.html">
+<meta property="og:site_name" content="Mount256的个人小站">
+<meta property="og:description" content="心似河水，奔流依旧">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://blog.mount256.com/img/avatar.png">
+<meta property="article:author" content="Mount256">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://blog.mount256.com/img/avatar.png"><script type="application/ld+json"></script><link rel="shortcut icon" href="/img/favicon.png"><link rel="canonical" href="https://blog.mount256.com/page/12/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css?v=5.5.5"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@7.2.0/css/all.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/ui@6.1.14/dist/fancybox/fancybox.min.css" media="print" onload="this.media='all'"><script>
+    (() => {
+      
+    const saveToLocal = {
+      set: (key, value, ttl) => {
+        if (!ttl) return
+        const expiry = Date.now() + ttl * 86400000
+        localStorage.setItem(key, JSON.stringify({ value, expiry }))
+      },
+      get: key => {
+        const itemStr = localStorage.getItem(key)
+        if (!itemStr) return undefined
+        const { value, expiry } = JSON.parse(itemStr)
+        if (Date.now() > expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return value
+      }
+    }
+
+    window.btf = {
+      saveToLocal,
+      getScript: (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        Object.entries(attr).forEach(([key, val]) => script.setAttribute(key, val))
+        script.onload = script.onreadystatechange = () => {
+          if (!script.readyState || /loaded|complete/.test(script.readyState)) resolve()
+        }
+        script.onerror = reject
+        document.head.appendChild(script)
+      }),
+      getCSS: (url, id) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onload = link.onreadystatechange = () => {
+          if (!link.readyState || /loaded|complete/.test(link.readyState)) resolve()
+        }
+        link.onerror = reject
+        document.head.appendChild(link)
+      }),
+      addGlobalFn: (key, fn, name = false, parent = window) => {
+        if (!false && key.startsWith('pjax')) return
+        const globalFn = parent.globalFn || {}
+        globalFn[key] = globalFn[key] || {}
+        globalFn[key][name || Object.keys(globalFn[key]).length] = fn
+        parent.globalFn = globalFn
+      }
+    }
+  
+      
+      const activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      const activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+
+      btf.activateDarkMode = activateDarkMode
+      btf.activateLightMode = activateLightMode
+
+      const theme = saveToLocal.get('theme')
+    
+          theme === 'dark' ? activateDarkMode() : theme === 'light' ? activateLightMode() : null
+        
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        document.documentElement.classList.toggle('hide-aside', asideStatus === 'hide')
+      }
+    
+      
+    const detectApple = () => {
+      if (/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)) {
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+  
+    })()
+  </script><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: {"path":"/search.xml","preload":false,"top_n_per_article":1,"unescape":false,"pagination":{"enable":false,"hitsPerPage":8},"languages":{"hits_empty":"未找到符合您查询的内容：${query}","hits_stats":"共找到 ${hits} 篇文章"}},
+  translate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false,"highlightFullpage":false,"highlightMacStyle":false},
+  copy: {
+    success: '复制成功',
+    error: '复制失败',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'fancybox',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid@4.13.0/dist/infinitegrid.min.js',
+    buttonText: '加载更多'
+  },
+  isPhotoFigcaption: false,
+  islazyloadPlugin: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'Mount256的个人小站',
+  isHighlightShrink: false,
+  isToc: false,
+  pageType: 'home'
+}</script><link rel="stylesheet" href="/css/mouse.css"><script src="/live2d-widget/dist/autoload.js"></script><!-- hexo injector head_end start -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.css">
+<!-- hexo injector head_end end --><meta name="generator" content="Hexo 8.1.2"></head><body><div class="bg-animation" id="web_bg" style="background-image: url(/img/background.png);"></div><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img text-center"><img src="/img/avatar.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data text-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">131</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">128</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">25</div></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 链接</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于</span></a></div></div></div></div><div class="page" id="body-wrap"><header class="full_page" id="page-header" style="background-image: url(/img/top.jpg);"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><span class="site-name">Mount256的个人小站</span></a></span><div id="menus"><div id="search-button"><span class="site-page social-icon search"><i class="fas fa-search fa-fw"></i><span> 搜索</span></span></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 链接</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于</span></a></div></div><div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div></div></nav><div id="site-info"><h1 id="site-title">Mount256的个人小站</h1><div id="site-subtitle"><span id="subtitle"></span></div></div><div id="scroll-down"><i class="fas fa-angle-down scroll-down-effects"></i></div></header><main class="layout" id="content-inner"><div class="recent-posts nc masonry" id="recent-posts"><div class="recent-post-items"><div class="recent-post-item"><div class="post_cover"><a href="/posts/de7ae269.html" title="C++并发与多线程（4）——unique_lock详解"><img class="post-bg" src="/img/cover1.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="C++并发与多线程（4）——unique_lock详解"></a></div><div class="recent-post-info"><a class="article-title" href="/posts/de7ae269.html" title="C++并发与多线程（4）——unique_lock详解">C++并发与多线程（4）——unique_lock详解</a><div class="article-meta-wrap"><span class="post-meta-date"><i class="far fa-calendar-alt"></i><span class="article-meta-label">发表于</span><time class="post-meta-date-created" datetime="2021-02-19T16:00:00.000Z" title="发表于 2021-02-20 00:00:00">2021-02-20</time><span class="article-meta-separator">|</span><i class="fas fa-history"></i><span class="article-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2026-06-19T16:00:00.000Z" title="更新于 2026-06-20 00:00:00">2026-06-20</time></span><span class="article-meta"><span class="article-meta-separator">|</span><i class="fas fa-inbox"></i><a class="article-meta__categories" href="/categories/C%E5%92%8CC/">C和C++</a><i class="fas fa-angle-right article-meta-link"></i><i class="fas fa-inbox"></i><a class="article-meta__categories" href="/categories/C%E5%92%8CC/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B/">并发编程</a></span></div><div class="content">一、unique_lock取代lock_guard unique_lock比lock_guard灵活很多（多出来很多用法），但是效率差一点，内存的占用也会大一点。 cppreference对此的描述是：  A unique lock is an object that manages a mutex object with unique ownership in both states: locked and unlocked. On construction (or by move-assigning to it), the object acquires a mutex object, for whose locking and unlocking operations becomes responsible. The object supports both states: locked and unlocked. This class guarantees an unlocked status on destruction (even if not called expl...</div></div></div><div class="recent-post-item"><div class="post_cover"><a href="/posts/14588e85.html" title="C++并发与多线程（3）——互斥量与死锁"><img class="post-bg" src="/img/cover0.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="C++并发与多线程（3）——互斥量与死锁"></a></div><div class="recent-post-info"><a class="article-title" href="/posts/14588e85.html" title="C++并发与多线程（3）——互斥量与死锁">C++并发与多线程（3）——互斥量与死锁</a><div class="article-meta-wrap"><span class="post-meta-date"><i class="far fa-calendar-alt"></i><span class="article-meta-label">发表于</span><time class="post-meta-date-created" datetime="2021-02-18T16:00:00.000Z" title="发表于 2021-02-19 00:00:00">2021-02-19</time><span class="article-meta-separator">|</span><i class="fas fa-history"></i><span class="article-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2026-06-19T16:00:00.000Z" title="更新于 2026-06-20 00:00:00">2026-06-20</time></span><span class="article-meta"><span class="article-meta-separator">|</span><i class="fas fa-inbox"></i><a class="article-meta__categories" href="/categories/C%E5%92%8CC/">C和C++</a><i class="fas fa-angle-right article-meta-link"></i><i class="fas fa-inbox"></i><a class="article-meta__categories" href="/categories/C%E5%92%8CC/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B/">并发编程</a></span></div><div class="content">零、引子 1.创建多线程 在前几次学习中，我们都是创建一个子线程，其实多个子线程是比较常见的。一般在创建多个线程时，把thread对象放入到容器中管理，看起来像个thread对象的数组，对一次创建大量的线程并对大量线程进行管理有好处。下面是一个例子： 123456789101112131415161718192021222324252627#include &lt;iostream&gt;#include &lt;thread&gt;#include &lt;vector&gt;using namespace std;void get_id(int i)&#123;	cout &lt;&lt; &quot;第&quot; &lt;&lt; i &lt;&lt; &quot;线程id为&quot; &lt;&lt; this_thread::get_id() &lt;&lt; &quot;开始执行&quot; &lt;&lt; endl;	cout &lt;&lt; &quot;第&quot; &lt;&lt; i &lt;&lt; &quot;线程id为&quot; &lt;&l...</div></div></div><div class="recent-post-item"><div class="post_cover"><a href="/posts/95262715.html" title="C++并发与多线程（2）——线程传参问题"><img class="post-bg" src="/img/cover2.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="C++并发与多线程（2）——线程传参问题"></a></div><div class="recent-post-info"><a class="article-title" href="/posts/95262715.html" title="C++并发与多线程（2）——线程传参问题">C++并发与多线程（2）——线程传参问题</a><div class="article-meta-wrap"><span class="post-meta-date"><i class="far fa-calendar-alt"></i><span class="article-meta-label">发表于</span><time class="post-meta-date-created" datetime="2021-02-17T16:00:00.000Z" title="发表于 2021-02-18 00:00:00">2021-02-18</time><span class="article-meta-separator">|</span><i class="fas fa-history"></i><span class="article-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2026-06-19T16:00:00.000Z" title="更新于 2026-06-20 00:00:00">2026-06-20</time></span><span class="article-meta"><span class="article-meta-separator">|</span><i class="fas fa-inbox"></i><a class="article-meta__categories" href="/categories/C%E5%92%8CC/">C和C++</a><i class="fas fa-angle-right article-meta-link"></i><i class="fas fa-inbox"></i><a class="article-meta__categories" href="/categories/C%E5%92%8CC/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B/">并发编程</a></span></div><div class="content">零、复习隐式转换和显式转换的概念  隐式转换（系统根据程序的需要而自动转换的）：  123456789void fun(CTest test); class CTest &#123; public:     CTest(int m = 0); &#125; fun(20);//隐式转换，这里的20生成了一个临时对象  显式转换（需要加括号标注想要转换的类型）：  12345678910void fun(CTest test); //但有时隐式转换并不是我们想要的，可在构造函数前加上关键字explicit，来指定显式调用class CTest &#123; public:     explicit CTest(int m = 0); &#125; fun(20);//错误，隐式转换fun(static_cast&lt;CTest&gt;(20)); //正确，显式转换，这里的20生成了一个临时对象 一、获得线程id 格式：std::thread::get_id cpp官网解释：  Get thread id Returns the thread id. If the thread ...</div></div></div><div class="recent-post-item"><div class="post_cover"><a href="/posts/77135fb8.html" title="C++并发与多线程（1）——创建线程"><img class="post-bg" src="/img/cover3.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="C++并发与多线程（1）——创建线程"></a></div><div class="recent-post-info"><a class="article-title" href="/posts/77135fb8.html" title="C++并发与多线程（1）——创建线程">C++并发与多线程（1）——创建线程</a><div class="article-meta-wrap"><span class="post-meta-date"><i class="far fa-calendar-alt"></i><span class="article-meta-label">发表于</span><time class="post-meta-date-created" datetime="2021-02-07T16:00:00.000Z" title="发表于 2021-02-08 00:00:00">2021-02-08</time><span class="article-meta-separator">|</span><i class="fas fa-history"></i><span class="article-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2026-06-19T16:00:00.000Z" title="更新于 2026-06-20 00:00:00">2026-06-20</time></span><span class="article-meta"><span class="article-meta-separator">|</span><i class="fas fa-inbox"></i><a class="article-meta__categories" href="/categories/C%E5%92%8CC/">C和C++</a><i class="fas fa-angle-right article-meta-link"></i><i class="fas fa-inbox"></i><a class="article-meta__categories" href="/categories/C%E5%92%8CC/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B/">并发编程</a></span></div><div class="content">零、注意事项  程序运行起来，生成一个进程，该进程所属的主线程开始自动运行；当主线程从main()函数返回，则整个进程执行完毕。 主线程从main()开始执行，那么我们自己创建的线程，也需要从一个函数开始运行，一旦这个函数运行完毕，线程也结束运行。 整个进程是否执行完毕的标志是：主线程是否执行完，如果主线程执行完毕了，就代表整个进程执行完毕了，此时如果其他子线程还没有执行完，也会被强行终止（此条有例外，以后会解释）。  一、创建线程的一般方法 首先要引入头文件#include，C++11中管理线程的函数和类在该头文件中声明，其中包括std::thread类。 创建线程的格式是std::thread mythread(function);，意思是创建了一个名为mythread的线程，并且线程mythread开始执行。其中可调用对象名（即括号中的function）作为第一个参数，第二个参数为该函数的第一个参数，如果该函数接收多个参数就依次写在后面。此时线程开始执行。 需要注意，线程类参数是一个可调用对象，C++中的可调用对象可以是函数、函数指针、lambda表达式、bind创建的对象...</div></div></div><div class="recent-post-item"><div class="post_cover"><a href="/posts/48f24887.html" title="STM32学习笔记（2）——按键输入实验"><img class="post-bg" src="/img/cover1.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="STM32学习笔记（2）——按键输入实验"></a></div><div class="recent-post-info"><a class="article-title" href="/posts/48f24887.html" title="STM32学习笔记（2）——按键输入实验">STM32学习笔记（2）——按键输入实验</a><div class="article-meta-wrap"><span class="post-meta-date"><i class="far fa-calendar-alt"></i><span class="article-meta-label">发表于</span><time class="post-meta-date-created" datetime="2021-01-19T16:00:00.000Z" title="发表于 2021-01-20 00:00:00">2021-01-20</time><span class="article-meta-separator">|</span><i class="fas fa-history"></i><span class="article-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2026-07-09T16:00:00.000Z" title="更新于 2026-07-10 00:00:00">2026-07-10</time></span><span class="article-meta"><span class="article-meta-separator">|</span><i class="fas fa-inbox"></i><a class="article-meta__categories" href="/categories/%E5%B5%8C%E5%85%A5%E5%BC%8F%E5%BC%80%E5%8F%91/">嵌入式开发</a><i class="fas fa-angle-right article-meta-link"></i><i class="fas fa-inbox"></i><a class="article-meta__categories" href="/categories/%E5%B5%8C%E5%85%A5%E5%BC%8F%E5%BC%80%E5%8F%91/STM32/">STM32</a></span></div><div class="content">前情提示： 我们之前简要做了LED和蜂鸣器的学习笔记。因此，本文程序涉及到LED和蜂鸣器的程序段不再重复出现。 零、按键基本认识 1、防抖 按键机械触点断开、闭合的时候，由于触点的弹性作用，按键开关不会马上稳定接通或一下子断开，而是会产生一些波纹信号，这些波纹信号会干扰高低电平的判断。如下图所示，在按键按下的前后均有信号抖动：  为了解决这个问题，有一些电路自带消抖功能，利用电容充放电的延时，消除了干扰波纹，从而简化了软件的处理，软件只需检测引脚的高低电平即可。这叫硬件消抖。 然而，我们的实验板却没有硬件消抖功能，因此，当用户按下按键时，软件需要延时一会儿（一般为10ms左右），待引脚的输入电平稳定后再判断高低电平。这叫软件消抖。 大致的思路如下： 123456789101112uint8_t KEY_Scan(void)&#123;    if(KEY按下）    &#123;        delay_ms(10)；//延时10-20ms，防抖。        if(KEY确实按下)        &#123;            return KEY_Value；    ...</div></div></div><div class="recent-post-item"><div class="post_cover"><a href="/posts/60b0a184.html" title="STM32学习笔记（1）——LED和蜂鸣器"><img class="post-bg" src="/img/cover0.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="STM32学习笔记（1）——LED和蜂鸣器"></a></div><div class="recent-post-info"><a class="article-title" href="/posts/60b0a184.html" title="STM32学习笔记（1）——LED和蜂鸣器">STM32学习笔记（1）——LED和蜂鸣器</a><div class="article-meta-wrap"><span class="post-meta-date"><i class="far fa-calendar-alt"></i><span class="article-meta-label">发表于</span><time class="post-meta-date-created" datetime="2021-01-18T16:00:00.000Z" title="发表于 2021-01-19 00:00:00">2021-01-19</time><span class="article-meta-separator">|</span><i class="fas fa-history"></i><span class="article-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2026-07-09T16:00:00.000Z" title="更新于 2026-07-10 00:00:00">2026-07-10</time></span><span class="article-meta"><span class="article-meta-separator">|</span><i class="fas fa-inbox"></i><a class="article-meta__categories" href="/categories/%E5%B5%8C%E5%85%A5%E5%BC%8F%E5%BC%80%E5%8F%91/">嵌入式开发</a><i class="fas fa-angle-right article-meta-link"></i><i class="fas fa-inbox"></i><a class="article-meta__categories" href="/categories/%E5%B5%8C%E5%85%A5%E5%BC%8F%E5%BC%80%E5%8F%91/STM32/">STM32</a></span></div><div class="content">阅读前提示： 我们使用的板子是正点原子的ALIENTEK精英STM32F103。本文使用固件库进行编程，因为使用固件库编程较为方便，且阅读程序也较易理解。 零、GPIO简介及其库函数 1. GPIO简介 7组IO口（具体地址可见头文件stm32f10x.h）： GPIOA ~ GPIOG。每组IO口可控制7个寄存器，这7个寄存器可控制一组GPIO的16个IO口：  GPIOx_CRL:端口配置低寄存器 GPIOx_CRH:端口配置高寄存器 GPIOx_IDR:端口输入寄存器 GPIOx_ODR:端口输出寄存器 GPIOx_BSRR:端口位设置/清除寄存器 GPIOx_BRR:端口位清除寄存器 GPIOx_LCKR:端口配置锁存寄存器  16个管脚（GPIO_Pin）（位于头文件stm32f10x_gpio.h）： GPIO_Pin_0 ~ GPIO_Pin_15，若想全部选中则GPIO_Pin_All。 4种输入模式（GPIO_Mode）（位于头文件stm32f10x_gpio.h）：  浮空输入（GPIO_Mode_IN_FLOATING） 上拉输入（GPIO_Mode_IPU...</div></div></div><div class="recent-post-item"><div class="post_cover"><a href="/posts/3275c5b9.html" title="植物大战僵尸 PVZ Qt版"><img class="post-bg" src="/img/cover2.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="植物大战僵尸 PVZ Qt版"></a></div><div class="recent-post-info"><a class="article-title" href="/posts/3275c5b9.html" title="植物大战僵尸 PVZ Qt版">植物大战僵尸 PVZ Qt版</a><div class="article-meta-wrap"><span class="post-meta-date"><i class="far fa-calendar-alt"></i><span class="article-meta-label">发表于</span><time class="post-meta-date-created" datetime="2020-08-25T16:00:00.000Z" title="发表于 2020-08-26 00:00:00">2020-08-26</time><span class="article-meta-separator">|</span><i class="fas fa-history"></i><span class="article-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2026-06-19T16:00:00.000Z" title="更新于 2026-06-20 00:00:00">2026-06-20</time></span><span class="article-meta"><span class="article-meta-separator">|</span><i class="fas fa-inbox"></i><a class="article-meta__categories" href="/categories/C%E5%92%8CC/">C和C++</a><i class="fas fa-angle-right article-meta-link"></i><i class="fas fa-inbox"></i><a class="article-meta__categories" href="/categories/C%E5%92%8CC/Qt-C/">Qt-C++</a></span></div><div class="content">一、初步设计 1. 框架 本程序分为两个部分：菜单界面采用QWidget实现，有一个父窗口，通过信号槽机制调用各种子窗口；游戏界面使用QGraphicsScene框架实现，里面包含view和各种图形项item。 本程序采用面向对象程序设计思路，创建基类植物Plant、僵尸Zombie、卡牌Cards，在这基础上派生出不同的类，如豌豆射手、路障僵尸等。创建一个Map类，用以记录植物的位置，以及是否可以种植。 2. 界面 首先，整个窗口界面是900X600的大小，并且大小不可调。 菜单界面依然是植物大战僵尸的那个味道，放置熟悉的菜单背景，在右侧放置游戏开始按钮，玩家点击后程序会展示僵尸的一封信，再次点击即可进入游戏界面。 游戏界面也依然是植物大战僵尸的那个味道，几乎差不多。最上方是卡牌选择框，在选择框左侧显示阳光点数。左上角是返回菜单和游戏暂停按钮，在左侧摆放割草机，右侧出僵尸，正中一大片区域放植物，最下方展示游戏目标。 游戏开始，依然是植物大战僵尸的味道。玩家选择卡牌，在地图中央点击放置植物；若想铲除植物，则需点击右上方的铲子进行铲除操作。 3. 图形项Item 基于QGraphi...</div></div></div><div class="recent-post-item"><div class="post_cover"><a href="/posts/50e8678c.html" title="C++学习笔记（7）——标准模板库STL之set和map"><img class="post-bg" src="/img/cover3.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="C++学习笔记（7）——标准模板库STL之set和map"></a></div><div class="recent-post-info"><a class="article-title" href="/posts/50e8678c.html" title="C++学习笔记（7）——标准模板库STL之set和map">C++学习笔记（7）——标准模板库STL之set和map</a><div class="article-meta-wrap"><span class="post-meta-date"><i class="far fa-calendar-alt"></i><span class="article-meta-label">发表于</span><time class="post-meta-date-created" datetime="2020-08-05T16:00:00.000Z" title="发表于 2020-08-06 00:00:00">2020-08-06</time><span class="article-meta-separator">|</span><i class="fas fa-history"></i><span class="article-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2026-06-19T16:00:00.000Z" title="更新于 2026-06-20 00:00:00">2026-06-20</time></span><span class="article-meta"><span class="article-meta-separator">|</span><i class="fas fa-inbox"></i><a class="article-meta__categories" href="/categories/C%E5%92%8CC/">C和C++</a><i class="fas fa-angle-right article-meta-link"></i><i class="fas fa-inbox"></i><a class="article-meta__categories" href="/categories/C%E5%92%8CC/%E6%B3%9B%E5%9E%8B%E7%BC%96%E7%A8%8B/">泛型编程</a></span></div><div class="content">零、pair类模板 pair与python中字典的键值对非常像。在C++中，pair的定义是： 12345template &lt;typename T1, typename T2&gt;struct pair&#123;	T1 first;	T2 second;	...下面都是各种构造函数重载版本，不写了 可以不写参数：pair&lt;string, double&gt; p 可以写参数（常用）：pair&lt;string, double&gt; p1(&quot;xiaoming&quot;, 78) 可以这样初始化：pair&lt;string, double&gt; p2(pair&lt;string, double&gt;(&quot;xiaoming&quot;, 78))，当这样写的时候，其实是用了定义中的函数模板，参数必须是pair模板类对象的引用。 也可以这样初始化：pair&lt;string, double&gt; p3 = make_pair(&quot;xiaoming&quot;, 78) 访问pair对象的“键”（Key）：p.first 访问pa...</div></div></div><div class="recent-post-item"><div class="post_cover"><a href="/posts/e5d3ed0b.html" title="C++学习笔记（6）——标准模板库STL之vector和list"><img class="post-bg" src="/img/cover0.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="C++学习笔记（6）——标准模板库STL之vector和list"></a></div><div class="recent-post-info"><a class="article-title" href="/posts/e5d3ed0b.html" title="C++学习笔记（6）——标准模板库STL之vector和list">C++学习笔记（6）——标准模板库STL之vector和list</a><div class="article-meta-wrap"><span class="post-meta-date"><i class="far fa-calendar-alt"></i><span class="article-meta-label">发表于</span><time class="post-meta-date-created" datetime="2020-08-04T16:00:00.000Z" title="发表于 2020-08-05 00:00:00">2020-08-05</time><span class="article-meta-separator">|</span><i class="fas fa-history"></i><span class="article-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2026-06-19T16:00:00.000Z" title="更新于 2026-06-20 00:00:00">2026-06-20</time></span><span class="article-meta"><span class="article-meta-separator">|</span><i class="fas fa-inbox"></i><a class="article-meta__categories" href="/categories/C%E5%92%8CC/">C和C++</a><i class="fas fa-angle-right article-meta-link"></i><i class="fas fa-inbox"></i><a class="article-meta__categories" href="/categories/C%E5%92%8CC/%E6%B3%9B%E5%9E%8B%E7%BC%96%E7%A8%8B/">泛型编程</a></span></div><div class="content">一、动态数组vector 1.初始化 初始化为空：vector&lt;int&gt; v; 用另一个vector来初始化，即构造一个副本：vector&lt;int&gt; v(v1); 大小为n，并全部初始化为元素i ：vector&lt;int&gt; v(n, i); 构造大小为n的容器，没有初始化里面的元素：vector&lt;int&gt; (n); 构造大小为4，并初始化里面的各个元素：vector&lt;int&gt; {1,2,3,4}; 数组a[0]到a[5]的内容放进v：vector&lt;int&gt; v(a, a+5); 2.元素个数 v.size(); //返回容器中元素的个数，返回类型是int v.capacity(); //返回容器中的容量，容器的预留空间也会计算在内 3.添加/插入元素 v.push_back(n); //将n加到容器末尾 v.insert(i, n); //将n插入到迭代器i指向的位置，并返回i v.insert(i, i_first, i_end); //将其他容器上的区间[i_first,i_end)中的元素插入到迭代器i指...</div></div></div><div class="recent-post-item"><div class="post_cover"><a href="/posts/f4db6f89.html" title="C语言中的函数指针"><img class="post-bg" src="/img/cover1.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="C语言中的函数指针"></a></div><div class="recent-post-info"><a class="article-title" href="/posts/f4db6f89.html" title="C语言中的函数指针">C语言中的函数指针</a><div class="article-meta-wrap"><span class="post-meta-date"><i class="far fa-calendar-alt"></i><span class="article-meta-label">发表于</span><time class="post-meta-date-created" datetime="2020-08-04T16:00:00.000Z" title="发表于 2020-08-05 00:00:00">2020-08-05</time><span class="article-meta-separator">|</span><i class="fas fa-history"></i><span class="article-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2026-06-19T16:00:00.000Z" title="更新于 2026-06-20 00:00:00">2026-06-20</time></span><span class="article-meta"><span class="article-meta-separator">|</span><i class="fas fa-inbox"></i><a class="article-meta__categories" href="/categories/C%E5%92%8CC/">C和C++</a><i class="fas fa-angle-right article-meta-link"></i><i class="fas fa-inbox"></i><a class="article-meta__categories" href="/categories/C%E5%92%8CC/%E4%B8%80%E4%BA%9B%E7%9F%A5%E8%AF%86%E7%82%B9/">一些知识点</a></span></div><div class="content">直接上程序说明函数指针是怎么写的： 1234567891011121314151617181920212223242526272829#include &lt;iostream&gt;using namespace std;int power(int a)&#123;	return a*a;&#125;int cube(int a)&#123;	return a*a*a;&#125;void aPrint(int a)&#123;	cout&lt;&lt;&quot;test:&quot;&lt;&lt;a&lt;&lt;endl;&#125;int main()&#123;	int (*p)(int);	void (*print)(int);	p = power;	print = aPrint;	print((*p)(6));	p = cube;	print((*p)(6));	return 0;&#125; 输出： 12test:36test:216 </div></div></div></div><nav id="pagination"><div class="pagination"><a class="extend prev" rel="prev" href="/page/11/#content-inner"><i class="fas fa-chevron-left fa-fw"></i></a><a class="page-number" href="/">1</a><span class="space">&hellip;</span><a class="page-number" href="/page/11/#content-inner">11</a><span class="page-number current">12</span><a class="page-number" href="/page/13/#content-inner">13</a><a class="page-number" href="/page/14/#content-inner">14</a><a class="extend next" rel="next" href="/page/13/#content-inner"><i class="fas fa-chevron-right fa-fw"></i></a></div></nav></div><div class="aside-content" id="aside-content"><div class="card-widget card-info text-center"><div class="avatar-img"><img src="/img/avatar.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info-name">Mount256</div><div class="author-info-description">心似河水，奔流依旧</div><div class="site-data"><a href="/archives/"><div class="headline">文章</div><div class="length-num">131</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">128</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">25</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/Mount256"><i class="fab fa-github"></i><span>Follow Me</span></a></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">自 2026/07/13 开始本站域名由 mount256.github.io 迁移至 blog.mount256.com, 请知悉。</div></div><div class="sticky_layout"><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item"><a class="thumbnail" href="/posts/19f8fc4.html" title="进行式和终止式"><img src="/img/cover2.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="进行式和终止式"/></a><div class="content"><a class="title" href="/posts/19f8fc4.html" title="进行式和终止式">进行式和终止式</a><time datetime="2026-07-10T16:00:00.000Z" title="发表于 2026-07-11 00:00:00">2026-07-11</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/posts/349744ff.html" title="ABC notation渲染测试"><img src="/img/cover3.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="ABC notation渲染测试"/></a><div class="content"><a class="title" href="/posts/349744ff.html" title="ABC notation渲染测试">ABC notation渲染测试</a><time datetime="2026-06-23T02:42:49.000Z" title="发表于 2026-06-23 10:42:49">2026-06-23</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/posts/f9ae104.html" title="Git的分支操作"><img src="/img/cover0.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Git的分支操作"/></a><div class="content"><a class="title" href="/posts/f9ae104.html" title="Git的分支操作">Git的分支操作</a><time datetime="2026-06-11T16:00:00.000Z" title="发表于 2026-06-12 00:00:00">2026-06-12</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/posts/99b9faf2.html" title="Git的撤销操作"><img src="/img/cover1.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Git的撤销操作"/></a><div class="content"><a class="title" href="/posts/99b9faf2.html" title="Git的撤销操作">Git的撤销操作</a><time datetime="2026-06-11T16:00:00.000Z" title="发表于 2026-06-12 00:00:00">2026-06-12</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/posts/81e19116.html" title="Git多人协作"><img src="/img/cover3.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Git多人协作"/></a><div class="content"><a class="title" href="/posts/81e19116.html" title="Git多人协作">Git多人协作</a><time datetime="2026-06-11T16:00:00.000Z" title="发表于 2026-06-12 00:00:00">2026-06-12</time></div></div></div></div><div class="card-widget card-categories"><div class="item-headline">
+            <i class="fas fa-folder-open"></i>
+            <span>分类</span>
+            <a class="card-more-btn" href="/categories/" title="查看更多">
+      <i class="fas fa-angle-right"></i></a>
+          </div>
+          <ul class="card-category-list" id="aside-cat-list">
+            <li class="card-category-list-item "><a class="card-category-list-link" href="/categories/C%E5%92%8CC/"><span class="card-category-list-name">C和C++</span><span class="card-category-list-count">25</span></a><ul class="card-category-list child"><li class="card-category-list-item "><a class="card-category-list-link" href="/categories/C%E5%92%8CC/Qt-C/"><span class="card-category-list-name">Qt-C++</span><span class="card-category-list-count">1</span></a></li><li class="card-category-list-item "><a class="card-category-list-link" href="/categories/C%E5%92%8CC/%E4%B8%80%E4%BA%9B%E7%9F%A5%E8%AF%86%E7%82%B9/"><span class="card-category-list-name">一些知识点</span><span class="card-category-list-count">7</span></a></li><li class="card-category-list-item "><a class="card-category-list-link" href="/categories/C%E5%92%8CC/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B/"><span class="card-category-list-name">并发编程</span><span class="card-category-list-count">5</span></a></li><li class="card-category-list-item "><a class="card-category-list-link" href="/categories/C%E5%92%8CC/%E6%B3%9B%E5%9E%8B%E7%BC%96%E7%A8%8B/"><span class="card-category-list-name">泛型编程</span><span class="card-category-list-count">5</span></a></li><li class="card-category-list-item "><a class="card-category-list-link" href="/categories/C%E5%92%8CC/%E9%9D%A2%E5%90%91%E5%AF%B9%E8%B1%A1%E7%BC%96%E7%A8%8B/"><span class="card-category-list-name">面向对象编程</span><span class="card-category-list-count">7</span></a></li></ul></li><li class="card-category-list-item "><a class="card-category-list-link" href="/categories/FPGA%E5%BC%80%E5%8F%91/"><span class="card-category-list-name">FPGA开发</span><span class="card-category-list-count">9</span></a><ul class="card-category-list child"><li class="card-category-list-item "><a class="card-category-list-link" href="/categories/FPGA%E5%BC%80%E5%8F%91/HDLBits%E5%88%B7%E9%A2%98/"><span class="card-category-list-name">HDLBits刷题</span><span class="card-category-list-count">9</span></a></li></ul></li>
+          </ul></div><div class="card-widget card-tags"><div class="item-headline"><i class="fas fa-tags"></i><span>标签</span></div><div class="card-tag-cloud"><a href="/tags/%E7%BA%BF%E6%80%A7%E7%9B%B8%E5%85%B3/" style="font-size: 1.1em; color: #999">线性相关</a> <a href="/tags/ADC/" style="font-size: 1.23em; color: #999ea6">ADC</a> <a href="/tags/%E8%93%9D%E7%89%99/" style="font-size: 1.1em; color: #999">蓝牙</a> <a href="/tags/USART/" style="font-size: 1.1em; color: #999">USART</a> <a href="/tags/%E5%8A%A8%E6%80%81%E6%95%B0%E7%BB%84/" style="font-size: 1.1em; color: #999">动态数组</a> <a href="/tags/%E7%BC%93%E5%86%B2%E5%8C%BA/" style="font-size: 1.1em; color: #999">缓冲区</a> <a href="/tags/%E9%80%92%E6%8E%A8%E5%BC%8F/" style="font-size: 1.1em; color: #999">递推式</a> <a href="/tags/%E6%B5%81%E6%B0%B4%E7%BA%BF/" style="font-size: 1.1em; color: #999">流水线</a> <a href="/tags/%E7%BB%84%E5%90%88%E6%95%B0%E5%AD%A6/" style="font-size: 1.1em; color: #999">组合数学</a> <a href="/tags/%E6%B3%9B%E5%9E%8B/" style="font-size: 1.1em; color: #999">泛型</a> <a href="/tags/%E4%BA%A4%E6%8D%A2%E6%9C%BA/" style="font-size: 1.1em; color: #999">交换机</a> <a href="/tags/Flash/" style="font-size: 1.1em; color: #999">Flash</a> <a href="/tags/%E5%AE%9A%E6%97%B6%E5%99%A8/" style="font-size: 1.37em; color: #99a4b2">定时器</a> <a href="/tags/%E7%A1%AC%E7%9B%98/" style="font-size: 1.1em; color: #999">硬盘</a> <a href="/tags/%E6%8A%BD%E8%B1%A1%E7%B1%BB/" style="font-size: 1.1em; color: #999">抽象类</a> <a href="/tags/I2C/" style="font-size: 1.23em; color: #999ea6">I2C</a> <a href="/tags/GPIO/" style="font-size: 1.23em; color: #999ea6">GPIO</a> <a href="/tags/EEPROM/" style="font-size: 1.1em; color: #999">EEPROM</a> <a href="/tags/ARP/" style="font-size: 1.1em; color: #999">ARP</a> <a href="/tags/IO/" style="font-size: 1.1em; color: #999">IO</a> <a href="/tags/conda/" style="font-size: 1.1em; color: #999">conda</a> <a href="/tags/FTP/" style="font-size: 1.1em; color: #999">FTP</a> <a href="/tags/%E7%A6%BB%E6%95%A3%E6%95%B0%E5%AD%A6/" style="font-size: 1.1em; color: #999">离散数学</a> <a href="/tags/%E5%B5%8C%E5%85%A5%E5%BC%8F/" style="font-size: 1.5em; color: #99a9bf">嵌入式</a> <a href="/tags/%E6%B8%B8%E6%88%8F/" style="font-size: 1.1em; color: #999">游戏</a> <a href="/tags/%E4%B8%AD%E6%96%AD%E7%AE%A1%E7%90%86/" style="font-size: 1.23em; color: #999ea6">中断管理</a> <a href="/tags/%E6%9E%90%E6%9E%84%E5%87%BD%E6%95%B0/" style="font-size: 1.1em; color: #999">析构函数</a> <a href="/tags/%E6%B5%8B%E8%AF%95/" style="font-size: 1.23em; color: #999ea6">测试</a> <a href="/tags/const/" style="font-size: 1.1em; color: #999">const</a> <a href="/tags/TCP%E5%8D%8F%E8%AE%AE/" style="font-size: 1.1em; color: #999">TCP协议</a> <a href="/tags/%E4%BA%92%E6%96%A5%E9%94%81/" style="font-size: 1.23em; color: #999ea6">互斥锁</a> <a href="/tags/%E9%A1%B5%E9%9D%A2%E7%AE%97%E6%B3%95/" style="font-size: 1.1em; color: #999">页面算法</a> <a href="/tags/%E8%99%9A%E5%87%BD%E6%95%B0/" style="font-size: 1.1em; color: #999">虚函数</a> <a href="/tags/%E4%BC%A0%E5%8F%82/" style="font-size: 1.1em; color: #999">传参</a> <a href="/tags/%E5%AD%90%E7%BD%91%E5%88%92%E5%88%86/" style="font-size: 1.1em; color: #999">子网划分</a> <a href="/tags/%E5%AE%9A%E7%A7%AF%E5%88%86/" style="font-size: 1.1em; color: #999">定积分</a> <a href="/tags/%E5%B1%80%E5%9F%9F%E7%BD%91/" style="font-size: 1.1em; color: #999">局域网</a> <a href="/tags/%E5%87%BD%E6%95%B0%E6%8C%87%E9%92%88/" style="font-size: 1.1em; color: #999">函数指针</a> <a href="/tags/%E6%AD%A3%E4%BA%A4%E5%8C%96/" style="font-size: 1.1em; color: #999">正交化</a> <a href="/tags/Qt/" style="font-size: 1.1em; color: #999">Qt</a></div></div><div class="card-widget card-archives">
+    <div class="item-headline">
+      <i class="fas fa-archive"></i>
+      <span>归档</span>
+      <a class="card-more-btn" href="/archives/"
+            title="查看更多">
+            <i class="fas fa-angle-right"></i>
+          </a>
+    </div>
+  
+    <ul class="card-archive-list">
+      
+        <li class="card-archive-list-item">
+          <a class="card-archive-list-link" href="/archives/2026/07/">
+            <span class="card-archive-list-date">
+              七月 2026
+            </span>
+            <span class="card-archive-list-count">1</span>
+          </a>
+        </li>
+      
+        <li class="card-archive-list-item">
+          <a class="card-archive-list-link" href="/archives/2026/06/">
+            <span class="card-archive-list-date">
+              六月 2026
+            </span>
+            <span class="card-archive-list-count">8</span>
+          </a>
+        </li>
+      
+        <li class="card-archive-list-item">
+          <a class="card-archive-list-link" href="/archives/2024/06/">
+            <span class="card-archive-list-date">
+              六月 2024
+            </span>
+            <span class="card-archive-list-count">1</span>
+          </a>
+        </li>
+      
+        <li class="card-archive-list-item">
+          <a class="card-archive-list-link" href="/archives/2024/01/">
+            <span class="card-archive-list-date">
+              一月 2024
+            </span>
+            <span class="card-archive-list-count">1</span>
+          </a>
+        </li>
+      
+        <li class="card-archive-list-item">
+          <a class="card-archive-list-link" href="/archives/2023/12/">
+            <span class="card-archive-list-date">
+              十二月 2023
+            </span>
+            <span class="card-archive-list-count">1</span>
+          </a>
+        </li>
+      
+        <li class="card-archive-list-item">
+          <a class="card-archive-list-link" href="/archives/2023/11/">
+            <span class="card-archive-list-date">
+              十一月 2023
+            </span>
+            <span class="card-archive-list-count">4</span>
+          </a>
+        </li>
+      
+        <li class="card-archive-list-item">
+          <a class="card-archive-list-link" href="/archives/2023/08/">
+            <span class="card-archive-list-date">
+              八月 2023
+            </span>
+            <span class="card-archive-list-count">6</span>
+          </a>
+        </li>
+      
+        <li class="card-archive-list-item">
+          <a class="card-archive-list-link" href="/archives/2023/07/">
+            <span class="card-archive-list-date">
+              七月 2023
+            </span>
+            <span class="card-archive-list-count">2</span>
+          </a>
+        </li>
+      
+    </ul>
+  </div><div class="card-widget card-webinfo"><div class="item-headline"><i class="fas fa-chart-line"></i><span>网站信息</span></div><div class="webinfo"><div class="webinfo-item"><div class="item-name">文章数目 :</div><div class="item-count">131</div></div><div class="webinfo-item"><div class="item-name">本站总字数 :</div><div class="item-count">423.5k</div></div><div class="webinfo-item"><div class="item-name">本站访客数 :</div><div class="item-count" id="busuanzi_value_site_uv"><i class="fa-solid fa-spinner fa-spin"></i></div></div><div class="webinfo-item"><div class="item-name">本站总浏览量 :</div><div class="item-count" id="busuanzi_value_site_pv"><i class="fa-solid fa-spinner fa-spin"></i></div></div><div class="webinfo-item"><div class="item-name">最后更新时间 :</div><div class="item-count" id="last-push-date" data-lastPushDate="2026-07-14T03:16:04.848Z"><i class="fa-solid fa-spinner fa-spin"></i></div></div></div></div></div></div></main><footer id="footer" style="background-image: url(/img/top.jpg);"><div class="footer-other"><div class="footer-copyright"><span class="copyright">&copy;&nbsp;2025 - 2026 By Mount256</span><span class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo 8.1.2</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly 5.5.5</a></span></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="darkmode" type="button" title="日间和夜间模式切换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js?v=5.5.5"></script><script src="/js/main.js?v=5.5.5"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui@6.1.14/dist/fancybox/fancybox.umd.min.js"></script><div class="js-pjax"><script>window.typedJSFn = {
+  init: str => {
+    window.typed = new Typed('#subtitle', Object.assign({
+      strings: str,
+      startDelay: 300,
+      typeSpeed: 150,
+      loop: true,
+      backSpeed: 50,
+    }, null))
+  },
+  run: subtitleType => {
+    if (true) {
+      if (typeof Typed === 'function') {
+        subtitleType()
+      } else {
+        btf.getScript('https://cdn.jsdelivr.net/npm/typed.js@3.0.0/dist/typed.umd.min.js').then(subtitleType)
+      }
+    } else {
+      subtitleType()
+    }
+  },
+  processSubtitle: (content, extraContents = []) => {
+    if (true) {
+      const sub = ["唯有那份眩目，无法遗忘"].slice()
+
+      if (extraContents.length > 0) {
+        sub.unshift(...extraContents)
+      }
+
+      if (typeof content === 'string') {
+        sub.unshift(content)
+      } else if (Array.isArray(content)) {
+        sub.unshift(...content)
+      }
+
+      sub.length > 0 && typedJSFn.init(sub)
+    } else {
+      document.getElementById('subtitle').textContent = typeof content === 'string' ? content :
+        (Array.isArray(content) && content.length > 0 ? content[0] : '')
+    }
+  }
+}
+btf.addGlobalFn('pjaxSendOnce', () => { typed.destroy() }, 'typedDestroy')
+</script><script>function subtitleType () {
+  typedJSFn.processSubtitle(["唯有那份眩目，无法遗忘"])
+}
+typedJSFn.run(subtitleType)</script><script>(() => {
+  const parseViewBox = viewBox => {
+    if (!viewBox) return null
+    const parts = viewBox.trim().split(/[\s,]+/).map(n => Number(n))
+    if (parts.length !== 4 || parts.some(n => Number.isNaN(n))) return null
+    return parts
+  }
+
+  const getSvgViewBox = svg => {
+    const attr = parseViewBox(svg.getAttribute('viewBox'))
+    if (attr) return attr
+
+    // Fallback: use bbox to build a viewBox
+    try {
+      const bbox = svg.getBBox()
+      if (bbox && bbox.width && bbox.height) return [bbox.x, bbox.y, bbox.width, bbox.height]
+    } catch (e) {
+      // getBBox may fail on some edge cases; ignore
+    }
+
+    const w = Number(svg.getAttribute('width')) || 0
+    const h = Number(svg.getAttribute('height')) || 0
+    if (w > 0 && h > 0) return [0, 0, w, h]
+    return [0, 0, 100, 100]
+  }
+
+  const setSvgViewBox = (svg, vb) => {
+    svg.setAttribute('viewBox', `${vb[0]} ${vb[1]} ${vb[2]} ${vb[3]}`)
+  }
+
+  const clamp = (v, min, max) => Math.max(min, Math.min(max, v))
+
+  const openSvgInNewTab = ({ source, initViewBox }) => {
+    const getClonedSvg = () => {
+      if (typeof source === 'string') {
+        const template = document.createElement('template')
+        template.innerHTML = source.trim()
+        const svg = template.content.querySelector('svg')
+        return svg ? svg.cloneNode(true) : null
+      }
+      if (source && typeof source.cloneNode === 'function') {
+        return source.cloneNode(true)
+      }
+      return null
+    }
+
+    const clone = getClonedSvg()
+    if (!clone) return
+    if (initViewBox && initViewBox.length === 4) {
+      clone.setAttribute('viewBox', initViewBox.join(' '))
+    }
+    if (!clone.getAttribute('xmlns')) clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg')
+    if (!clone.getAttribute('xmlns:xlink') && clone.outerHTML.includes('xlink:')) {
+      clone.setAttribute('xmlns:xlink', 'http://www.w3.org/1999/xlink')
+    }
+    // inject background to match current theme
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark'
+    const bg = getComputedStyle(document.body).backgroundColor || (isDark ? '#1e1e1e' : '#ffffff')
+    if (!clone.style.background) clone.style.background = bg
+
+    const serializer = new XMLSerializer()
+    const svgSource = serializer.serializeToString(clone)
+    const htmlSource = `<!doctype html><html><head><meta charset="utf-8" />
+      <style>
+        html, body { width: 100%; height: 100%; margin: 0; display: flex; align-items: center; justify-content: center; background: ${bg}; }
+        svg { max-width: 100%; max-height: 100%; height: auto; width: auto; }
+      </style>
+      </head><body>${svgSource}</body></html>`
+    const blob = new Blob([htmlSource], { type: 'text/html;charset=utf-8' })
+    const url = URL.createObjectURL(blob)
+    window.open(url, '_blank', 'noopener')
+    setTimeout(() => URL.revokeObjectURL(url), 30000)
+  }
+
+  const attachMermaidViewerButton = wrap => {
+    let btn = wrap.querySelector('.mermaid-open-btn')
+    if (!btn) {
+      btn = document.createElement('button')
+      btn.type = 'button'
+      btn.className = 'mermaid-open-btn'
+      wrap.appendChild(btn)
+    }
+
+    btn.innerHTML = '<i class="fa fa-search fa-fw" aria-hidden="true"></i>'
+
+    if (!btn.__mermaidViewerBound) {
+      btn.addEventListener('click', e => {
+        e.preventDefault()
+        e.stopPropagation()
+        const svg = wrap.__mermaidOriginalSvg || wrap.querySelector('svg')
+        if (!svg) return
+        const initViewBox = wrap.__mermaidInitViewBox
+        if (typeof svg === 'string') {
+          openSvgInNewTab({ source: svg, initViewBox })
+          return
+        }
+        openSvgInNewTab({ source: svg, initViewBox })
+      })
+      btn.__mermaidViewerBound = true
+    }
+  }
+
+  // Zoom around a point (px, py) in the SVG viewport (in viewBox coordinates)
+  const zoomAtPoint = (vb, factor, px, py) => {
+    const w = vb[2] * factor
+    const h = vb[3] * factor
+    const nx = px - (px - vb[0]) * factor
+    const ny = py - (py - vb[1]) * factor
+    return [nx, ny, w, h]
+  }
+
+  const initMermaidGestures = wrap => {
+    const svg = wrap.querySelector('svg')
+    if (!svg) return
+
+    // Ensure viewBox exists so gestures always work
+    const initVb = getSvgViewBox(svg)
+    wrap.__mermaidInitViewBox = initVb
+    wrap.__mermaidCurViewBox = initVb.slice()
+    setSvgViewBox(svg, initVb)
+
+    // Avoid binding multiple times on themeChange/pjax
+    if (wrap.__mermaidGestureBound) return
+    wrap.__mermaidGestureBound = true
+
+    // Helper: map client (viewport) coordinate -> viewBox coordinate
+    const clientToViewBox = (clientX, clientY) => {
+      const rect = svg.getBoundingClientRect()
+      const vb = wrap.__mermaidCurViewBox || getSvgViewBox(svg)
+      const x = vb[0] + (clientX - rect.left) * (vb[2] / rect.width)
+      const y = vb[1] + (clientY - rect.top) * (vb[3] / rect.height)
+      return { x, y, rect, vb }
+    }
+
+    const state = {
+      pointers: new Map(),
+      startVb: null,
+      startDist: 0,
+      startCenter: null
+    }
+
+    const clampVb = vb => {
+      const init = wrap.__mermaidInitViewBox || vb
+      const minW = init[2] * 0.1
+      const maxW = init[2] * 10
+      const minH = init[3] * 0.1
+      const maxH = init[3] * 10
+      vb[2] = clamp(vb[2], minW, maxW)
+      vb[3] = clamp(vb[3], minH, maxH)
+      return vb
+    }
+
+    const setCurVb = vb => {
+      vb = clampVb(vb)
+      wrap.__mermaidCurViewBox = vb
+      setSvgViewBox(svg, vb)
+    }
+
+    const onPointerDown = e => {
+      // Allow only primary button for mouse
+      if (e.pointerType === 'mouse' && e.button !== 0) return
+      svg.setPointerCapture(e.pointerId)
+      state.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY })
+
+      if (state.pointers.size === 1) {
+        state.startVb = (wrap.__mermaidCurViewBox || getSvgViewBox(svg)).slice()
+      } else if (state.pointers.size === 2) {
+        const pts = [...state.pointers.values()]
+        const dx = pts[0].x - pts[1].x
+        const dy = pts[0].y - pts[1].y
+        state.startDist = Math.hypot(dx, dy)
+        state.startVb = (wrap.__mermaidCurViewBox || getSvgViewBox(svg)).slice()
+        state.startCenter = { x: (pts[0].x + pts[1].x) / 2, y: (pts[0].y + pts[1].y) / 2 }
+      }
+    }
+
+    const onPointerMove = e => {
+      if (!state.pointers.has(e.pointerId)) return
+      state.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY })
+
+      // Pan with 1 pointer
+      if (state.pointers.size === 1 && state.startVb) {
+        const p = [...state.pointers.values()][0]
+        const prev = { x: e.clientX - e.movementX, y: e.clientY - e.movementY }
+        // movementX/Y unreliable on touch, compute from stored last position
+        const last = wrap.__mermaidLastSinglePointer || p
+        const dxClient = p.x - last.x
+        const dyClient = p.y - last.y
+        wrap.__mermaidLastSinglePointer = p
+
+        const { rect } = clientToViewBox(p.x, p.y)
+        const vb = (wrap.__mermaidCurViewBox || getSvgViewBox(svg)).slice()
+        const dx = dxClient * (vb[2] / rect.width)
+        const dy = dyClient * (vb[3] / rect.height)
+        setCurVb([vb[0] - dx, vb[1] - dy, vb[2], vb[3]])
+        return
+      }
+
+      // Pinch zoom with 2 pointers
+      if (state.pointers.size === 2 && state.startVb && state.startDist > 0) {
+        const pts = [...state.pointers.values()]
+        const dx = pts[0].x - pts[1].x
+        const dy = pts[0].y - pts[1].y
+        const dist = Math.hypot(dx, dy)
+        if (!dist) return
+        const factor = state.startDist / dist // dist bigger => zoom in (viewBox smaller)
+
+        const cx = (pts[0].x + pts[1].x) / 2
+        const cy = (pts[0].y + pts[1].y) / 2
+        const centerClient = { x: cx, y: cy }
+
+        const pxy = clientToViewBox(centerClient.x, centerClient.y)
+        const cpx = pxy.x
+        const cpy = pxy.y
+
+        const vb = zoomAtPoint(state.startVb, factor, cpx, cpy)
+        setCurVb(vb)
+      }
+    }
+
+    const onPointerUpOrCancel = e => {
+      state.pointers.delete(e.pointerId)
+      if (state.pointers.size === 0) {
+        state.startVb = null
+        state.startDist = 0
+        state.startCenter = null
+        wrap.__mermaidLastSinglePointer = null
+      } else if (state.pointers.size === 1) {
+        // reset single pointer baseline to avoid jump
+        wrap.__mermaidLastSinglePointer = [...state.pointers.values()][0]
+      }
+    }
+
+    // Wheel zoom (mouse/trackpad)
+    const onWheel = e => {
+      // ctrlKey on mac trackpad pinch; we treat both as zoom
+      e.preventDefault()
+      const delta = e.deltaY
+      const zoomFactor = delta > 0 ? 1.1 : 0.9
+      const { x, y } = clientToViewBox(e.clientX, e.clientY)
+      const vb = (wrap.__mermaidCurViewBox || getSvgViewBox(svg)).slice()
+      setCurVb(zoomAtPoint(vb, zoomFactor, x, y))
+    }
+
+    const onDblClick = () => {
+      const init = wrap.__mermaidInitViewBox
+      if (!init) return
+      wrap.__mermaidCurViewBox = init.slice()
+      setSvgViewBox(svg, init)
+    }
+
+    svg.addEventListener('pointerdown', onPointerDown)
+    svg.addEventListener('pointermove', onPointerMove)
+    svg.addEventListener('pointerup', onPointerUpOrCancel)
+    svg.addEventListener('pointercancel', onPointerUpOrCancel)
+    svg.addEventListener('wheel', onWheel, { passive: false })
+    svg.addEventListener('dblclick', onDblClick)
+  }
+
+  const runMermaid = ele => {
+    window.loadMermaid = true
+    const theme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default'
+
+    ele.forEach((item, index) => {
+      const mermaidSrc = item.firstElementChild
+
+      // Clear old render (themeChange/pjax will rerun)
+      const oldSvg = item.querySelector('svg')
+      if (oldSvg) oldSvg.remove()
+      item.__mermaidGestureBound = false
+
+      const config = mermaidSrc.dataset.config ? JSON.parse(mermaidSrc.dataset.config) : {}
+      if (!config.theme) {
+        config.theme = theme
+      }
+      const mermaidThemeConfig = `%%{init: ${JSON.stringify(config)}}%%\n`
+      const mermaidID = `mermaid-${index}`
+      const mermaidDefinition = mermaidThemeConfig + mermaidSrc.textContent
+
+      const renderFn = mermaid.render(mermaidID, mermaidDefinition)
+      const renderMermaid = svg => {
+        mermaidSrc.insertAdjacentHTML('afterend', svg)
+        if (true) initMermaidGestures(item)
+        item.__mermaidOriginalSvg = svg
+        if (true) attachMermaidViewerButton(item)
+      }
+
+
+      // mermaid v9 and v10 compatibility
+      typeof renderFn === 'string' ? renderMermaid(renderFn) : renderFn.then(({ svg }) => renderMermaid(svg))
+    })
+  }
+
+  const codeToMermaid = () => {
+    const codeMermaidEle = document.querySelectorAll('pre > code.mermaid')
+    if (codeMermaidEle.length === 0) return
+
+    codeMermaidEle.forEach(ele => {
+      const preEle = document.createElement('pre')
+      preEle.className = 'mermaid-src'
+      preEle.hidden = true
+      preEle.textContent = ele.textContent
+      const newEle = document.createElement('div')
+      newEle.className = 'mermaid-wrap'
+      newEle.appendChild(preEle)
+      ele.parentNode.replaceWith(newEle)
+    })
+  }
+
+  const loadMermaid = () => {
+    if (true) codeToMermaid()
+    const $mermaid = document.querySelectorAll('#article-container .mermaid-wrap')
+    if ($mermaid.length === 0) return
+
+    const runMermaidFn = () => runMermaid($mermaid)
+    btf.addGlobalFn('themeChange', runMermaidFn, 'mermaid')
+    window.loadMermaid ? runMermaidFn() : btf.getScript('https://cdn.jsdelivr.net/npm/mermaid@11.15.0/dist/mermaid.min.js').then(runMermaidFn)
+  }
+
+  btf.addGlobalFn('encrypt', loadMermaid, 'mermaid')
+  window.pjax ? loadMermaid() : document.addEventListener('DOMContentLoaded', loadMermaid)
+})()</script></div><script src="/js/abcjs-detect.js"></script><script src="/js/bubble.js"></script><script id="click-heart" src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/dist/click-heart.min.js" async="async" mobile="true"></script><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script><div id="local-search"><div class="search-dialog"><nav class="search-nav"><span class="search-dialog-title">搜索</span><i class="fas fa-spinner fa-pulse" id="loading-status" hidden="hidden"></i><button class="search-close-button"><i class="fas fa-times"></i></button></nav><div class="text-center" id="loading-database"><i class="fas fa-spinner fa-pulse"></i><span>  数据加载中</span></div><div class="local-search-input"><input placeholder="输入关键词…" type="text"/></div><hr/><div id="local-search-results"></div><div class="ais-Pagination" id="local-search-pagination" style="display:none;"><ul class="ais-Pagination-list"></ul></div><div id="local-search-stats"></div></div><div id="search-mask"></div><script src="/js/search/local-search.js?v=5.5.5"></script></div></div></body></html>

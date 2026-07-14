@@ -1,0 +1,1234 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>【操作系统-IO管理】IO层次结构 | Mount256的个人小站</title><meta name="author" content="Mount256"><meta name="copyright" content="Mount256"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="I&#x2F;O 层次结构分为五层：  用户层 I&#x2F;O 软件 设备独立性软件 设备驱动程序 中断处理程序 硬件  其中，设备独立性软件、设备驱动程序、中断处理程序属于操作系统的内核部分，即“I&#x2F;O 系统”，或称“I&#x2F;O 核心子系统”。 1 用户层 I&#x2F;O 软件 用户层软件实现了与用户交互的接口，用户可直接使用该层提供的、与 I&#x2F;O 操作相关的库函数对设备进行操作。 Windows 操作系统向外提供的一系列系">
+<meta property="og:type" content="article">
+<meta property="og:title" content="【操作系统-IO管理】IO层次结构">
+<meta property="og:url" content="https://blog.mount256.com/posts/b3a7c8d1.html">
+<meta property="og:site_name" content="Mount256的个人小站">
+<meta property="og:description" content="I&#x2F;O 层次结构分为五层：  用户层 I&#x2F;O 软件 设备独立性软件 设备驱动程序 中断处理程序 硬件  其中，设备独立性软件、设备驱动程序、中断处理程序属于操作系统的内核部分，即“I&#x2F;O 系统”，或称“I&#x2F;O 核心子系统”。 1 用户层 I&#x2F;O 软件 用户层软件实现了与用户交互的接口，用户可直接使用该层提供的、与 I&#x2F;O 操作相关的库函数对设备进行操作。 Windows 操作系统向外提供的一系列系">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://blog.mount256.com/img/cover0.jpg">
+<meta property="article:published_time" content="2022-09-29T16:00:00.000Z">
+<meta property="article:modified_time" content="2026-07-10T16:00:00.000Z">
+<meta property="article:author" content="Mount256">
+<meta property="article:tag" content="IO">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://blog.mount256.com/img/cover0.jpg"><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "【操作系统-IO管理】IO层次结构",
+  "url": "https://blog.mount256.com/posts/b3a7c8d1.html",
+  "image": "https://blog.mount256.com/img/cover0.jpg",
+  "datePublished": "2022-09-29T16:00:00.000Z",
+  "dateModified": "2026-07-10T16:00:00.000Z",
+  "author": [
+    {
+      "@type": "Person",
+      "name": "Mount256",
+      "url": "https://blog.mount256.com"
+    }
+  ]
+}</script><link rel="shortcut icon" href="/img/favicon.png"><link rel="canonical" href="https://blog.mount256.com/posts/b3a7c8d1.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css?v=5.5.5"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@7.2.0/css/all.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/ui@6.1.14/dist/fancybox/fancybox.min.css" media="print" onload="this.media='all'"><script>
+    (() => {
+      
+    const saveToLocal = {
+      set: (key, value, ttl) => {
+        if (!ttl) return
+        const expiry = Date.now() + ttl * 86400000
+        localStorage.setItem(key, JSON.stringify({ value, expiry }))
+      },
+      get: key => {
+        const itemStr = localStorage.getItem(key)
+        if (!itemStr) return undefined
+        const { value, expiry } = JSON.parse(itemStr)
+        if (Date.now() > expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return value
+      }
+    }
+
+    window.btf = {
+      saveToLocal,
+      getScript: (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        Object.entries(attr).forEach(([key, val]) => script.setAttribute(key, val))
+        script.onload = script.onreadystatechange = () => {
+          if (!script.readyState || /loaded|complete/.test(script.readyState)) resolve()
+        }
+        script.onerror = reject
+        document.head.appendChild(script)
+      }),
+      getCSS: (url, id) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onload = link.onreadystatechange = () => {
+          if (!link.readyState || /loaded|complete/.test(link.readyState)) resolve()
+        }
+        link.onerror = reject
+        document.head.appendChild(link)
+      }),
+      addGlobalFn: (key, fn, name = false, parent = window) => {
+        if (!false && key.startsWith('pjax')) return
+        const globalFn = parent.globalFn || {}
+        globalFn[key] = globalFn[key] || {}
+        globalFn[key][name || Object.keys(globalFn[key]).length] = fn
+        parent.globalFn = globalFn
+      }
+    }
+  
+      
+      const activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      const activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+
+      btf.activateDarkMode = activateDarkMode
+      btf.activateLightMode = activateLightMode
+
+      const theme = saveToLocal.get('theme')
+    
+          theme === 'dark' ? activateDarkMode() : theme === 'light' ? activateLightMode() : null
+        
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        document.documentElement.classList.toggle('hide-aside', asideStatus === 'hide')
+      }
+    
+      
+    const detectApple = () => {
+      if (/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)) {
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+  
+    })()
+  </script><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: {"path":"/search.xml","preload":false,"top_n_per_article":1,"unescape":false,"pagination":{"enable":false,"hitsPerPage":8},"languages":{"hits_empty":"未找到符合您查询的内容：${query}","hits_stats":"共找到 ${hits} 篇文章"}},
+  translate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false,"highlightFullpage":false,"highlightMacStyle":false},
+  copy: {
+    success: '复制成功',
+    error: '复制失败',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'fancybox',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid@4.13.0/dist/infinitegrid.min.js',
+    buttonText: '加载更多'
+  },
+  isPhotoFigcaption: false,
+  islazyloadPlugin: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: '【操作系统-IO管理】IO层次结构',
+  isHighlightShrink: false,
+  isToc: true,
+  pageType: 'post'
+}</script><link rel="stylesheet" href="/css/mouse.css"><script src="/live2d-widget/dist/autoload.js"></script><!-- hexo injector head_end start -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.css">
+<!-- hexo injector head_end end --><meta name="generator" content="Hexo 8.1.2"></head><body><div class="bg-animation" id="web_bg" style="background-image: url(/img/background.png);"></div><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img text-center"><img src="/img/avatar.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data text-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">131</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">128</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">25</div></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 链接</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header" style="background-image: url(/img/cover0.jpg);"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><span class="site-name">Mount256的个人小站</span></a><a class="nav-page-title" href="/"><span class="site-name">【操作系统-IO管理】IO层次结构</span><span class="site-name"><i class="fa-solid fa-circle-arrow-left"></i><span>  返回首页</span></span></a></span><div id="menus"><div id="search-button"><span class="site-page social-icon search"><i class="fas fa-search fa-fw"></i><span> 搜索</span></span></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 链接</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于</span></a></div></div><div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div></div></nav><div id="post-info"><h1 class="post-title">【操作系统-IO管理】IO层次结构</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2022-09-29T16:00:00.000Z" title="发表于 2022-09-30 00:00:00">2022-09-30</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2026-07-10T16:00:00.000Z" title="更新于 2026-07-11 00:00:00">2026-07-11</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80%E5%9B%9B%E5%A4%A7%E4%BB%B6/">计算机基础四大件</a><i class="fas fa-angle-right post-meta-separator"></i><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80%E5%9B%9B%E5%A4%A7%E4%BB%B6/%E8%AE%A1%E7%AE%97%E6%9C%BA%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F/">计算机操作系统</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-wordcount"><i class="far fa-file-word fa-fw post-meta-icon"></i><span class="post-meta-label">总字数:</span><span class="word-count">5.9k</span><span class="post-meta-separator">|</span><i class="far fa-clock fa-fw post-meta-icon"></i><span class="post-meta-label">阅读时长:</span><span>19分钟</span></span><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title=""><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">浏览量:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="container post-content" id="article-container"><p><strong>I/O 层次结构</strong>分为五层：</p>
+<ul>
+<li>用户层 I/O 软件</li>
+<li>设备独立性软件</li>
+<li>设备驱动程序</li>
+<li>中断处理程序</li>
+<li>硬件</li>
+</ul>
+<p>其中，设备独立性软件、设备驱动程序、中断处理程序属于操作系统的内核部分，即“<strong>I/O 系统</strong>”，或称“<strong>I/O 核心子系统</strong>”。</p>
+<h2 id="1-用户层-I-O-软件">1 用户层 I/O 软件</h2>
+<p>用户层软件实现了与用户交互的接口，用户可直接使用该层提供的、与 I/O 操作相关的库函数对设备进行操作。</p>
+<p>Windows 操作系统向外提供的一系列系统调用，但是由于系统调用的格式严格，使用麻烦，因此在用户层上封装了一系列更方便的库函数接口供用户使用（Windows API）。</p>
+<h3 id="1-1-假脱机技术（SPOOLing-技术）">1.1 假脱机技术（SPOOLing 技术）</h3>
+<p>“假脱机技术”，又称“SPOOLing 技术”是用软件的方式模拟脱机技术。要实现 SPOOLing 技术，必须要有<strong>多道程序技术的支持</strong>。系统会建立 “输入进程”和 “输出进程”。SPOOLing 技术可以<strong>把一台物理设备虚拟成逻辑上的多台设备，可将独占式设备改造成共享设备</strong>，每个用户进程都觉得自己在独占一台设备，从而实现对设备的共享，也缓解了 CPU 和设备的速度矛盾。</p>
+<blockquote>
+<p>【注】408 大纲又将假脱机技术归为“ I/O 核心子系统” 的功能， 因此考试时还是以大纲为准。</p>
+</blockquote>
+<h4 id="1-1-1-SPOOLing-系统的组成">1.1.1 SPOOLing 系统的组成</h4>
+<p>SPOOLing 技术系统由预输入程序、井管理程序（本质上可以理解成目录）和缓输出程序组成。预输入程序、井管理程序和缓输出程序合起来也叫守护进程。</p>
+<ul>
+<li>输入井：模拟脱机输入时的磁带，用于收容 I/O 设备输入的数据，是在磁盘上开辟出的存储区域。</li>
+<li>输出井：模拟脱机输出时的磁带，用于收容用户进程输出的数据，是在磁盘上开辟出的存储区域。</li>
+<li>输入缓冲区：位于内存，在输入进程的控制下，“输入缓冲区”用于暂存从输入设备输入的数据，之后再转存到输入井中。</li>
+<li>输出缓冲区：位于内存，在输出进程的控制下，“输出缓冲区”用于暂存从输出井送来的数据，之后再传送到输出设备上。</li>
+</ul>
+<h4 id="1-1-2-假脱机管理进程的工作原理">1.1.2 假脱机管理进程的工作原理</h4>
+<p>用户进程提出输出打印的请求时，由假脱机管理进程为每个进程做两件事：</p>
+<ul>
+<li>在磁盘输出井中为进程申请一个空闲缓冲区，并将要打印的数据送入其中；</li>
+<li>为用户进程申请一张空白的打印请求表，并将用户的打印请求填入表中，再将该表挂到假脱机文件队列上。</li>
+</ul>
+<p>打印机空闲时，输出进程会从文件队列的队头取出一张打印请求表，并根据表中的要求将要打印的数据从输出井传送到输出缓冲区，再输出到打印机进行打印。</p>
+<h3 id="1-2-应用程序接口">1.2 应用程序接口</h3>
+<p>输入/输出应用程序接口位于用户层和设备独立层之间。</p>
+<h4 id="1-2-1-字符设备接口">1.2.1 字符设备接口</h4>
+<ul>
+<li>get/put 系统调用：向字符设备缓冲区读/写一个字符。</li>
+</ul>
+<h4 id="1-2-2-块设备接口">1.2.2 块设备接口</h4>
+<ul>
+<li>read/write 系统调用：向块设备的读/写指针位置读/写多个字符。</li>
+<li>seek 系统调用：修改读/写指针位置。</li>
+</ul>
+<h4 id="1-2-3-网络设备（网络套接字）接口">1.2.3 网络设备（网络套接字）接口</h4>
+<ul>
+<li>socket 系统调用：创建一个网络套接字，需指明网络协议。</li>
+<li>bind 系统调用：将套接字绑定在某个本地端口。</li>
+<li>connect 系统调用：将套接字连接到远程地址。</li>
+<li>read/write 系统调用：从套接字读/写数据。</li>
+</ul>
+<h4 id="1-2-4-阻塞-非阻塞-I-O">1.2.4 阻塞/非阻塞 I/O</h4>
+<ul>
+<li>阻塞 I/O：应用程序发出 I/O 系统调用，进程需转为阻塞态等待。例如，字符设备接口的 get 调用（从键盘读一个字符）；C 语言中的 scanf 函数。</li>
+<li>非阻塞 I/O：应用程序发出 I/O 系统调用，系统调用可迅速返回，进程无需阻塞等待。例如，块设备接口的 write 调用（往磁盘写数据）；C 语言中的 printf 函数。</li>
+</ul>
+<h2 id="2-设备独立性软件">2 设备独立性软件</h2>
+<p>设备独立性软件，又称设备无关性软件。与设备的硬件特性无关的功能几乎都在这一层实现。</p>
+<h3 id="2-1-I-O-调度">2.1 I/O 调度</h3>
+<p>I/O 调度指的是用某种算法确定一个好的顺序来处理各个 I/O 请求。</p>
+<p>对于磁盘，有这些调度算法：先来先服务算法、最短寻道优先算法、SCAN 算法、C-SCAN 算法、LOOK 算法、C-LOOK 算法（见《【组成原理-存储】存储器的相关知识》）。当多个磁盘 I/O 请求到来时，用其中一种调度算法确定满足 I/O 请求的顺序。</p>
+<p>同理，打印机等设备也可以用先来先服务算法、优先级算法、短作业优先等算法来确定 I/O 调度顺序。</p>
+<h3 id="2-2-设备保护">2.2 设备保护</h3>
+<p>在 UNIX 系统中，设备被看做是一种特殊的文件，每个设备也会有对应的 FCB。当用户请求访问某个设备时，系统根据 FCB 中记录的信息来判断该用户是否有相应的访问权限，以此实现“设备保护”的功能。</p>
+<h3 id="2-3-设备的分配与回收">2.3 设备的分配与回收</h3>
+<h4 id="2-3-1-设备分配的方式">2.3.1 设备分配的方式</h4>
+<p><strong>从进程运行的安全性上考虑</strong>：</p>
+<table>
+<thead>
+<tr>
+<th>方式</th>
+<th>描述</th>
+<th>优点</th>
+<th>缺点</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>安全分配方式</strong></td>
+<td>为进程分配一个设备后就将进程阻塞，本次 I/O 完成后才将进程唤醒</td>
+<td>破坏了“请求和保持”条件，不会死锁</td>
+<td>对于一个进程来说，CPU 和 I/O 设备只能串行工作</td>
+</tr>
+<tr>
+<td><strong>不安全分配方式</strong></td>
+<td>进程发出 I/O 请求后，系统为其分配 I/O 设备，进程可继续执行，之后还可以发出新的 I/O 请求，只有某个 I/O 请求得不到满足时才将进程阻塞</td>
+<td>进程的计算任务和 I/O 任务可以并行处理，使进程迅速推进</td>
+<td>有可能发生死锁</td>
+</tr>
+</tbody>
+</table>
+<p><strong>从获取资源的时机上考虑</strong>：</p>
+<ul>
+<li><strong>静态分配</strong>：进程运行前为其分配全部所需资源，运行结束后归还资源（破坏了“请求和保持”条件，不会发生死锁）。</li>
+<li><strong>动态分配</strong>：进程运行过程中动态申请设备资源。</li>
+</ul>
+<h4 id="2-3-2-设备分配的数据结构">2.3.2 设备分配的数据结构</h4>
+<table>
+<thead>
+<tr>
+<th>数据结构</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>系统设备表（SDT）</strong></td>
+<td>记录了系统中全部设备的情况，每个设备对应一个表目。每个表目存有 DCT（设备控制表）的指针，以及设备类型（即逻辑设备名）</td>
+</tr>
+<tr>
+<td><strong>设备控制表（DCT）</strong></td>
+<td>系统为每个设备配置一张 DCT，用于记录设备情况。每个表目存有 COCT（控制器控制表）的指针</td>
+</tr>
+<tr>
+<td><strong>控制器控制表（COCT）</strong></td>
+<td>每个设备控制器（即 I/O 接口）都会对应一张 COCT，操作系统根据 COCT 的信息对控制器进行操作和管理。每个表目存有 CHCT（通道控制表）的指针</td>
+</tr>
+<tr>
+<td><strong>通道控制表（CHCT）</strong></td>
+<td>每个通道都会对应一张 CHCT，操作系统根据 CHCT 的信息对通道进行操作和管理</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>【注】一个通道控制多个控制器，一个控制器控制多个设备。</p>
+</blockquote>
+<p><strong>物理设备和逻辑设备的映射</strong>：</p>
+<ul>
+<li><strong>物理设备名（绝对号）</strong>：进程请求分配设备时提供的参数。</li>
+<li><strong>逻辑设备名</strong>：用户编程时提供的逻辑设备名其实就是“设备类型”。建立逻辑设备名与物理设备名的映射机制，用户编程时只需提供逻辑设备名。</li>
+<li><strong>逻辑设备表（LUT）</strong>：建立了逻辑设备名与物理设备名之间的映射关系。每个表目记录了逻辑设备名对应的物理设备名和驱动程序入口地址。</li>
+</ul>
+<blockquote>
+<p>【注】若整个系统只有一张 LUT，则各用户所用的逻辑设备名不允许重复，适用于单用户操作系统；若每个用户一张 LUT，则不同用户的逻辑设备名可重复，适用于多用户操作系统。</p>
+</blockquote>
+<h4 id="2-3-3-设备分配的流程">2.3.3 设备分配的流程</h4>
+<ul>
+<li>根据进程请求的逻辑设备名查找 SDT，找到用户进程指定类型的、并且空闲的设备，将其分配给该进程，然后操作系统在逻辑设备表（LUT）中新增一个表项。</li>
+<li>根据 SDT 找到 DCT，若设备忙碌则将进程 PCB 挂到<strong>设备等待队列</strong>中，不忙碌则将设备分配给进程。</li>
+<li>根据 DCT 找到 COCT，若控制器忙碌则将进程 PCB 挂到<strong>控制器等待队列</strong>中，不忙碌则将控制器分配给进程。</li>
+<li>根据 COCT 找到 CHCT，若通道忙碌则将进程 PCB 挂到<strong>通道等待队列</strong>中，不忙碌则将通道分配给进程。</li>
+<li>只有设备、控制器、通道三者都分配成功时，这次设备分配才算成功，之后便可启动 I/O 设备进行数据传送。</li>
+</ul>
+<blockquote>
+<p>【注】如果之后用户进程再次通过相同的逻辑设备名请求使用设备，则操作系统通过 LUT 即可知道用户进程实际要使用的是哪个物理设备了，并且也能知道该设备的驱动程序入口地址。</p>
+</blockquote>
+<h3 id="2-4-缓冲区管理">2.4 缓冲区管理</h3>
+<p>默认：一个缓冲区的大小就是一个块。</p>
+<p>从缓冲区读入数据的过程如下：</p>
+<ul>
+<li>在块设备输入数据的过程中，首先把磁盘数据送到缓冲区，花费的时间为 T，简记为 T 过程。</li>
+<li>然后把操作系统缓冲区的数据送到用户区，花费的时间为 M，简记为 M 过程。</li>
+<li>最后用户进程对这批数据进行计算，花费的时间为 C，简记为 C 过程。</li>
+</ul>
+<blockquote>
+<p>【注】当缓冲区数据非空时，不能往缓冲区冲入数据，只能从缓冲区把数据传出；当缓冲区为空时，可以往缓冲区冲入数据，但必须把缓冲区充满以后，才能从缓冲区把数据传出。</p>
+</blockquote>
+<h4 id="2-4-1-单缓冲">2.4.1 单缓冲</h4>
+<p><strong>T 过程和 M 过程不能并行，C 过程和 M 过程不能并行。</strong></p>
+<p>大致过程：</p>
+<table>
+<thead>
+<tr>
+<th>.</th>
+<th>.</th>
+<th>.</th>
+<th>.</th>
+<th>.</th>
+<th>.</th>
+<th>.</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>T</td>
+<td>M</td>
+<td>C</td>
+<td>.</td>
+<td>.</td>
+<td>.</td>
+<td>.</td>
+</tr>
+<tr>
+<td>.</td>
+<td>.</td>
+<td>T</td>
+<td>M</td>
+<td>C</td>
+<td>.</td>
+<td>.</td>
+</tr>
+<tr>
+<td>.</td>
+<td>.</td>
+<td>.</td>
+<td>T</td>
+<td>M</td>
+<td>C</td>
+<td>.</td>
+</tr>
+</tbody>
+</table>
+<p>现具体分析如下：</p>
+<p><strong>（1）T &gt; C</strong></p>
+<p>（假设缓冲次数为 n 次，T = T1 + T2，最底下一行为总结）</p>
+<table>
+<thead>
+<tr>
+<th>.</th>
+<th>.</th>
+<th>.</th>
+<th>.</th>
+<th>.</th>
+<th>.</th>
+<th>.</th>
+<th>.</th>
+<th>.</th>
+<th>.</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>T1</td>
+<td>T2</td>
+<td>M</td>
+<td>C</td>
+<td>.</td>
+<td>.</td>
+<td>.</td>
+<td>.</td>
+<td>.</td>
+<td>.</td>
+</tr>
+<tr>
+<td>.</td>
+<td>.</td>
+<td>.</td>
+<td>T1</td>
+<td>T2</td>
+<td>M</td>
+<td>C</td>
+<td>.</td>
+<td>.</td>
+<td>.</td>
+</tr>
+<tr>
+<td>.</td>
+<td>.</td>
+<td>.</td>
+<td>.</td>
+<td>.</td>
+<td>.</td>
+<td>T1</td>
+<td>T2</td>
+<td>M</td>
+<td>C</td>
+</tr>
+<tr>
+<td>T1</td>
+<td>T2</td>
+<td>M</td>
+<td>T1</td>
+<td>T2</td>
+<td>M</td>
+<td>T1</td>
+<td>T2</td>
+<td>M</td>
+<td><strong>C</strong></td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>总时间 = n * (T + M) + C</li>
+<li>平均时间 = (n * (T + M) + C) / n = T + M （n 足够大）</li>
+</ul>
+<p><strong>（2）T &lt; C</strong></p>
+<p>（假设缓冲次数为 n 次，C = C1 + C2，最底下一行为总结）</p>
+<table>
+<thead>
+<tr>
+<th>.</th>
+<th>.</th>
+<th>.</th>
+<th>.</th>
+<th>.</th>
+<th>.</th>
+<th>.</th>
+<th>.</th>
+<th>.</th>
+<th>.</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>T</td>
+<td>M</td>
+<td>C1</td>
+<td>C2</td>
+<td>.</td>
+<td>.</td>
+<td>.</td>
+<td>.</td>
+<td>.</td>
+<td>.</td>
+</tr>
+<tr>
+<td>.</td>
+<td>.</td>
+<td>T</td>
+<td>.</td>
+<td>M</td>
+<td>C1</td>
+<td>C2</td>
+<td>.</td>
+<td>.</td>
+<td>.</td>
+</tr>
+<tr>
+<td>.</td>
+<td>.</td>
+<td>.</td>
+<td>.</td>
+<td>.</td>
+<td>T</td>
+<td>.</td>
+<td>M</td>
+<td>C1</td>
+<td>C2</td>
+</tr>
+<tr>
+<td><strong>T</strong></td>
+<td>M</td>
+<td>C1</td>
+<td>C2</td>
+<td>M</td>
+<td>C1</td>
+<td>C2</td>
+<td>M</td>
+<td>C1</td>
+<td>C2</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>总时间 = T + n * (M + C)</li>
+<li>平均时间 = (T + n * (M + C)) / n = M + C （n 足够大）</li>
+</ul>
+<blockquote>
+<p>综上，单缓冲的平均时间 = max { T, C } + M。</p>
+</blockquote>
+<h4 id="2-4-2-双缓冲">2.4.2 双缓冲</h4>
+<p><strong>T 过程和 M 过程可以并行，C 过程和 M 过程不能并行。</strong></p>
+<p>大致过程：</p>
+<table>
+<thead>
+<tr>
+<th>.</th>
+<th>.</th>
+<th>.</th>
+<th>.</th>
+<th>.</th>
+<th>.</th>
+<th>.</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>T</td>
+<td>M</td>
+<td>C</td>
+<td>.</td>
+<td>.</td>
+<td>.</td>
+<td>.</td>
+</tr>
+<tr>
+<td>.</td>
+<td>T</td>
+<td>M</td>
+<td>C</td>
+<td>.</td>
+<td>.</td>
+<td>.</td>
+</tr>
+<tr>
+<td>.</td>
+<td>.</td>
+<td>T</td>
+<td>M</td>
+<td>C</td>
+<td>.</td>
+<td>.</td>
+</tr>
+</tbody>
+</table>
+<p>现具体分析如下：</p>
+<p><strong>（1）T &gt; C</strong></p>
+<p>（假设缓冲次数为 n 次，T = T1 + T2，最底下一行为总结）</p>
+<table>
+<thead>
+<tr>
+<th>.</th>
+<th>.</th>
+<th>.</th>
+<th>.</th>
+<th>.</th>
+<th>.</th>
+<th>.</th>
+<th>.</th>
+<th>.</th>
+<th>.</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>T1</td>
+<td>T2</td>
+<td>M</td>
+<td>C</td>
+<td>.</td>
+<td>.</td>
+<td>.</td>
+<td>.</td>
+<td>.</td>
+<td>.</td>
+</tr>
+<tr>
+<td>.</td>
+<td>.</td>
+<td>T1</td>
+<td>T2</td>
+<td>M</td>
+<td>C</td>
+<td>.</td>
+<td>.</td>
+<td>.</td>
+<td>.</td>
+</tr>
+<tr>
+<td>.</td>
+<td>.</td>
+<td>.</td>
+<td>.</td>
+<td>T1</td>
+<td>T2</td>
+<td>M</td>
+<td>C</td>
+<td>.</td>
+<td>.</td>
+</tr>
+<tr>
+<td><strong>T1</strong></td>
+<td><strong>T2</strong></td>
+<td>M</td>
+<td>C</td>
+<td>M</td>
+<td>C</td>
+<td>M</td>
+<td>C</td>
+<td>.</td>
+<td>.</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>总时间 = T + n * (M + C)</li>
+<li>平均时间 = (T + n * (M + C)) / n = M + C （n 足够大）</li>
+</ul>
+<p><strong>（2）T &gt; C，M &lt;&lt; C，M &lt;&lt; T</strong></p>
+<p>（假设缓冲次数为 n 次，T = T1 + T2，M 很小，可以忽略不计，因而可直接算入 T2 中。最底下一行为总结）</p>
+<table>
+<thead>
+<tr>
+<th>.</th>
+<th>.</th>
+<th>.</th>
+<th>.</th>
+<th>.</th>
+<th>.</th>
+<th>.</th>
+<th>.</th>
+<th>.</th>
+<th>.</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>T1</td>
+<td>T2 (+ M)</td>
+<td>C</td>
+<td>.</td>
+<td>.</td>
+<td>.</td>
+<td>.</td>
+<td>.</td>
+<td>.</td>
+<td>.</td>
+</tr>
+<tr>
+<td>.</td>
+<td>T1</td>
+<td>T2 (+ M)</td>
+<td>C</td>
+<td>.</td>
+<td>.</td>
+<td>.</td>
+<td>.</td>
+<td>.</td>
+<td>.</td>
+</tr>
+<tr>
+<td>.</td>
+<td>.</td>
+<td>T1</td>
+<td>T2 (+ M)</td>
+<td>C</td>
+<td>M</td>
+<td>.</td>
+<td>.</td>
+<td>.</td>
+<td>.</td>
+</tr>
+<tr>
+<td>T1</td>
+<td>T2</td>
+<td>T1</td>
+<td>T2</td>
+<td><strong>C</strong></td>
+<td><strong>M</strong></td>
+<td>.</td>
+<td>.</td>
+<td>.</td>
+<td>.</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>总时间 = T * n + C + M</li>
+<li>平均时间 = (T * n + C + M) / n = T （n 足够大）</li>
+</ul>
+<p><strong>（3）T &lt; C</strong></p>
+<p>（假设缓冲次数为 n 次，C = C1 + C2，最底下一行为总结）</p>
+<table>
+<thead>
+<tr>
+<th>.</th>
+<th>.</th>
+<th>.</th>
+<th>.</th>
+<th>.</th>
+<th>.</th>
+<th>.</th>
+<th>.</th>
+<th>.</th>
+<th>.</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>T</td>
+<td>M</td>
+<td>C1</td>
+<td>C2</td>
+<td>.</td>
+<td>.</td>
+<td>.</td>
+<td>.</td>
+<td>.</td>
+<td>.</td>
+</tr>
+<tr>
+<td>.</td>
+<td>T</td>
+<td>.</td>
+<td>.</td>
+<td>M</td>
+<td>C1</td>
+<td>C2</td>
+<td>.</td>
+<td>.</td>
+<td>.</td>
+</tr>
+<tr>
+<td>.</td>
+<td>.</td>
+<td>.</td>
+<td>.</td>
+<td>T</td>
+<td>.</td>
+<td>.</td>
+<td>M</td>
+<td>C1</td>
+<td>C2</td>
+</tr>
+<tr>
+<td><strong>T</strong></td>
+<td>M</td>
+<td>C1</td>
+<td>C2</td>
+<td>M</td>
+<td>C1</td>
+<td>C2</td>
+<td>M</td>
+<td>C1</td>
+<td>C2</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>总时间 = T + n * (M + C)</li>
+<li>平均时间 = (T + n * (M + C)) / n = M + C （n 足够大）</li>
+</ul>
+<blockquote>
+<p>综上，双缓冲的平均时间 = max { T, C } + M；如果 M &lt;&lt; C，M &lt;&lt; T，则平均时间 = max { T, C }。因此结论又可以整合为 max { T, C+M }。</p>
+</blockquote>
+<h4 id="2-4-3-循环缓冲">2.4.3 循环缓冲</h4>
+<p>将多个大小相等的缓冲区链接成一个循环队列。</p>
+<ul>
+<li>in 指针：指向下一个可以冲入数据的空缓冲区。</li>
+<li>out 指针：指向下一个可以取出数据的满缓冲区。</li>
+</ul>
+<h4 id="2-4-4-缓冲池">2.4.4 缓冲池</h4>
+<p>缓冲池由系统中共用的缓冲区组成。这些缓冲区按使用状况可以分为：空缓冲队列、装满输入数据的缓冲队列（输入队列）、装满输出数据的缓冲队列（输出队列）。</p>
+<p>设置四种工作缓冲区：</p>
+<ul>
+<li>用于收容输入数据的工作缓冲区（hin）</li>
+<li>用于提取输入数据的工作缓冲区（sin）</li>
+<li>用于收容输出数据的工作缓冲区（hout）</li>
+<li>用于提取输出数据的工作缓冲区（sout）</li>
+</ul>
+<p>缓冲池的工作原理：</p>
+<ul>
+<li>进程请求输入数据：从空缓冲队列中取出一块作为收容输入数据的工作缓冲区（hin）。冲满数据后将缓冲区挂到输入队列队尾。</li>
+<li>进程取得一块输入数据：从输入队列中取得一块冲满输入数据的缓冲区作为“提取输入数据的工作缓冲区（sin）”。缓冲区读空后挂到空缓冲区队列。</li>
+<li>进程将准备好的数据冲入缓冲区：从空缓冲队列中取出一块作为“收容输出数据的工作缓冲区（hout）”。数据冲满后将缓冲区挂到输出队列队尾。</li>
+<li>进程请求输出数据：从输出队列中取得一块冲满输出数据的缓冲区作为“提取输出数据的工作缓冲区（sout）”。缓冲区读空后挂到空缓冲区队列。</li>
+</ul>
+<h4 id="2-4-5-相关例题">2.4.5 相关例题</h4>
+<p>【例 1】设从磁盘将一块数据传送到缓冲区所用时间为 80us，将缓冲区中数据传送到用户区所用时间为 40us，CPU 处理一块数据所用时间为 30us。如果有多块数据需要处理，并采用单缓冲区传送某磁盘数据，则处理一块数据所用总时间为？</p>
+<blockquote>
+<p>【解】T = 80us，M = 40us，C = 30us。</p>
+<p>有多块数据需要处理，则处理一块数据的平均时间 = max { T, C } + M = 80us + 40us = 120us。</p>
+</blockquote>
+<p>【例 2】某操作系统采用双缓冲传送磁盘上的数据。设从磁盘将数据传送到缓冲区所用时间为 T1，将缓冲区中数据传送到用户区所用时间为 T2（假设T2 &lt;&lt; T1），CPU 处理数据所用时间为 T3，则处理该数据，系统所用总时间为？</p>
+<blockquote>
+<p>【解】直接使用结论：max { T, C } + M，如果 M &lt;&lt; C，M &lt;&lt; T，则平均时间 = max { T, C } = max { T1, T3 }。</p>
+</blockquote>
+<p>【例 3】某文件占 10 个磁盘块，现要把该文件的磁盘块逐个读入主存缓冲区，并送用户区进行分析。一个缓冲区与磁盘块大小相等。把一个磁盘块读入缓冲区的时间为 100μs，缓冲区数据传送到用户区的时间是 50μs，CPU 对一块数据进行分析的时间为 50μs。分别计算在单缓冲区和双缓冲区结构下，分析完该文件的时间是多少？</p>
+<blockquote>
+<p>【解】T = 100us，M = 50us，C = 50us。注意到 T &gt; C。</p>
+<p>单缓冲总时间 = n * (T + M) + C = 10 * (100 + 50) + 50 = 1550us。</p>
+<p>双缓冲总时间 = T + n * (M + C) = 100 + 10 * (50 + 50) = 1100us。</p>
+</blockquote>
+<p>【例 4】设系统缓冲区和用户工作区均采用单缓冲，从外设读入 1 个数据块到系统缓冲区的时间为 100，从系统缓冲区读入 1 个数据块到用户工作区的时间为 5， 对用户工作区中的 1 个数据块进行分析的时间为 90。进程从外设读入并分析 2 个数据块的最短时间是？</p>
+<blockquote>
+<p>【解】T = 100，M = 5，C = 90。注意到 T &gt; C。</p>
+<p>单缓冲总时间 = n * (T + M) + C = 2 * (100 + 5) + 90 = 300。</p>
+</blockquote>
+<blockquote>
+<p>【注】这些公式不用背，实际做题时只需像上面那样画出三段的图，即可推得公式。</p>
+</blockquote>
+<h2 id="3-设备驱动程序">3 设备驱动程序</h2>
+<p>不同的 I/O 设备有不同的硬件特性，具体细节只有设备的厂家才知道。因此厂家需要根据设备的硬件特性设计并提供相应的驱动程序。</p>
+<p>设备驱动程序主要负责对硬件设备的具体控制，将上层发出的一系列命令（如 read/write、get 等）转化成特定设备“能听得懂”的一系列操作。包括设置设备寄存器、检查设备状态等。<strong>驱动程序一般会以一个独立进程的方式存在。</strong></p>
+<p>若各公司开发的驱动设备程序接口不统一，则操作系统很难调用设备驱动程序，因此操作系统规定好设备驱动程序的接口标准，各厂商必须按规定要求开发设备驱动程序。</p>
+<p>与此同时，不同的操作系统也对设备驱动程序接口的标准各不相同。设备厂商必须根据操作系统的接口要求，开发相应的设备驱动程序，设备才能被使用。</p>
+<h2 id="4-中断处理程序">4 中断处理程序</h2>
+<p>当 I/O 任务完成时，I/O 控制器会发送一个中断信号，系统会根据中断信号类型找到相应的中断处理程序并执行。中断处理程序的处理流程如下：</p>
+<ul>
+<li>从控制器读出设备状态。</li>
+<li>检测 I/O 是否正常结束，若否，根据异常原因做相应处理，若是，继续下一步。</li>
+<li>从设备中读入一个字的数据并经由 CPU 放到内存缓冲区中。</li>
+</ul>
+<h2 id="5-硬件">5 硬件</h2>
+<h3 id="5-1-I-O-设备">5.1 I/O 设备</h3>
+<p><strong>按设备特性分类</strong>：</p>
+<ul>
+<li><strong>独占式使用设备</strong>：一个时段只能分配给一个进程（如打印机）。</li>
+<li><strong>分时式共享使用设备</strong>：可同时分配给多个进程使用（如磁盘），各进程往往是宏观上同时共享使用设备，实际在微观上是交替使用。</li>
+<li><strong>虚拟设备</strong>：采用 SPOOLing 技术将独占设备改造成虚拟的共享设备，可同时分配给多个进程使用（如采用 SPOOLing 技术实现的共享打印机）。</li>
+</ul>
+<p><strong>按信息交换的单位分类</strong>：</p>
+<ul>
+<li><strong>块设备</strong>：如磁盘、SSD，属于<strong>共享设备</strong>。数据传输的基本单位是“块”，<strong>传输速率较高，可寻址</strong>，即对它可随机地读/写任一块。</li>
+<li><strong>字符设备</strong>：如键盘、打印机，属于<strong>独占设备</strong>。数据传输的基本单位是字符。<strong>传输速率较慢，不可寻址</strong>，在输入/输出时常采用中断驱动方式。</li>
+</ul>
+<h3 id="5-2-I-O-接口（I-O-控制器、设备控制器）">5.2 I/O 接口（I/O 控制器、设备控制器）</h3>
+<p>I/O 接口又称为 I/O 控制器或设备控制器，由内部接口、外部接口、I/O 逻辑、I/O 端口组成。</p>
+<p><strong>I/O 接口的工作原理</strong>：</p>
+<ul>
+<li>发命令：发送命令字到控制寄存器，向设备发送命令（需要驱动程序的协助）。</li>
+<li>读状态：从状态寄存器读取状态字，获得设备或 I/O 控制器的状态信息。</li>
+<li>读/写数据：从数据缓冲寄存器发送或读取数据，完成主机与外设的数据交换。</li>
+</ul>
+<p><strong>I/O 接口的作用</strong>：</p>
+<ul>
+<li>数据缓冲：通过数据缓冲寄存器（DBR）达到主机和外设工作速度的匹配。</li>
+<li>错误或状态监测：通过状态寄存器反馈设备的各种错误、状态信息，供 CPU 查用。</li>
+<li>控制和定时：接收从控制总线发来的控制信号、时钟信号。</li>
+<li>数据格式转换：串-并、并-串等格式转换。</li>
+<li>与主机和设备通信：实现 主机—I/O接口—I/O设备 之间的通信。</li>
+</ul>
+<h4 id="5-2-1-内部接口">5.2.1 内部接口</h4>
+<p>即 CPU 与控制器的接口，用于实现 CPU 与控制器之间的通信。CPU 通过控制线发出命令；通过地址线指明要操作的设备；CPU 通过数据线来取出数据，或放入数据。内部接口与系统总线（数据线、地址线、控制线）相连，实质上是与内存、CPU 相连，其中数据线和 I/O 端口相连。</p>
+<h4 id="5-2-2-外部接口">5.2.2 外部接口</h4>
+<p>即控制器与设备的接口，用于实现控制器与设备之间的通信。外部接口通过接口电缆与外设相连，外部接口的数据传输可能是串行方式，因此 I/O 接口需具有串/并转换功能。</p>
+<h4 id="5-2-3-I-O-逻辑">5.2.3 I/O 逻辑</h4>
+<p>I/O 逻辑负责接收和识别 CPU 的各种命令（如地址译码），并负责对设备发出命令。</p>
+<h4 id="5-2-4-I-O-端口">5.2.4 I/O 端口</h4>
+<p>I/O 端口指设备控制器中可被 CPU 直接访问的寄存器，包括：</p>
+<ul>
+<li><strong>数据（缓冲）寄存器</strong>：实现 CPU 与外设之间的数据缓冲。</li>
+<li><strong>状态寄存器</strong>：获取执行结果和设备的状态信息。</li>
+<li><strong>控制寄存器</strong>：由 CPU 写入，以便启动或更改设备模工作式。</li>
+</ul>
+<blockquote>
+<p>【注 1】控制寄存器、状态寄存器在使用时间上是错开的，因此有的 I/O 接口中可将二者合为<strong>控制/状态寄存器</strong>。</p>
+<p>【注 2】数据寄存器、控制寄存器、状态寄存器可能有多个（如：每个控制/状态寄存器对应一个具体的设备）。</p>
+</blockquote>
+<p><strong>I/O 端口的编址方式</strong>有两种：</p>
+<table>
+<thead>
+<tr>
+<th>方式</th>
+<th>描述</th>
+<th>优点</th>
+<th>缺点</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>统一编址（内存映像 I/O）</strong></td>
+<td>I/O 端口地址和主存地址空间统一，用访存指令访问 I/O 端口（RISC 机器常用，如 STM32）</td>
+<td>不需要专门的输入/输出指令，端口有较大的编址空间，程序设计灵活性高</td>
+<td>端口占用了主存地址空间，使主存地址空间变小，外设寻址时间长</td>
+</tr>
+<tr>
+<td><strong>独立编址（寄存器独立编址）</strong></td>
+<td>I/O 端口地址和主存地址相互独立，用 I/O 指令访问 I/O 端口（如 80386 的 IN、OUT 指令）</td>
+<td>使用专用 I/O 指令，程序编制清晰，I/O 端口地址位数少，地址译码速度快，I/O 端口的地址不占用主存地址空间</td>
+<td>I/O 指令类型，程序设计灵活性差，增加了 CPU 的控制逻辑电路的复杂度</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>【注 1】统一编址方式下，I/O 端口地址要求固定在地址空间的某部分，不能随意在地址空间的任意位置。</p>
+<p>【注 2】端口是指接口电路中可以进行读/写的寄存器，若干端口加上相应的控制逻辑才可以组成接口。</p>
+</blockquote>
+<h3 id="5-3-I-O-控制方式">5.3 I/O 控制方式</h3>
+<p>见《【组成原理-IO系统】IO控制方式》。</p>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>文章作者: </span><span class="post-copyright-info"><a href="https://blog.mount256.com">Mount256</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>文章链接: </span><span class="post-copyright-info"><a href="https://blog.mount256.com/posts/b3a7c8d1.html">https://blog.mount256.com/posts/b3a7c8d1.html</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来源 <a href="https://blog.mount256.com" target="_blank">Mount256的个人小站</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/IO/">IO</a></div><div class="post-share"><div class="social-share" data-image="/img/cover0.jpg" data-sites="facebook,x,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><a class="pagination-related" href="/posts/96bb5969.html" title="【操作系统-内存】页面分配策略和页面置换算法"><img class="cover" src="/img/cover1.jpg" onerror="onerror=null;src='/img/404.jpg'" alt="cover of previous post"><div class="info"><div class="info-1"><div class="info-item-1">上一篇</div><div class="info-item-2">【操作系统-内存】页面分配策略和页面置换算法</div></div><div class="info-2"><div class="info-item-1">0 基本概念  驻留集：指请求分页存储管理中给进程分配的物理块（即页框）的集合。在采用了虚拟存储技术的系统中，驻留集大小一般小于进程的总大小。   【注】若驻留集太小，会导致缺页频繁，系统要花大量的时间来处理缺页，实际用于进程推进的时间很少；驻留集太大，又会导致多道程序并发度下降，资源利用率降低。所以应该选择一个合适的驻留集大小。   工作集：指在某段时间间隔里，进程实际访问页面的集合。 窗口尺寸：页面访问序列的集合，窗口尺寸有多大，访问序列中就有多少个页面。   【注 1】工作集和窗口尺寸的区别： 某进程的页面访问序列如下，窗口尺寸为 4。 （24，15，18，23），24，17，（18，24，18，17），17，15 括号表示窗口尺寸，则第一个窗口尺寸对应的工作集是 24，15，18，23，工作集为 4；第二个窗口尺寸对应的工作集是 18，24，17，工作集为 3。 【注 2】驻留集大小不能小于工作集大小，否则进程运行过程中将频繁缺页。   抖动：刚刚换出的页面马上又要换入内存，刚刚换入的页面马上又要换出外存，这种频繁的页面调度行为称为抖动，或颠簸。产生抖动的主要原因是进程频...</div></div></div></a><a class="pagination-related" href="/posts/3cbd81da.html" title="【操作系统-进程】进程的概念"><img class="cover" src="/img/cover2.jpg" onerror="onerror=null;src='/img/404.jpg'" alt="cover of next post"><div class="info text-right"><div class="info-1"><div class="info-item-1">下一篇</div><div class="info-item-2">【操作系统-进程】进程的概念</div></div><div class="info-2"><div class="info-item-1">0 补充  并发：指两个或多个事件在同一时间间隔内发生。 并行：指两个或多个事件在同一时刻发生。   【注】对于单处理机，在多道程序环境下，一段时间内，宏观上有多道程序在同时执行，而在每个时刻，单处理机仅能有一道程序执行。此时操作系统 是通过分时来实现并发性的，没有真正实现并行性。  1 进程 1.1 进程的组成（进程实体/进程映像） 一个进程实体（进程映像）由 PCB、程序段、数据段组成。进程是动态的，进程实体（进程映像）是静态的。进程是进程实体的运行过程，是系统进行资源分配、拥有资源和调度的一个基本单位。 程序和进程的区别：    项目 程序 进程     组成 代码和数据 代码，数据和 PCB   特点 永久的，静态的 暂时的，动态的   对应关系 程序代码经过多次创建可对应不同进程 一个进程可由系统调用方法被不同进程多次调用     进程控制块（PCB）：PCB 是进程存在的唯一标志，当进程被创建时，操作系统为其创建 PCB，当进程结束时，会回收其 PCB。     项目 内容     进程描述信息 进程标识符 PID，用户标识符 UID   进程控制和管理信息 各硬件使...</div></div></div></a></nav></div><div class="aside-content" id="aside-content"><div class="card-widget card-info text-center"><div class="avatar-img"><img src="/img/avatar.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info-name">Mount256</div><div class="author-info-description">心似河水，奔流依旧</div><div class="site-data"><a href="/archives/"><div class="headline">文章</div><div class="length-num">131</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">128</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">25</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/Mount256"><i class="fab fa-github"></i><span>Follow Me</span></a></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">自 2026/07/13 开始本站域名由 mount256.github.io 迁移至 blog.mount256.com, 请知悉。</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#1-%E7%94%A8%E6%88%B7%E5%B1%82-I-O-%E8%BD%AF%E4%BB%B6"><span class="toc-text">1 用户层 I&#x2F;O 软件</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-1-%E5%81%87%E8%84%B1%E6%9C%BA%E6%8A%80%E6%9C%AF%EF%BC%88SPOOLing-%E6%8A%80%E6%9C%AF%EF%BC%89"><span class="toc-text">1.1 假脱机技术（SPOOLing 技术）</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#1-1-1-SPOOLing-%E7%B3%BB%E7%BB%9F%E7%9A%84%E7%BB%84%E6%88%90"><span class="toc-text">1.1.1 SPOOLing 系统的组成</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#1-1-2-%E5%81%87%E8%84%B1%E6%9C%BA%E7%AE%A1%E7%90%86%E8%BF%9B%E7%A8%8B%E7%9A%84%E5%B7%A5%E4%BD%9C%E5%8E%9F%E7%90%86"><span class="toc-text">1.1.2 假脱机管理进程的工作原理</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-2-%E5%BA%94%E7%94%A8%E7%A8%8B%E5%BA%8F%E6%8E%A5%E5%8F%A3"><span class="toc-text">1.2 应用程序接口</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#1-2-1-%E5%AD%97%E7%AC%A6%E8%AE%BE%E5%A4%87%E6%8E%A5%E5%8F%A3"><span class="toc-text">1.2.1 字符设备接口</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#1-2-2-%E5%9D%97%E8%AE%BE%E5%A4%87%E6%8E%A5%E5%8F%A3"><span class="toc-text">1.2.2 块设备接口</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#1-2-3-%E7%BD%91%E7%BB%9C%E8%AE%BE%E5%A4%87%EF%BC%88%E7%BD%91%E7%BB%9C%E5%A5%97%E6%8E%A5%E5%AD%97%EF%BC%89%E6%8E%A5%E5%8F%A3"><span class="toc-text">1.2.3 网络设备（网络套接字）接口</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#1-2-4-%E9%98%BB%E5%A1%9E-%E9%9D%9E%E9%98%BB%E5%A1%9E-I-O"><span class="toc-text">1.2.4 阻塞&#x2F;非阻塞 I&#x2F;O</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-%E8%AE%BE%E5%A4%87%E7%8B%AC%E7%AB%8B%E6%80%A7%E8%BD%AF%E4%BB%B6"><span class="toc-text">2 设备独立性软件</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#2-1-I-O-%E8%B0%83%E5%BA%A6"><span class="toc-text">2.1 I&#x2F;O 调度</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-2-%E8%AE%BE%E5%A4%87%E4%BF%9D%E6%8A%A4"><span class="toc-text">2.2 设备保护</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-3-%E8%AE%BE%E5%A4%87%E7%9A%84%E5%88%86%E9%85%8D%E4%B8%8E%E5%9B%9E%E6%94%B6"><span class="toc-text">2.3 设备的分配与回收</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#2-3-1-%E8%AE%BE%E5%A4%87%E5%88%86%E9%85%8D%E7%9A%84%E6%96%B9%E5%BC%8F"><span class="toc-text">2.3.1 设备分配的方式</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-3-2-%E8%AE%BE%E5%A4%87%E5%88%86%E9%85%8D%E7%9A%84%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84"><span class="toc-text">2.3.2 设备分配的数据结构</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-3-3-%E8%AE%BE%E5%A4%87%E5%88%86%E9%85%8D%E7%9A%84%E6%B5%81%E7%A8%8B"><span class="toc-text">2.3.3 设备分配的流程</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-4-%E7%BC%93%E5%86%B2%E5%8C%BA%E7%AE%A1%E7%90%86"><span class="toc-text">2.4 缓冲区管理</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#2-4-1-%E5%8D%95%E7%BC%93%E5%86%B2"><span class="toc-text">2.4.1 单缓冲</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-4-2-%E5%8F%8C%E7%BC%93%E5%86%B2"><span class="toc-text">2.4.2 双缓冲</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-4-3-%E5%BE%AA%E7%8E%AF%E7%BC%93%E5%86%B2"><span class="toc-text">2.4.3 循环缓冲</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-4-4-%E7%BC%93%E5%86%B2%E6%B1%A0"><span class="toc-text">2.4.4 缓冲池</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-4-5-%E7%9B%B8%E5%85%B3%E4%BE%8B%E9%A2%98"><span class="toc-text">2.4.5 相关例题</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#3-%E8%AE%BE%E5%A4%87%E9%A9%B1%E5%8A%A8%E7%A8%8B%E5%BA%8F"><span class="toc-text">3 设备驱动程序</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#4-%E4%B8%AD%E6%96%AD%E5%A4%84%E7%90%86%E7%A8%8B%E5%BA%8F"><span class="toc-text">4 中断处理程序</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#5-%E7%A1%AC%E4%BB%B6"><span class="toc-text">5 硬件</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#5-1-I-O-%E8%AE%BE%E5%A4%87"><span class="toc-text">5.1 I&#x2F;O 设备</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-2-I-O-%E6%8E%A5%E5%8F%A3%EF%BC%88I-O-%E6%8E%A7%E5%88%B6%E5%99%A8%E3%80%81%E8%AE%BE%E5%A4%87%E6%8E%A7%E5%88%B6%E5%99%A8%EF%BC%89"><span class="toc-text">5.2 I&#x2F;O 接口（I&#x2F;O 控制器、设备控制器）</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#5-2-1-%E5%86%85%E9%83%A8%E6%8E%A5%E5%8F%A3"><span class="toc-text">5.2.1 内部接口</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#5-2-2-%E5%A4%96%E9%83%A8%E6%8E%A5%E5%8F%A3"><span class="toc-text">5.2.2 外部接口</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#5-2-3-I-O-%E9%80%BB%E8%BE%91"><span class="toc-text">5.2.3 I&#x2F;O 逻辑</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#5-2-4-I-O-%E7%AB%AF%E5%8F%A3"><span class="toc-text">5.2.4 I&#x2F;O 端口</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-3-I-O-%E6%8E%A7%E5%88%B6%E6%96%B9%E5%BC%8F"><span class="toc-text">5.3 I&#x2F;O 控制方式</span></a></li></ol></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item"><a class="thumbnail" href="/posts/19f8fc4.html" title="进行式和终止式"><img src="/img/cover2.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="进行式和终止式"/></a><div class="content"><a class="title" href="/posts/19f8fc4.html" title="进行式和终止式">进行式和终止式</a><time datetime="2026-07-10T16:00:00.000Z" title="发表于 2026-07-11 00:00:00">2026-07-11</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/posts/349744ff.html" title="ABC notation渲染测试"><img src="/img/cover3.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="ABC notation渲染测试"/></a><div class="content"><a class="title" href="/posts/349744ff.html" title="ABC notation渲染测试">ABC notation渲染测试</a><time datetime="2026-06-23T02:42:49.000Z" title="发表于 2026-06-23 10:42:49">2026-06-23</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/posts/f9ae104.html" title="Git的分支操作"><img src="/img/cover0.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Git的分支操作"/></a><div class="content"><a class="title" href="/posts/f9ae104.html" title="Git的分支操作">Git的分支操作</a><time datetime="2026-06-11T16:00:00.000Z" title="发表于 2026-06-12 00:00:00">2026-06-12</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/posts/99b9faf2.html" title="Git的撤销操作"><img src="/img/cover1.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Git的撤销操作"/></a><div class="content"><a class="title" href="/posts/99b9faf2.html" title="Git的撤销操作">Git的撤销操作</a><time datetime="2026-06-11T16:00:00.000Z" title="发表于 2026-06-12 00:00:00">2026-06-12</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/posts/81e19116.html" title="Git多人协作"><img src="/img/cover3.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Git多人协作"/></a><div class="content"><a class="title" href="/posts/81e19116.html" title="Git多人协作">Git多人协作</a><time datetime="2026-06-11T16:00:00.000Z" title="发表于 2026-06-12 00:00:00">2026-06-12</time></div></div></div></div></div></div></main><footer id="footer" style="background-image: url(/img/cover0.jpg);"><div class="footer-other"><div class="footer-copyright"><span class="copyright">&copy;&nbsp;2025 - 2026 By Mount256</span><span class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo 8.1.2</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly 5.5.5</a></span></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="日间和夜间模式切换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js?v=5.5.5"></script><script src="/js/main.js?v=5.5.5"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui@6.1.14/dist/fancybox/fancybox.umd.min.js"></script><div class="js-pjax"><script>(() => {
+  const parseViewBox = viewBox => {
+    if (!viewBox) return null
+    const parts = viewBox.trim().split(/[\s,]+/).map(n => Number(n))
+    if (parts.length !== 4 || parts.some(n => Number.isNaN(n))) return null
+    return parts
+  }
+
+  const getSvgViewBox = svg => {
+    const attr = parseViewBox(svg.getAttribute('viewBox'))
+    if (attr) return attr
+
+    // Fallback: use bbox to build a viewBox
+    try {
+      const bbox = svg.getBBox()
+      if (bbox && bbox.width && bbox.height) return [bbox.x, bbox.y, bbox.width, bbox.height]
+    } catch (e) {
+      // getBBox may fail on some edge cases; ignore
+    }
+
+    const w = Number(svg.getAttribute('width')) || 0
+    const h = Number(svg.getAttribute('height')) || 0
+    if (w > 0 && h > 0) return [0, 0, w, h]
+    return [0, 0, 100, 100]
+  }
+
+  const setSvgViewBox = (svg, vb) => {
+    svg.setAttribute('viewBox', `${vb[0]} ${vb[1]} ${vb[2]} ${vb[3]}`)
+  }
+
+  const clamp = (v, min, max) => Math.max(min, Math.min(max, v))
+
+  const openSvgInNewTab = ({ source, initViewBox }) => {
+    const getClonedSvg = () => {
+      if (typeof source === 'string') {
+        const template = document.createElement('template')
+        template.innerHTML = source.trim()
+        const svg = template.content.querySelector('svg')
+        return svg ? svg.cloneNode(true) : null
+      }
+      if (source && typeof source.cloneNode === 'function') {
+        return source.cloneNode(true)
+      }
+      return null
+    }
+
+    const clone = getClonedSvg()
+    if (!clone) return
+    if (initViewBox && initViewBox.length === 4) {
+      clone.setAttribute('viewBox', initViewBox.join(' '))
+    }
+    if (!clone.getAttribute('xmlns')) clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg')
+    if (!clone.getAttribute('xmlns:xlink') && clone.outerHTML.includes('xlink:')) {
+      clone.setAttribute('xmlns:xlink', 'http://www.w3.org/1999/xlink')
+    }
+    // inject background to match current theme
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark'
+    const bg = getComputedStyle(document.body).backgroundColor || (isDark ? '#1e1e1e' : '#ffffff')
+    if (!clone.style.background) clone.style.background = bg
+
+    const serializer = new XMLSerializer()
+    const svgSource = serializer.serializeToString(clone)
+    const htmlSource = `<!doctype html><html><head><meta charset="utf-8" />
+      <style>
+        html, body { width: 100%; height: 100%; margin: 0; display: flex; align-items: center; justify-content: center; background: ${bg}; }
+        svg { max-width: 100%; max-height: 100%; height: auto; width: auto; }
+      </style>
+      </head><body>${svgSource}</body></html>`
+    const blob = new Blob([htmlSource], { type: 'text/html;charset=utf-8' })
+    const url = URL.createObjectURL(blob)
+    window.open(url, '_blank', 'noopener')
+    setTimeout(() => URL.revokeObjectURL(url), 30000)
+  }
+
+  const attachMermaidViewerButton = wrap => {
+    let btn = wrap.querySelector('.mermaid-open-btn')
+    if (!btn) {
+      btn = document.createElement('button')
+      btn.type = 'button'
+      btn.className = 'mermaid-open-btn'
+      wrap.appendChild(btn)
+    }
+
+    btn.innerHTML = '<i class="fa fa-search fa-fw" aria-hidden="true"></i>'
+
+    if (!btn.__mermaidViewerBound) {
+      btn.addEventListener('click', e => {
+        e.preventDefault()
+        e.stopPropagation()
+        const svg = wrap.__mermaidOriginalSvg || wrap.querySelector('svg')
+        if (!svg) return
+        const initViewBox = wrap.__mermaidInitViewBox
+        if (typeof svg === 'string') {
+          openSvgInNewTab({ source: svg, initViewBox })
+          return
+        }
+        openSvgInNewTab({ source: svg, initViewBox })
+      })
+      btn.__mermaidViewerBound = true
+    }
+  }
+
+  // Zoom around a point (px, py) in the SVG viewport (in viewBox coordinates)
+  const zoomAtPoint = (vb, factor, px, py) => {
+    const w = vb[2] * factor
+    const h = vb[3] * factor
+    const nx = px - (px - vb[0]) * factor
+    const ny = py - (py - vb[1]) * factor
+    return [nx, ny, w, h]
+  }
+
+  const initMermaidGestures = wrap => {
+    const svg = wrap.querySelector('svg')
+    if (!svg) return
+
+    // Ensure viewBox exists so gestures always work
+    const initVb = getSvgViewBox(svg)
+    wrap.__mermaidInitViewBox = initVb
+    wrap.__mermaidCurViewBox = initVb.slice()
+    setSvgViewBox(svg, initVb)
+
+    // Avoid binding multiple times on themeChange/pjax
+    if (wrap.__mermaidGestureBound) return
+    wrap.__mermaidGestureBound = true
+
+    // Helper: map client (viewport) coordinate -> viewBox coordinate
+    const clientToViewBox = (clientX, clientY) => {
+      const rect = svg.getBoundingClientRect()
+      const vb = wrap.__mermaidCurViewBox || getSvgViewBox(svg)
+      const x = vb[0] + (clientX - rect.left) * (vb[2] / rect.width)
+      const y = vb[1] + (clientY - rect.top) * (vb[3] / rect.height)
+      return { x, y, rect, vb }
+    }
+
+    const state = {
+      pointers: new Map(),
+      startVb: null,
+      startDist: 0,
+      startCenter: null
+    }
+
+    const clampVb = vb => {
+      const init = wrap.__mermaidInitViewBox || vb
+      const minW = init[2] * 0.1
+      const maxW = init[2] * 10
+      const minH = init[3] * 0.1
+      const maxH = init[3] * 10
+      vb[2] = clamp(vb[2], minW, maxW)
+      vb[3] = clamp(vb[3], minH, maxH)
+      return vb
+    }
+
+    const setCurVb = vb => {
+      vb = clampVb(vb)
+      wrap.__mermaidCurViewBox = vb
+      setSvgViewBox(svg, vb)
+    }
+
+    const onPointerDown = e => {
+      // Allow only primary button for mouse
+      if (e.pointerType === 'mouse' && e.button !== 0) return
+      svg.setPointerCapture(e.pointerId)
+      state.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY })
+
+      if (state.pointers.size === 1) {
+        state.startVb = (wrap.__mermaidCurViewBox || getSvgViewBox(svg)).slice()
+      } else if (state.pointers.size === 2) {
+        const pts = [...state.pointers.values()]
+        const dx = pts[0].x - pts[1].x
+        const dy = pts[0].y - pts[1].y
+        state.startDist = Math.hypot(dx, dy)
+        state.startVb = (wrap.__mermaidCurViewBox || getSvgViewBox(svg)).slice()
+        state.startCenter = { x: (pts[0].x + pts[1].x) / 2, y: (pts[0].y + pts[1].y) / 2 }
+      }
+    }
+
+    const onPointerMove = e => {
+      if (!state.pointers.has(e.pointerId)) return
+      state.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY })
+
+      // Pan with 1 pointer
+      if (state.pointers.size === 1 && state.startVb) {
+        const p = [...state.pointers.values()][0]
+        const prev = { x: e.clientX - e.movementX, y: e.clientY - e.movementY }
+        // movementX/Y unreliable on touch, compute from stored last position
+        const last = wrap.__mermaidLastSinglePointer || p
+        const dxClient = p.x - last.x
+        const dyClient = p.y - last.y
+        wrap.__mermaidLastSinglePointer = p
+
+        const { rect } = clientToViewBox(p.x, p.y)
+        const vb = (wrap.__mermaidCurViewBox || getSvgViewBox(svg)).slice()
+        const dx = dxClient * (vb[2] / rect.width)
+        const dy = dyClient * (vb[3] / rect.height)
+        setCurVb([vb[0] - dx, vb[1] - dy, vb[2], vb[3]])
+        return
+      }
+
+      // Pinch zoom with 2 pointers
+      if (state.pointers.size === 2 && state.startVb && state.startDist > 0) {
+        const pts = [...state.pointers.values()]
+        const dx = pts[0].x - pts[1].x
+        const dy = pts[0].y - pts[1].y
+        const dist = Math.hypot(dx, dy)
+        if (!dist) return
+        const factor = state.startDist / dist // dist bigger => zoom in (viewBox smaller)
+
+        const cx = (pts[0].x + pts[1].x) / 2
+        const cy = (pts[0].y + pts[1].y) / 2
+        const centerClient = { x: cx, y: cy }
+
+        const pxy = clientToViewBox(centerClient.x, centerClient.y)
+        const cpx = pxy.x
+        const cpy = pxy.y
+
+        const vb = zoomAtPoint(state.startVb, factor, cpx, cpy)
+        setCurVb(vb)
+      }
+    }
+
+    const onPointerUpOrCancel = e => {
+      state.pointers.delete(e.pointerId)
+      if (state.pointers.size === 0) {
+        state.startVb = null
+        state.startDist = 0
+        state.startCenter = null
+        wrap.__mermaidLastSinglePointer = null
+      } else if (state.pointers.size === 1) {
+        // reset single pointer baseline to avoid jump
+        wrap.__mermaidLastSinglePointer = [...state.pointers.values()][0]
+      }
+    }
+
+    // Wheel zoom (mouse/trackpad)
+    const onWheel = e => {
+      // ctrlKey on mac trackpad pinch; we treat both as zoom
+      e.preventDefault()
+      const delta = e.deltaY
+      const zoomFactor = delta > 0 ? 1.1 : 0.9
+      const { x, y } = clientToViewBox(e.clientX, e.clientY)
+      const vb = (wrap.__mermaidCurViewBox || getSvgViewBox(svg)).slice()
+      setCurVb(zoomAtPoint(vb, zoomFactor, x, y))
+    }
+
+    const onDblClick = () => {
+      const init = wrap.__mermaidInitViewBox
+      if (!init) return
+      wrap.__mermaidCurViewBox = init.slice()
+      setSvgViewBox(svg, init)
+    }
+
+    svg.addEventListener('pointerdown', onPointerDown)
+    svg.addEventListener('pointermove', onPointerMove)
+    svg.addEventListener('pointerup', onPointerUpOrCancel)
+    svg.addEventListener('pointercancel', onPointerUpOrCancel)
+    svg.addEventListener('wheel', onWheel, { passive: false })
+    svg.addEventListener('dblclick', onDblClick)
+  }
+
+  const runMermaid = ele => {
+    window.loadMermaid = true
+    const theme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default'
+
+    ele.forEach((item, index) => {
+      const mermaidSrc = item.firstElementChild
+
+      // Clear old render (themeChange/pjax will rerun)
+      const oldSvg = item.querySelector('svg')
+      if (oldSvg) oldSvg.remove()
+      item.__mermaidGestureBound = false
+
+      const config = mermaidSrc.dataset.config ? JSON.parse(mermaidSrc.dataset.config) : {}
+      if (!config.theme) {
+        config.theme = theme
+      }
+      const mermaidThemeConfig = `%%{init: ${JSON.stringify(config)}}%%\n`
+      const mermaidID = `mermaid-${index}`
+      const mermaidDefinition = mermaidThemeConfig + mermaidSrc.textContent
+
+      const renderFn = mermaid.render(mermaidID, mermaidDefinition)
+      const renderMermaid = svg => {
+        mermaidSrc.insertAdjacentHTML('afterend', svg)
+        if (true) initMermaidGestures(item)
+        item.__mermaidOriginalSvg = svg
+        if (true) attachMermaidViewerButton(item)
+      }
+
+
+      // mermaid v9 and v10 compatibility
+      typeof renderFn === 'string' ? renderMermaid(renderFn) : renderFn.then(({ svg }) => renderMermaid(svg))
+    })
+  }
+
+  const codeToMermaid = () => {
+    const codeMermaidEle = document.querySelectorAll('pre > code.mermaid')
+    if (codeMermaidEle.length === 0) return
+
+    codeMermaidEle.forEach(ele => {
+      const preEle = document.createElement('pre')
+      preEle.className = 'mermaid-src'
+      preEle.hidden = true
+      preEle.textContent = ele.textContent
+      const newEle = document.createElement('div')
+      newEle.className = 'mermaid-wrap'
+      newEle.appendChild(preEle)
+      ele.parentNode.replaceWith(newEle)
+    })
+  }
+
+  const loadMermaid = () => {
+    if (true) codeToMermaid()
+    const $mermaid = document.querySelectorAll('#article-container .mermaid-wrap')
+    if ($mermaid.length === 0) return
+
+    const runMermaidFn = () => runMermaid($mermaid)
+    btf.addGlobalFn('themeChange', runMermaidFn, 'mermaid')
+    window.loadMermaid ? runMermaidFn() : btf.getScript('https://cdn.jsdelivr.net/npm/mermaid@11.15.0/dist/mermaid.min.js').then(runMermaidFn)
+  }
+
+  btf.addGlobalFn('encrypt', loadMermaid, 'mermaid')
+  window.pjax ? loadMermaid() : document.addEventListener('DOMContentLoaded', loadMermaid)
+})()</script></div><script src="/js/abcjs-detect.js"></script><script src="/js/bubble.js"></script><script id="click-heart" src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/dist/click-heart.min.js" async="async" mobile="true"></script><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script><div id="local-search"><div class="search-dialog"><nav class="search-nav"><span class="search-dialog-title">搜索</span><i class="fas fa-spinner fa-pulse" id="loading-status" hidden="hidden"></i><button class="search-close-button"><i class="fas fa-times"></i></button></nav><div class="text-center" id="loading-database"><i class="fas fa-spinner fa-pulse"></i><span>  数据加载中</span></div><div class="local-search-input"><input placeholder="输入关键词…" type="text"/></div><hr/><div id="local-search-results"></div><div class="ais-Pagination" id="local-search-pagination" style="display:none;"><ul class="ais-Pagination-list"></ul></div><div id="local-search-stats"></div></div><div id="search-mask"></div><script src="/js/search/local-search.js?v=5.5.5"></script></div></div></body></html>

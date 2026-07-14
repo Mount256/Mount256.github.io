@@ -1,0 +1,2061 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>【组成原理-存储】Cache 和页式虚拟存储器 | Mount256的个人小站</title><meta name="author" content="Mount256"><meta name="copyright" content="Mount256"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="1 高速缓冲存储器（Cache） 1.1 组相联映射 将 Cache 分为 Q 个大小相等的组，每组有 r 个 Cache行，称为 r 路组相联。  Cache 组号 &#x3D; 主存块号 mod Cache 组数 (Q)  例 1（按字节编址） 【假设】   某计算机的主存地址空间为 256MB，按字节编址（1B），则有 256MB&#x2F;1B &#x3D; 256M &#x3D; 2^28^ 个存储单元，地址位数为 28 一个">
+<meta property="og:type" content="article">
+<meta property="og:title" content="【组成原理-存储】Cache 和页式虚拟存储器">
+<meta property="og:url" content="https://blog.mount256.com/posts/ff7e7993.html">
+<meta property="og:site_name" content="Mount256的个人小站">
+<meta property="og:description" content="1 高速缓冲存储器（Cache） 1.1 组相联映射 将 Cache 分为 Q 个大小相等的组，每组有 r 个 Cache行，称为 r 路组相联。  Cache 组号 &#x3D; 主存块号 mod Cache 组数 (Q)  例 1（按字节编址） 【假设】   某计算机的主存地址空间为 256MB，按字节编址（1B），则有 256MB&#x2F;1B &#x3D; 256M &#x3D; 2^28^ 个存储单元，地址位数为 28 一个">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://blog.mount256.com/img/cover1.jpg">
+<meta property="article:published_time" content="2022-08-22T16:00:00.000Z">
+<meta property="article:modified_time" content="2026-07-10T16:00:00.000Z">
+<meta property="article:author" content="Mount256">
+<meta property="article:tag" content="Cache">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://blog.mount256.com/img/cover1.jpg"><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "【组成原理-存储】Cache 和页式虚拟存储器",
+  "url": "https://blog.mount256.com/posts/ff7e7993.html",
+  "image": "https://blog.mount256.com/img/cover1.jpg",
+  "datePublished": "2022-08-22T16:00:00.000Z",
+  "dateModified": "2026-07-10T16:00:00.000Z",
+  "author": [
+    {
+      "@type": "Person",
+      "name": "Mount256",
+      "url": "https://blog.mount256.com"
+    }
+  ]
+}</script><link rel="shortcut icon" href="/img/favicon.png"><link rel="canonical" href="https://blog.mount256.com/posts/ff7e7993.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css?v=5.5.5"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@7.2.0/css/all.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/ui@6.1.14/dist/fancybox/fancybox.min.css" media="print" onload="this.media='all'"><script>
+    (() => {
+      
+    const saveToLocal = {
+      set: (key, value, ttl) => {
+        if (!ttl) return
+        const expiry = Date.now() + ttl * 86400000
+        localStorage.setItem(key, JSON.stringify({ value, expiry }))
+      },
+      get: key => {
+        const itemStr = localStorage.getItem(key)
+        if (!itemStr) return undefined
+        const { value, expiry } = JSON.parse(itemStr)
+        if (Date.now() > expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return value
+      }
+    }
+
+    window.btf = {
+      saveToLocal,
+      getScript: (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        Object.entries(attr).forEach(([key, val]) => script.setAttribute(key, val))
+        script.onload = script.onreadystatechange = () => {
+          if (!script.readyState || /loaded|complete/.test(script.readyState)) resolve()
+        }
+        script.onerror = reject
+        document.head.appendChild(script)
+      }),
+      getCSS: (url, id) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onload = link.onreadystatechange = () => {
+          if (!link.readyState || /loaded|complete/.test(link.readyState)) resolve()
+        }
+        link.onerror = reject
+        document.head.appendChild(link)
+      }),
+      addGlobalFn: (key, fn, name = false, parent = window) => {
+        if (!false && key.startsWith('pjax')) return
+        const globalFn = parent.globalFn || {}
+        globalFn[key] = globalFn[key] || {}
+        globalFn[key][name || Object.keys(globalFn[key]).length] = fn
+        parent.globalFn = globalFn
+      }
+    }
+  
+      
+      const activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      const activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+
+      btf.activateDarkMode = activateDarkMode
+      btf.activateLightMode = activateLightMode
+
+      const theme = saveToLocal.get('theme')
+    
+          theme === 'dark' ? activateDarkMode() : theme === 'light' ? activateLightMode() : null
+        
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        document.documentElement.classList.toggle('hide-aside', asideStatus === 'hide')
+      }
+    
+      
+    const detectApple = () => {
+      if (/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)) {
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+  
+    })()
+  </script><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: {"path":"/search.xml","preload":false,"top_n_per_article":1,"unescape":false,"pagination":{"enable":false,"hitsPerPage":8},"languages":{"hits_empty":"未找到符合您查询的内容：${query}","hits_stats":"共找到 ${hits} 篇文章"}},
+  translate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false,"highlightFullpage":false,"highlightMacStyle":false},
+  copy: {
+    success: '复制成功',
+    error: '复制失败',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'fancybox',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid@4.13.0/dist/infinitegrid.min.js',
+    buttonText: '加载更多'
+  },
+  isPhotoFigcaption: false,
+  islazyloadPlugin: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: '【组成原理-存储】Cache 和页式虚拟存储器',
+  isHighlightShrink: false,
+  isToc: true,
+  pageType: 'post'
+}</script><link rel="stylesheet" href="/css/mouse.css"><script src="/live2d-widget/dist/autoload.js"></script><!-- hexo injector head_end start -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.css">
+<!-- hexo injector head_end end --><meta name="generator" content="Hexo 8.1.2"></head><body><div class="bg-animation" id="web_bg" style="background-image: url(/img/background.png);"></div><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img text-center"><img src="/img/avatar.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data text-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">131</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">128</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">25</div></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 链接</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header" style="background-image: url(/img/cover1.jpg);"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><span class="site-name">Mount256的个人小站</span></a><a class="nav-page-title" href="/"><span class="site-name">【组成原理-存储】Cache 和页式虚拟存储器</span><span class="site-name"><i class="fa-solid fa-circle-arrow-left"></i><span>  返回首页</span></span></a></span><div id="menus"><div id="search-button"><span class="site-page social-icon search"><i class="fas fa-search fa-fw"></i><span> 搜索</span></span></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 链接</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于</span></a></div></div><div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div></div></nav><div id="post-info"><h1 class="post-title">【组成原理-存储】Cache 和页式虚拟存储器</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2022-08-22T16:00:00.000Z" title="发表于 2022-08-23 00:00:00">2022-08-23</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2026-07-10T16:00:00.000Z" title="更新于 2026-07-11 00:00:00">2026-07-11</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80%E5%9B%9B%E5%A4%A7%E4%BB%B6/">计算机基础四大件</a><i class="fas fa-angle-right post-meta-separator"></i><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80%E5%9B%9B%E5%A4%A7%E4%BB%B6/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86/">计算机组成原理</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-wordcount"><i class="far fa-file-word fa-fw post-meta-icon"></i><span class="post-meta-label">总字数:</span><span class="word-count">5.1k</span><span class="post-meta-separator">|</span><i class="far fa-clock fa-fw post-meta-icon"></i><span class="post-meta-label">阅读时长:</span><span>19分钟</span></span><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title=""><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">浏览量:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="container post-content" id="article-container"><h2 id="1-高速缓冲存储器（Cache）">1 高速缓冲存储器（Cache）</h2>
+<h3 id="1-1-组相联映射">1.1 组相联映射</h3>
+<p>将 Cache 分为 Q 个大小相等的组，每组有 r 个 Cache行，称为 r 路组相联。</p>
+<ul>
+<li><code>Cache 组号 = 主存块号 mod Cache 组数 (Q)</code></li>
+</ul>
+<h4 id="例-1（按字节编址）">例 1（按字节编址）</h4>
+<p>【假设】</p>
+<blockquote>
+<ul>
+<li>某计算机的主存地址空间为 256MB，按字节编址（1B），则有 256MB/1B = 256M = 2^28^ 个存储单元，地址位数为 28</li>
+<li>一个主存块大小为 64B（即 Cache 行长为 64B），则一个主存块的存储单元个数为 64B/1B = 64</li>
+<li>Cache 有 16 行，又已知 Cache 行长为 64B，二路组相联（即 2 行/组 或 2 块/组），一共 16/2=8 组</li>
+</ul>
+</blockquote>
+<p>【解答】</p>
+<ul>
+<li>主存的物理地址的结构：</li>
+</ul>
+<p>Cache 一共 2^3^ = 8 组，所以组号占 3 位；主存块（行长）存储单元个数为 2^6^ = 64，所以块内地址占 6 位；因此标记占 28-3-6=19 位。</p>
+<table>
+<thead>
+<tr>
+<th>标记</th>
+<th>组号</th>
+<th>块内地址</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>19b</td>
+<td>3b</td>
+<td>6b</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>Cache 地址的结构：</li>
+</ul>
+<p>Cache 的存储单元个数为 64B * 16 / 1B = 1024 = 2^10^，所以 Cache 地址一共 10 位；Cache 一共 2^3^ = 8 组，所以组号占 3 位；每组有两行，所以行号（块号）占 1 位；块内地址占 6 位。</p>
+<table>
+<thead>
+<tr>
+<th>组号</th>
+<th>行号</th>
+<th>块内地址</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>3b</td>
+<td>1b</td>
+<td>6b</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>Cache 结构（组号、行号不是 Cache 的组成部分）：</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>（组号）</th>
+<th>（行号）</th>
+<th>有效位</th>
+<th>标记位（Tag）</th>
+<th>数据（行长）</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>（0）</td>
+<td>（0）</td>
+<td>1b</td>
+<td>19b</td>
+<td>64B</td>
+</tr>
+<tr>
+<td>（0）</td>
+<td>（1）</td>
+<td>1b</td>
+<td>19b</td>
+<td>64B</td>
+</tr>
+<tr>
+<td>（1）</td>
+<td>（2）</td>
+<td>1b</td>
+<td>19b</td>
+<td>64B</td>
+</tr>
+<tr>
+<td>（1）</td>
+<td>（3）</td>
+<td>1b</td>
+<td>19b</td>
+<td>64B</td>
+</tr>
+<tr>
+<td>（…）</td>
+<td>（…）</td>
+<td>…</td>
+<td>…</td>
+<td>…</td>
+</tr>
+<tr>
+<td>（…）</td>
+<td>（…）</td>
+<td>…</td>
+<td>…</td>
+<td>…</td>
+</tr>
+<tr>
+<td>（7）</td>
+<td>（14）</td>
+<td>1b</td>
+<td>19b</td>
+<td>64B</td>
+</tr>
+<tr>
+<td>（7）</td>
+<td>（15）</td>
+<td>1b</td>
+<td>19b</td>
+<td>64B</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>Cache 行位数 = 标记阵列位数 + Cache 行长 = 1 + 19 + 64 * 8 = 532</li>
+<li>Cache 总位数 = Cache 总行数 * Cache 行位数 = 16 * (1 + 19 + 64 * 8) b = 8512b</li>
+</ul>
+<blockquote>
+<p>【注】Cache 总容量指的是 Cache 的存储容量，<strong>不包括标记阵列（标记位、有效位、脏位等）</strong>，不要与 Cache 总位数搞混！比如某个 Cache 总容量为 64KB，指的是 Cache 存储容量为 64KB，若再加条件：Cache 行长（即主存块大小）为 128B，则该 Cache 总行数为 64KB/128B = 512 行。</p>
+</blockquote>
+<h4 id="例-2（按字编址）">例 2（按字编址）</h4>
+<p>【假设】</p>
+<blockquote>
+<ul>
+<li>某计算机的主存地址空间为 256MB，按字编址（4B），则有 256MB/4B = 64M = 2^26^ 个存储单元，地址位数为 26</li>
+<li>一个主存块大小为 64B（即 Cache 行长为 64B），则一个主存块的存储单元个数为 64B/4B = 16</li>
+<li>Cache 有 16 行，又已知 Cache 行长为 64B，二路组相联，一共 16/2=8 组</li>
+</ul>
+</blockquote>
+<p>【解答】</p>
+<ul>
+<li>主存的物理地址的结构：</li>
+</ul>
+<p>Cache 一共 2^3^ = 8 组，所以组号占 3 位；主存块（行长）存储单元个数为 2^4^ = 16，所以块内地址占 4 位；因此标记占 26-3-4=19 位。</p>
+<table>
+<thead>
+<tr>
+<th>标记</th>
+<th>组号</th>
+<th>块内地址</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>19b</td>
+<td>3b</td>
+<td>4b</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>Cache 地址的结构：</li>
+</ul>
+<p>Cache 的存储单元个数为 64B * 16 / 4B = 256 = 2^8^，所以 Cache 地址一共 8 位；Cache 一共 2^3^ = 8 组，所以组号占 3 位；每组有两行，所以行号（块号）占 1 位；块内地址占 4 位。</p>
+<table>
+<thead>
+<tr>
+<th>组号</th>
+<th>行号</th>
+<th>块内地址</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>3b</td>
+<td>1b</td>
+<td>4b</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>Cache 结构（组号、行号不是 Cache 的组成部分）：</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>（组号）</th>
+<th>（行号）</th>
+<th>有效位</th>
+<th>标记位（Tag）</th>
+<th>数据（行长）</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>（0）</td>
+<td>（0）</td>
+<td>1b</td>
+<td>19b</td>
+<td>64B</td>
+</tr>
+<tr>
+<td>（0）</td>
+<td>（1）</td>
+<td>1b</td>
+<td>19b</td>
+<td>64B</td>
+</tr>
+<tr>
+<td>（1）</td>
+<td>（2）</td>
+<td>1b</td>
+<td>19b</td>
+<td>64B</td>
+</tr>
+<tr>
+<td>（1）</td>
+<td>（3）</td>
+<td>1b</td>
+<td>19b</td>
+<td>64B</td>
+</tr>
+<tr>
+<td>（…）</td>
+<td>（…）</td>
+<td>…</td>
+<td>…</td>
+<td>…</td>
+</tr>
+<tr>
+<td>（…）</td>
+<td>（…）</td>
+<td>…</td>
+<td>…</td>
+<td>…</td>
+</tr>
+<tr>
+<td>（7）</td>
+<td>（14）</td>
+<td>1b</td>
+<td>19b</td>
+<td>64B</td>
+</tr>
+<tr>
+<td>（7）</td>
+<td>（15）</td>
+<td>1b</td>
+<td>19b</td>
+<td>64B</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>Cache 行位数 = 标记阵列位数 + Cache 行长 = 1 + 19 + 64 * 8 = 532</li>
+<li>Cache 总位数 = Cache 总行数 * Cache 行位数 = 16 * (1 + 19 + 64 * 8) b = 8512b</li>
+</ul>
+<h4 id="例-3（按字节编址，考虑-LRU-算法、回写策略）">例 3（按字节编址，考虑 LRU 算法、回写策略）</h4>
+<p>【假设】</p>
+<blockquote>
+<ul>
+<li>某计算机的主存地址空间为 256MB，按字节编址（1B），则有 256MB/1B = 256M = 2^28^ 个存储单元，地址位数为 28</li>
+<li>一个主存块大小为 16B（即 Cache 行长为 16B），则一个主存块的存储单元个数为 16B/1B = 16</li>
+<li>Cache 有 64 行，又已知 Cache 行长为 16B，四路组相联，一共 64/4=16 组</li>
+<li>考虑 LRU 算法、回写策略（<strong>LRU 位的位数与 Cache 组大小有关，2 路时有一位，4 路时有两位</strong>）</li>
+</ul>
+</blockquote>
+<p>【解答】</p>
+<ul>
+<li>主存的物理地址的结构：</li>
+</ul>
+<p>Cache 一共 2^4^ = 16 组，所以组号占 4 位；主存块（行长）存储单元个数为 2^4^ = 16，所以块内地址占 4 位；因此标记占 28-4-4=20 位。</p>
+<table>
+<thead>
+<tr>
+<th>标记</th>
+<th>组号</th>
+<th>块内地址</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>20b</td>
+<td>4b</td>
+<td>4b</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>Cache 地址的结构：</li>
+</ul>
+<p>Cache 的存储单元个数为 64B * 16 / 1B = 1024 = 2^10^，所以 Cache 地址一共 10 位；Cache 一共 2^4^ = 16 组，所以组号占 4 位；每组有四行，所以行号（块号）占 2 位；块内地址占 4 位。</p>
+<table>
+<thead>
+<tr>
+<th>组号</th>
+<th>行号</th>
+<th>块内地址</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>4b</td>
+<td>2b</td>
+<td>4b</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>Cache 结构（组号、行号不是 Cache 的组成部分）：</li>
+</ul>
+<p>考虑 LRU 算法，因为是四路组相联，2^2^ = 4，所以替换控制位占 2 位；考虑回写策略，所以脏位占 1 位。（注意：如果题目中没有要求考虑，则不需要加这些东西）</p>
+<table>
+<thead>
+<tr>
+<th>（组号）</th>
+<th>（行号）</th>
+<th>有效位</th>
+<th>替换控制位</th>
+<th>脏位</th>
+<th>标记位（Tag）</th>
+<th>数据（行长）</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>（0）</td>
+<td>（0）</td>
+<td>1b</td>
+<td>2b</td>
+<td>1b</td>
+<td>20b</td>
+<td>16B</td>
+</tr>
+<tr>
+<td>（0）</td>
+<td>（1）</td>
+<td>1b</td>
+<td>2b</td>
+<td>1b</td>
+<td>20b</td>
+<td>16B</td>
+</tr>
+<tr>
+<td>（0）</td>
+<td>（2）</td>
+<td>1b</td>
+<td>2b</td>
+<td>1b</td>
+<td>20b</td>
+<td>16B</td>
+</tr>
+<tr>
+<td>（0）</td>
+<td>（3）</td>
+<td>1b</td>
+<td>2b</td>
+<td>1b</td>
+<td>20b</td>
+<td>16B</td>
+</tr>
+<tr>
+<td>（1）</td>
+<td>（4）</td>
+<td>1b</td>
+<td>2b</td>
+<td>1b</td>
+<td>20b</td>
+<td>16B</td>
+</tr>
+<tr>
+<td>（1）</td>
+<td>（5）</td>
+<td>1b</td>
+<td>2b</td>
+<td>1b</td>
+<td>20b</td>
+<td>16B</td>
+</tr>
+<tr>
+<td>（1）</td>
+<td>（6）</td>
+<td>1b</td>
+<td>2b</td>
+<td>1b</td>
+<td>20b</td>
+<td>16B</td>
+</tr>
+<tr>
+<td>（1）</td>
+<td>（7）</td>
+<td>1b</td>
+<td>2b</td>
+<td>1b</td>
+<td>20b</td>
+<td>16B</td>
+</tr>
+<tr>
+<td>（…）</td>
+<td>（…）</td>
+<td>…</td>
+<td>…</td>
+<td>…</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>（…）</td>
+<td>（…）</td>
+<td>…</td>
+<td>…</td>
+<td>…</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>（15）</td>
+<td>（62）</td>
+<td>1b</td>
+<td>2b</td>
+<td>1b</td>
+<td>20b</td>
+<td>16B</td>
+</tr>
+<tr>
+<td>（15）</td>
+<td>（63）</td>
+<td>1b</td>
+<td>2b</td>
+<td>1b</td>
+<td>20b</td>
+<td>16B</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>Cache 行位数 = 标记阵列位数 + Cache 行长 = 1 + 2 + 1 + 20 + 16 * 8 = 152</li>
+<li>Cache 总位数 = Cache 总行数 * Cache 行位数 = 64 * (1 + 2 + 1 + 20 + 16 * 8) b = 9728b</li>
+</ul>
+<h3 id="1-2-全相联映射">1.2 全相联映射</h3>
+<p>当 Q=1 时变为全相联映射，即整个 Cache 都是一个组。</p>
+<h4 id="例-4（按字节编址）">例 4（按字节编址）</h4>
+<p>【假设】</p>
+<blockquote>
+<ul>
+<li>某计算机的主存地址空间为 256MB，按字节编址（1B），则有 256MB/1B = 256M = 2^28^ 个存储单元，地址位数为 28</li>
+<li>一个主存块大小为 64B（即 Cache 行长为 64B），则一个主存块的存储单元个数为 64B/1B = 64</li>
+<li>Cache 有 16 行，又已知 Cache 行长为 64B</li>
+</ul>
+</blockquote>
+<p>【解答】</p>
+<ul>
+<li>主存的物理地址的结构：</li>
+</ul>
+<p>主存块（行长）存储单元个数为 2^6^ = 64，所以块内地址占 6 位；因此标记占 28-6=22 位。</p>
+<table>
+<thead>
+<tr>
+<th>标记</th>
+<th>组号</th>
+<th>块内地址</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>22b</td>
+<td>0b</td>
+<td>6b</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>Cache 地址的结构：</li>
+</ul>
+<p>Cache 的存储单元个数为 64B * 16 / 1B = 1024 = 2^10^，所以 Cache 地址一共 10 位；Cache 有 16 行，因此块号占 4 位；块内地址占 6 位。</p>
+<table>
+<thead>
+<tr>
+<th>行号</th>
+<th>块内地址</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>4b</td>
+<td>6b</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>Cache 结构（组号、行号不是 Cache 的组成部分）：</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>（组号）</th>
+<th>（行号）</th>
+<th>有效位</th>
+<th>标记位（Tag）</th>
+<th>数据（行长）</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>（0）</td>
+<td>（0）</td>
+<td>1b</td>
+<td>22b</td>
+<td>64B</td>
+</tr>
+<tr>
+<td>（0）</td>
+<td>（1）</td>
+<td>1b</td>
+<td>22b</td>
+<td>64B</td>
+</tr>
+<tr>
+<td>（0）</td>
+<td>（2）</td>
+<td>1b</td>
+<td>22b</td>
+<td>64B</td>
+</tr>
+<tr>
+<td>（0）</td>
+<td>（3）</td>
+<td>1b</td>
+<td>22b</td>
+<td>64B</td>
+</tr>
+<tr>
+<td>（…）</td>
+<td>（…）</td>
+<td>…</td>
+<td>…</td>
+<td>…</td>
+</tr>
+<tr>
+<td>（…）</td>
+<td>（…）</td>
+<td>…</td>
+<td>…</td>
+<td>…</td>
+</tr>
+<tr>
+<td>（0）</td>
+<td>（14）</td>
+<td>1b</td>
+<td>22b</td>
+<td>64B</td>
+</tr>
+<tr>
+<td>（0）</td>
+<td>（15）</td>
+<td>1b</td>
+<td>22b</td>
+<td>64B</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>Cache 行位数 = 标记阵列位数 + Cache 行长 = 1 + 22 + 64 * 8 = 279</li>
+<li>Cache 总位数 = Cache 总行数 * Cache 行位数 = 16 * (1 + 22 + 64 * 8) b = 4464b</li>
+</ul>
+<h4 id="例-5（按字编址）">例 5（按字编址）</h4>
+<p>【假设】</p>
+<blockquote>
+<ul>
+<li>某计算机的主存地址空间为 256MB，按字编址（4B），则有 256MB/4B = 64M = 2^26^ 个存储单元，地址位数为 26</li>
+<li>一个主存块大小为 64B（即 Cache 行长为 64B），则一个主存块的存储单元个数为 64B/4B = 16</li>
+<li>Cache 有 16 行，又已知 Cache 行长为 64B</li>
+</ul>
+</blockquote>
+<p>【解答】</p>
+<ul>
+<li>主存的物理地址的结构：</li>
+</ul>
+<p>主存块（行长）存储单元个数为 2^4^ = 16，所以块内地址占 4 位；因此标记占 28-4=24 位。</p>
+<table>
+<thead>
+<tr>
+<th>标记</th>
+<th>组号</th>
+<th>块内地址</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>24b</td>
+<td>0b</td>
+<td>4b</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>Cache 地址的结构：</li>
+</ul>
+<p>Cache 的存储单元个数为 64B * 16 / 4B = 256 = 2^8^，所以 Cache 地址一共 8 位；Cache 有 16 行，因此块号占 4 位；块内地址占 4 位。</p>
+<table>
+<thead>
+<tr>
+<th>行号</th>
+<th>块内地址</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>4b</td>
+<td>4b</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>Cache 结构（组号、行号不是 Cache 的组成部分）：</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>（组号）</th>
+<th>（行号）</th>
+<th>有效位</th>
+<th>标记位（Tag）</th>
+<th>数据（行长）</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>（0）</td>
+<td>（0）</td>
+<td>1b</td>
+<td>24b</td>
+<td>64B</td>
+</tr>
+<tr>
+<td>（0）</td>
+<td>（1）</td>
+<td>1b</td>
+<td>24b</td>
+<td>64B</td>
+</tr>
+<tr>
+<td>（0）</td>
+<td>（2）</td>
+<td>1b</td>
+<td>24b</td>
+<td>64B</td>
+</tr>
+<tr>
+<td>（0）</td>
+<td>（3）</td>
+<td>1b</td>
+<td>24b</td>
+<td>64B</td>
+</tr>
+<tr>
+<td>（…）</td>
+<td>（…）</td>
+<td>…</td>
+<td>…</td>
+<td>…</td>
+</tr>
+<tr>
+<td>（…）</td>
+<td>（…）</td>
+<td>…</td>
+<td>…</td>
+<td>…</td>
+</tr>
+<tr>
+<td>（0）</td>
+<td>（14）</td>
+<td>1b</td>
+<td>24b</td>
+<td>64B</td>
+</tr>
+<tr>
+<td>（0）</td>
+<td>（15）</td>
+<td>1b</td>
+<td>24b</td>
+<td>64B</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>Cache 行位数 = 标记阵列位数 + Cache 行长 = 1 + 24 + 64 * 8 = 281</li>
+<li>Cache 总位数 = Cache 总行数 * Cache 行位数 = 16 * (1 + 24 + 64 * 8) b = 4496b</li>
+</ul>
+<h3 id="1-3-直接映射">1.3 直接映射</h3>
+<p>当 r=1 时变为直接映射，即每行 Cache 都是一个组。</p>
+<ul>
+<li><code>Cache 组号 = 主存块号 mod Cache 总行数</code></li>
+</ul>
+<h4 id="例-6（按字节编址）">例 6（按字节编址）</h4>
+<p>【假设】</p>
+<blockquote>
+<ul>
+<li>某计算机的主存地址空间为 256MB，按字节编址（1B），则有 256MB/1B = 256M = 2^28^ 个存储单元，地址位数为 28</li>
+<li>一个主存块大小为 64B（即 Cache 行长为 64B），则一个主存块的存储单元个数为 64B/1B = 64</li>
+<li>Cache 有 16 行，又已知 Cache 行长为 64B</li>
+</ul>
+</blockquote>
+<p>【解答】</p>
+<ul>
+<li>主存的物理地址的结构：</li>
+</ul>
+<p>Cache 一共 2^4^ = 16 行，所以行号占 4 位；主存块（行长）存储单元个数为 2^6^ = 64，所以块内地址占 6 位；因此标记占 28-4-6=18 位。</p>
+<table>
+<thead>
+<tr>
+<th>标记</th>
+<th>行号（组号）</th>
+<th>块内地址</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>18b</td>
+<td>4b</td>
+<td>6b</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>Cache 地址的结构：</li>
+</ul>
+<p>Cache 的存储单元个数为 64B * 16 / 1B = 1024 = 2^10^，所以 Cache 地址一共 10 位；Cache 有 16 行，因此块号占 4 位；块内地址占 6 位。</p>
+<table>
+<thead>
+<tr>
+<th>行号</th>
+<th>块内地址</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>4b</td>
+<td>6b</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>Cache 结构（组号、行号不是 Cache 的组成部分）：</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>（组号）</th>
+<th>（行号）</th>
+<th>有效位</th>
+<th>标记位（Tag）</th>
+<th>数据（行长）</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>（0）</td>
+<td>（0）</td>
+<td>1b</td>
+<td>18b</td>
+<td>64B</td>
+</tr>
+<tr>
+<td>（1）</td>
+<td>（1）</td>
+<td>1b</td>
+<td>18b</td>
+<td>64B</td>
+</tr>
+<tr>
+<td>（2）</td>
+<td>（2）</td>
+<td>1b</td>
+<td>18b</td>
+<td>64B</td>
+</tr>
+<tr>
+<td>（3）</td>
+<td>（3）</td>
+<td>1b</td>
+<td>18b</td>
+<td>64B</td>
+</tr>
+<tr>
+<td>（…）</td>
+<td>（…）</td>
+<td>…</td>
+<td>…</td>
+<td>…</td>
+</tr>
+<tr>
+<td>（…）</td>
+<td>（…）</td>
+<td>…</td>
+<td>…</td>
+<td>…</td>
+</tr>
+<tr>
+<td>（14）</td>
+<td>（14）</td>
+<td>1b</td>
+<td>18b</td>
+<td>64B</td>
+</tr>
+<tr>
+<td>（15）</td>
+<td>（15）</td>
+<td>1b</td>
+<td>18b</td>
+<td>64B</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>Cache 行位数 = 标记阵列位数 + Cache 行长 = 1 + 18 + 64 * 8 = 275</li>
+<li>Cache 总位数 = Cache 总行数 * Cache 行位数 = 16 * (1 + 18 + 64 * 8) b = 4400b</li>
+</ul>
+<h3 id="1-4-Cache-命中率的计算">1.4 Cache 命中率的计算</h3>
+<p>【例 7】有如下 C 语言程序段：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">for</span> (k=<span class="number">0</span>; k&lt;<span class="number">1000</span>; k++)</span><br><span class="line">  a[k] = a[k] + <span class="number">32</span>;</span><br></pre></td></tr></table></figure>
+<p>若数组 a 和变量 k 均为 int 型，int 型数据占 4B，数据 Cache 采用直接映射方式，数据区大小是 1KB，块大小是 16B，该程序段执行前 Cache 为空，则该程序段执行过程中，访问数组 a 的 Cache 的缺失率是（ ）</p>
+<p>A. 1.25%</p>
+<p>B. 2.5%</p>
+<p>C. 12.5%</p>
+<p>D. 25%</p>
+<blockquote>
+<p>【解】一个块可以存储 16B / 4B = 4 个 int 型数据，读 4 次、写 4 次，一共访问 8 次，其中第一次未命中，其他 7 次命中。因此 Cache 缺失率为 1 / 8 = 12.5%，选 C。</p>
+<p>本题中，Cache 数据区一共有 1KB / 16B = 64 个块，而数组 a 占用 1000 * 4B / 16B = 250 个块，数组 a 占用的块数显然比 Cache 的多，然而本题无需考虑这些因素。这是因为 CPU 将数组 a 的每一个主存块调入 Cache 进行连续访问后，程序后面没有再进行访问，降低了思考和计算难度。</p>
+</blockquote>
+<p>【例 8】数据 Cache 有 8 行，每行大小为 64B。int 型数据用 32 位补码表示。请问程序 A 和程序 B 的命中率是多少？</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line">程序 A：</span><br><span class="line"><span class="type">int</span> a[<span class="number">256</span>][<span class="number">256</span>];</span><br><span class="line">...</span><br><span class="line"><span class="type">int</span> <span class="title function_">sum_array1</span> <span class="params">()</span>&#123;</span><br><span class="line">    <span class="type">int</span> i, j, sum = <span class="number">0</span>;</span><br><span class="line">    <span class="keyword">for</span> (i=<span class="number">0</span>; i&lt;<span class="number">256</span>; i++)</span><br><span class="line">      <span class="keyword">for</span> (j=<span class="number">0</span>; j&lt;<span class="number">256</span>; j++)</span><br><span class="line">        sum += a[i][j];</span><br><span class="line">    <span class="keyword">return</span> sum;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">程序 B：</span><br><span class="line"><span class="type">int</span> a[<span class="number">256</span>][<span class="number">256</span>];</span><br><span class="line">...</span><br><span class="line"><span class="type">int</span> <span class="title function_">sum_array2</span> <span class="params">()</span>&#123;</span><br><span class="line">    <span class="type">int</span> i, j, sum = <span class="number">0</span>;</span><br><span class="line">    <span class="keyword">for</span> (j=<span class="number">0</span>; i&lt;<span class="number">256</span>; i++)</span><br><span class="line">      <span class="keyword">for</span> (i=<span class="number">0</span>; j&lt;<span class="number">256</span>; j++)</span><br><span class="line">        sum += a[i][j];</span><br><span class="line">    <span class="keyword">return</span> sum;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>【解】对于程序 A，一个块可以存储 64B / 4B = 16 个 int 型数据，读 16 次，其中第一次未命中，其他 15 次命中。因此 Cache 缺失率为 15 / 16 = 93.75%。</p>
+<p>本题中，Cache 数据区一共有 8 个块，而数组 a 占用 256 * 256 * 4B / 64B = 4096 个块，数组 a 占用的块数显然比 Cache 的多，然而本题无需考虑这些因素。这是因为 CPU 将数组 a 的每一个主存块调入 Cache 进行连续访问后，程序后面没有再进行访问，降低了思考和计算难度。</p>
+<p>对于程序 B，数组 a 一行占用 256 * 4B / 64B = 16 个块，大于 Cache 数据区的 8 个块，因此在访问完 a[0][0]、a[1][0]、···、a[7][0] 并依次调入这 8 个块到 Cache 后，访问到 a[8][0] 时，必须将 Cache 中的一个块替换掉。所以程序 B 没有一个命中，命中率为 0。</p>
+</blockquote>
+<p>【例 9】某程序运行于一个由 L1、L2 两级 Cache 以及主存组成的存储系统，L1 Cache 和 L2 Cache 的命中率分别为 50% 和 80%，则整个存储系统 Cache 的命中率是（ ）</p>
+<p>A. 65%</p>
+<p>B. 80%</p>
+<p>C. 90%</p>
+<p>D. 95%</p>
+<blockquote>
+<p>【答案】C</p>
+<p>【解法一】整个存储系统由两级 Cache 组成，则按照概率论的知识，可以分析出命中的情况有三种：</p>
+<ul>
+<li>L1 Cache 命中、L2 Cache 命中：50% x 80% = 40%</li>
+<li>L1 Cache 命中、L2 Cache 不命中：50% x (1-80%) = 10%</li>
+<li>L1 Cache 不命中、L2 Cache 命中：(1-50%) x 80% = 40%</li>
+</ul>
+<p>所以命中率为 40% + 10% + 40% = 90%。</p>
+<p>【解法二】逆向思考，先计算不命中的概率：</p>
+<ul>
+<li>L1 Cache 不命中、L2 Cache 不命中：(1-50%) x (1-80%) = 10%</li>
+</ul>
+<p>所以命中率为 1 - 10% = 90%。</p>
+</blockquote>
+<h2 id="2-页式虚拟存储器">2 页式虚拟存储器</h2>
+<h3 id="2-1-页表">2.1 页表</h3>
+<p>假设虚拟地址空间为 32 位，一页为 4KB，物理地址空间为 28 位，则：</p>
+<ul>
+<li>虚拟地址的结构（一共 2^20^ 页）：</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>虚页号</th>
+<th>页内地址</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>20b</td>
+<td>12b</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>页表结构（虚页号不属于页表结构）：</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>（虚页号）</th>
+<th>有效位</th>
+<th>物理页号（页框号）</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>（0）</td>
+<td>1b</td>
+<td>16b</td>
+</tr>
+<tr>
+<td>（1）</td>
+<td>1b</td>
+<td>16b</td>
+</tr>
+<tr>
+<td>（2）</td>
+<td>1b</td>
+<td>16b</td>
+</tr>
+<tr>
+<td>（3）</td>
+<td>1b</td>
+<td>16b</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>得到的物理地址结构：</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>物理页号</th>
+<th>页内地址</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>16b</td>
+<td>12b</td>
+</tr>
+</tbody>
+</table>
+<h3 id="2-2-快表（TLB）">2.2 快表（TLB）</h3>
+<h4 id="2-2-1-组相联-TLB">2.2.1 组相联 TLB</h4>
+<p>【假设】</p>
+<blockquote>
+<ul>
+<li>主存空间大小为 256MB，按字节编址，则物理地址位数为 28 位</li>
+<li>虚拟地址空间大小为 4GB，页面大小为 4KB，则地址位数为 32 位，有 4GB/4KB = 2^20^ 页，所以虚拟地址的虚页号占高 20 位，虚拟地址的页内地址占低 12 位；物理地址的页内地址也占低 12 位，因而物理地址的页号占高 16 位</li>
+<li>TLB 为二路组相联，一共四组，2^2^=4，则虚页号中组号还要占低 2 位</li>
+</ul>
+</blockquote>
+<p>【则有】</p>
+<ul>
+<li>（4GB）虚拟地址的结构：</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>虚页号（标记）</th>
+<th>组号</th>
+<th>页内地址</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>18b</td>
+<td>2b</td>
+<td>12b</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>二路组相联 TLB 结构（组号、行号不是 TLB 的组成部分）：</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>（组号）</th>
+<th>（行号）</th>
+<th>有效位</th>
+<th>标记（Tag）</th>
+<th>物理页号（页框号）</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>（0）</td>
+<td>（0）</td>
+<td>1b</td>
+<td>18b</td>
+<td>16b</td>
+</tr>
+<tr>
+<td>（0）</td>
+<td>（1）</td>
+<td>1b</td>
+<td>18b</td>
+<td>16b</td>
+</tr>
+<tr>
+<td>（1）</td>
+<td>（2）</td>
+<td>1b</td>
+<td>18b</td>
+<td>16b</td>
+</tr>
+<tr>
+<td>（1）</td>
+<td>（3）</td>
+<td>1b</td>
+<td>18b</td>
+<td>16b</td>
+</tr>
+<tr>
+<td>（2）</td>
+<td>（4）</td>
+<td>1b</td>
+<td>18b</td>
+<td>16b</td>
+</tr>
+<tr>
+<td>（2）</td>
+<td>（5）</td>
+<td>1b</td>
+<td>18b</td>
+<td>16b</td>
+</tr>
+<tr>
+<td>（3）</td>
+<td>（6）</td>
+<td>1b</td>
+<td>18b</td>
+<td>16b</td>
+</tr>
+<tr>
+<td>（3）</td>
+<td>（7）</td>
+<td>1b</td>
+<td>18b</td>
+<td>16b</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>（256MB）得到的物理地址的结构：</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>物理页号</th>
+<th>页内地址</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>16b</td>
+<td>12b</td>
+</tr>
+</tbody>
+</table>
+<h4 id="2-2-2-全相联-TLB">2.2.2 全相联 TLB</h4>
+<p>【假设】</p>
+<blockquote>
+<ul>
+<li>主存空间大小为 256MB，按字节编址，则物理地址位数为 28 位</li>
+<li>虚拟地址空间大小为 4GB，页面大小为 4KB，则地址位数为 32 位，有 4GB/4KB = 2^20^ 页，所以虚拟地址的虚页号占高 20 位，虚拟地址的页内地址占低 12 位；物理地址的页内地址也占低 12 位，因而物理地址的页号占高 16 位</li>
+<li>TLB 为全相联，共 8 行</li>
+</ul>
+</blockquote>
+<p>【则有】</p>
+<ul>
+<li>（4GB）虚拟地址的结构：</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>虚页号（标记）</th>
+<th>组号</th>
+<th>页内地址</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>20b</td>
+<td>0b</td>
+<td>12b</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>四路组相联 TLB 结构（组号、行号不是 TLB 的组成部分）：</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>（组号）</th>
+<th>（行号）</th>
+<th>有效位</th>
+<th>标记（Tag）</th>
+<th>物理页号（页框号）</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>（0）</td>
+<td>（0）</td>
+<td>1b</td>
+<td>20b</td>
+<td>16b</td>
+</tr>
+<tr>
+<td>（0）</td>
+<td>（1）</td>
+<td>1b</td>
+<td>20b</td>
+<td>16b</td>
+</tr>
+<tr>
+<td>（0）</td>
+<td>（2）</td>
+<td>1b</td>
+<td>20b</td>
+<td>16b</td>
+</tr>
+<tr>
+<td>（0）</td>
+<td>（3）</td>
+<td>1b</td>
+<td>20b</td>
+<td>16b</td>
+</tr>
+<tr>
+<td>（0）</td>
+<td>（4）</td>
+<td>1b</td>
+<td>20b</td>
+<td>16b</td>
+</tr>
+<tr>
+<td>（0）</td>
+<td>（5）</td>
+<td>1b</td>
+<td>20b</td>
+<td>16b</td>
+</tr>
+<tr>
+<td>（0）</td>
+<td>（6）</td>
+<td>1b</td>
+<td>20b</td>
+<td>16b</td>
+</tr>
+<tr>
+<td>（0）</td>
+<td>（7）</td>
+<td>1b</td>
+<td>20b</td>
+<td>16b</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>（256MB）得到的物理地址的结构：</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>物理页号</th>
+<th>页内地址</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>16b</td>
+<td>12b</td>
+</tr>
+</tbody>
+</table>
+<h4 id="2-2-3-直接相联-TLB">2.2.3 直接相联 TLB</h4>
+<p>【假设】</p>
+<blockquote>
+<ul>
+<li>主存空间大小为 256MB，按字节编址，则物理地址位数为 28 位</li>
+<li>虚拟地址空间大小为 4GB，页面大小为 4KB，则地址位数为 32 位，有 4GB/4KB = 2^20^ 页，所以虚拟地址的虚页号占高 20 位，虚拟地址的页内地址占低 12 位；物理地址的页内地址也占低 12 位，因而物理地址的页号占高 16 位</li>
+<li>TLB 为直接相联，共 8 行，2^3^=8，所以虚页号中行号还要占低 3 位</li>
+</ul>
+</blockquote>
+<p>【则有】</p>
+<ul>
+<li>（4GB）虚拟地址的结构：</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>虚页号（标记）</th>
+<th>行号</th>
+<th>页内地址</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>17b</td>
+<td>3b</td>
+<td>12b</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>直接相联 TLB 结构（组号、行号不是 TLB 的组成部分）：</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>（组号）</th>
+<th>（行号）</th>
+<th>有效位</th>
+<th>标记（Tag）</th>
+<th>物理页号（页框号）</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>（0）</td>
+<td>（0）</td>
+<td>1b</td>
+<td>17b</td>
+<td>16b</td>
+</tr>
+<tr>
+<td>（1）</td>
+<td>（1）</td>
+<td>1b</td>
+<td>17b</td>
+<td>16b</td>
+</tr>
+<tr>
+<td>（2）</td>
+<td>（2）</td>
+<td>1b</td>
+<td>17b</td>
+<td>16b</td>
+</tr>
+<tr>
+<td>（3）</td>
+<td>（3）</td>
+<td>1b</td>
+<td>17b</td>
+<td>16b</td>
+</tr>
+<tr>
+<td>（4）</td>
+<td>（4）</td>
+<td>1b</td>
+<td>17b</td>
+<td>16b</td>
+</tr>
+<tr>
+<td>（5）</td>
+<td>（5）</td>
+<td>1b</td>
+<td>17b</td>
+<td>16b</td>
+</tr>
+<tr>
+<td>（6）</td>
+<td>（6）</td>
+<td>1b</td>
+<td>17b</td>
+<td>16b</td>
+</tr>
+<tr>
+<td>（7）</td>
+<td>（7）</td>
+<td>1b</td>
+<td>17b</td>
+<td>16b</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>（256MB）得到的物理地址的结构：</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>物理页号</th>
+<th>页内地址</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>16b</td>
+<td>12b</td>
+</tr>
+</tbody>
+</table>
+<h2 id="3-LRU-替换算法">3 LRU 替换算法</h2>
+<h3 id="3-1-直接映射的-LRU-算法">3.1 直接映射的 LRU 算法</h3>
+<p>计数器变化规则：</p>
+<ul>
+<li>命中时，所命中的行计数器清零，比其低的计数器加 1，其余不变；</li>
+<li>未命中且有空闲行时，新装入的行的计数器置 0，其余全加 1；</li>
+<li>未命中且无空闲行时，计数值为 3 的行的信息块被淘汰，新装入的行的块计数器置 0，其余全加 1。</li>
+</ul>
+<p>【例】内存容量为 4 个页面，使用 LRU 页面替换算法，考虑以下页面访问顺序：{1, 8, 1, 7, 2, 7, 2, 1, 8, 3, 8, 3, 2, 7}</p>
+<p>【解答】（<em>斜体</em>表示<em>命中</em>，<strong>加粗</strong>表示<strong>该页缺失，需要调入和替换</strong>）</p>
+<p>技巧：<strong>无空闲行且需要替换时</strong>，从上一次替换的位置开始，从右往左检查页面访问序列，找到第 4 个不同且位于页面的页号，该页号就是要被淘汰的页号。</p>
+<blockquote>
+<ul>
+<li>比如访问该序列到第一个页号 3 时，发现该页缺失，于是从 3 开始逆向检查序列 {7, 2, 1, 8}，页号 7 即为第 4 个不同且位于页面的页号，说明是近期最少使用的页面，把它淘汰。</li>
+<li>比如访问该序列到最后一个页号 7 时，发现该页缺失，于是从 7 开始逆向检查序列 {1, 8, 3, 8, 3, 2}，页号 1 即为第 4 个不同且位于页面的页号，说明是近期最少使用的页面，把它淘汰。</li>
+</ul>
+</blockquote>
+<table>
+<thead>
+<tr>
+<th>顺序</th>
+<th>1</th>
+<th>8</th>
+<th>1</th>
+<th>7</th>
+<th>2</th>
+<th>7</th>
+<th>2</th>
+<th>1</th>
+<th>8</th>
+<th>3</th>
+<th>8</th>
+<th>3</th>
+<th>2</th>
+<th>7</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>页#0</td>
+<td><strong>1</strong></td>
+<td>1</td>
+<td><em>1</em></td>
+<td>1</td>
+<td>1</td>
+<td>1</td>
+<td>1</td>
+<td><em>1</em></td>
+<td>1</td>
+<td>1</td>
+<td>1</td>
+<td>1</td>
+<td>1</td>
+<td><strong>7</strong></td>
+</tr>
+<tr>
+<td>页#1</td>
+<td></td>
+<td><strong>8</strong></td>
+<td>8</td>
+<td>8</td>
+<td>8</td>
+<td>8</td>
+<td>8</td>
+<td>8</td>
+<td><em>8</em></td>
+<td>8</td>
+<td><em>8</em></td>
+<td>8</td>
+<td>8</td>
+<td>8</td>
+</tr>
+<tr>
+<td>页#2</td>
+<td></td>
+<td></td>
+<td></td>
+<td><strong>7</strong></td>
+<td>7</td>
+<td><em>7</em></td>
+<td>7</td>
+<td>7</td>
+<td>7</td>
+<td><strong>3</strong></td>
+<td>3</td>
+<td><em>3</em></td>
+<td>3</td>
+<td>3</td>
+</tr>
+<tr>
+<td>页#3</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td><strong>2</strong></td>
+<td>2</td>
+<td><em>2</em></td>
+<td>2</td>
+<td>2</td>
+<td>2</td>
+<td>2</td>
+<td>2</td>
+<td><em>2</em></td>
+<td>2</td>
+</tr>
+</tbody>
+</table>
+<p>综上，失效次数（未命中次数）为 6 次，命中率为 8/14。</p>
+<h3 id="3-2-组相联的-LRU-算法">3.2 组相联的 LRU 算法</h3>
+<p>先计算 <code>Cache 组号 = 主存块号 mod Cache 组数 (Q)</code>，看对应的 Cache 组里面有无命中的行，然后按照以下计数器变化规则处理（<strong>注意只处理对应组里面的所有行，其他组不用管</strong>）：</p>
+<ul>
+<li>命中时，所命中的行计数器清零，比其低的计数器加 1，其余不变；</li>
+<li>未命中且有空闲行时，新装入的行的计数器置 0，其余全加 1；</li>
+<li>未命中且无空闲行时，计数值为 3 的行的信息块被淘汰，新装入的行的块计数器置 0，其余全加 1。</li>
+</ul>
+<p>【例】Cache 采用二路组相联方式，访问主存地址顺序：{0, 4, 8, 2, 0, 6, 8, 6, 4, 8}</p>
+<p>【解答 1：蒋本珊第二版】（<em>斜体</em>表示<em>命中</em>，<strong>加粗</strong>表示<strong>该页缺失，需要调入和替换</strong>）</p>
+<p>技巧：<strong>无空闲行且需要替换时</strong>，从上一次替换的位置开始，从右往左检查页面访问序列，找到第 4 个不同且位于该组页面的页号，该页号就是要被淘汰的页号。</p>
+<blockquote>
+<p><a target="_blank" rel="noopener" href="https://www.zhihu.com/question/529942959">疑问：按唐朔飞教材上看，Cache组号=主存块号 % Cache组数，那上述主存地址不应该都是映射到第0组Cache中吗？为什么答案中有的地址映射到第1组？</a></p>
+<ul>
+<li>主存的 0、1 块对应 Cache 的 0、1 块，也就是 Cache 的第 0 组；</li>
+<li>主存的 2、3 块对应 Cache 的 2、3 块，也就是 Cache 的第 1 组；</li>
+<li>以此类推，主存的 4、5、8、9 块就对应 0 组，6、7 块对应 1 组；</li>
+<li>所以，0、1、4、5、8、9 只能放在 0 组。2、3、6、7 只能放在 1 组。</li>
+</ul>
+</blockquote>
+<table>
+<thead>
+<tr>
+<th>组号</th>
+<th>顺序</th>
+<th>0</th>
+<th>4</th>
+<th>8</th>
+<th>2</th>
+<th>0</th>
+<th>6</th>
+<th>8</th>
+<th>6</th>
+<th>4</th>
+<th>8</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0</td>
+<td>行#0</td>
+<td><strong>0</strong></td>
+<td>0</td>
+<td><strong>8</strong></td>
+<td>8</td>
+<td>8</td>
+<td>8</td>
+<td><em>8</em></td>
+<td>8</td>
+<td>8</td>
+<td><em>8</em></td>
+</tr>
+<tr>
+<td>0</td>
+<td>行#1</td>
+<td></td>
+<td><strong>4</strong></td>
+<td>4</td>
+<td>4</td>
+<td><strong>0</strong></td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td><strong>4</strong></td>
+<td>4</td>
+</tr>
+<tr>
+<td>1</td>
+<td>行#2</td>
+<td></td>
+<td></td>
+<td></td>
+<td><strong>2</strong></td>
+<td>2</td>
+<td>2</td>
+<td>2</td>
+<td>2</td>
+<td>2</td>
+<td>2</td>
+</tr>
+<tr>
+<td>1</td>
+<td>行#3</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td><strong>6</strong></td>
+<td>6</td>
+<td><em>6</em></td>
+<td>6</td>
+<td>6</td>
+</tr>
+</tbody>
+</table>
+<p>命中次数为 3，命中率为 3/10。</p>
+<p>【解答 2：唐朔飞第三版】（<em>斜体</em>表示<em>命中</em>，<strong>加粗</strong>表示<strong>该页缺失，需要调入和替换</strong>）</p>
+<blockquote>
+<ul>
+<li>主存的 0、2、4、6、8 块对应 Cache 的 0、1 块，也就是 Cache 的第 0 组；</li>
+<li>主存的 1、3、5、7、9 块对应 Cache 的 0、1 块，也就是 Cache 的第 1 组。</li>
+</ul>
+</blockquote>
+<table>
+<thead>
+<tr>
+<th>组号</th>
+<th>顺序</th>
+<th>0</th>
+<th>4</th>
+<th>8</th>
+<th>2</th>
+<th>0</th>
+<th>6</th>
+<th>8</th>
+<th>6</th>
+<th>4</th>
+<th>8</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0</td>
+<td>行#0</td>
+<td><strong>0</strong></td>
+<td>0</td>
+<td><strong>8</strong></td>
+<td>8</td>
+<td><strong>0</strong></td>
+<td>0</td>
+<td><strong>8</strong></td>
+<td>8</td>
+<td><strong>4</strong></td>
+<td>4</td>
+</tr>
+<tr>
+<td>0</td>
+<td>行#1</td>
+<td></td>
+<td><strong>4</strong></td>
+<td>4</td>
+<td><strong>2</strong></td>
+<td>2</td>
+<td><strong>6</strong></td>
+<td>6</td>
+<td><em>6</em></td>
+<td>6</td>
+<td><strong>8</strong></td>
+</tr>
+<tr>
+<td>1</td>
+<td>行#2</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>1</td>
+<td>行#3</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p>命中次数为 1，命中率为 1/10。</p>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>文章作者: </span><span class="post-copyright-info"><a href="https://blog.mount256.com">Mount256</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>文章链接: </span><span class="post-copyright-info"><a href="https://blog.mount256.com/posts/ff7e7993.html">https://blog.mount256.com/posts/ff7e7993.html</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来源 <a href="https://blog.mount256.com" target="_blank">Mount256的个人小站</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/Cache/">Cache</a></div><div class="post-share"><div class="social-share" data-image="/img/cover1.jpg" data-sites="facebook,x,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><a class="pagination-related" href="/posts/ed2e0c39.html" title="【组成原理-指令】指令系统"><img class="cover" src="/img/cover3.jpg" onerror="onerror=null;src='/img/404.jpg'" alt="cover of previous post"><div class="info"><div class="info-1"><div class="info-item-1">上一篇</div><div class="info-item-2">【组成原理-指令】指令系统</div></div><div class="info-2"><div class="info-item-1">1 指令格式 零地址、一地址、二地址、三地址指令的格式：    操作码 地址码1 地址码2 地址码3     OP A1 A2 A3    1.1 定长操作码 定长操作码指的是操作码的位数不变，n 位操作码的指令系统最大可以有 2^n^ 条指令。 1.2 变长操作码 定长操作码指的是操作码的位数不固定，相应的地址码根据操作码长度的不同而发生变化。 假设指令字长为 16 位，有四种指令格式（零地址、一地址、二地址、三地址指令），操作码和地址码均占 4 位，则一种扩展操作码方案：    指令 操作码 地址码1 地址码2 地址码3     15 条三地址指令 0000 A1 A2 A3   . 0001 A1 A2 A3   . … … … …   . 1110 A1 A2 A3   15 条二地址指令 1111 0000 A2 A3   . 1111 0001 A2 A3   . … … … …   . 1111 1110 A2 A3   15 条一地址指令 1111 1111 0000 A3   . 1111 1111 0001 A3   . … … … …   . 1111 11...</div></div></div></a><a class="pagination-related" href="/posts/9949cda8.html" title="【组成原理-数据】浮点数的编码与运算"><img class="cover" src="/img/cover0.jpg" onerror="onerror=null;src='/img/404.jpg'" alt="cover of next post"><div class="info text-right"><div class="info-1"><div class="info-item-1">下一篇</div><div class="info-item-2">【组成原理-数据】浮点数的编码与运算</div></div><div class="info-2"><div class="info-item-1">1 浮点数的格式 浮点数的格式如下：    符号 (S) 阶码 (E) 尾数 (M)     反映浮点数的正负 反映浮点数的小数点的实际位置 反映浮点数的精度    浮点数真值：N = (-1)^S^ * 1.M * 2^E-偏置值^（E 表示阶码的无符号解释） 1.1 符号 (S) 符号位 S 取值 0 或 1，用来决定浮点数的符号。 1.2 阶码 (E) 阶码或指数 E 是一个二进制定点整数，用 n 位移码表示，其偏置值为2^n-1^-1，与定点数的移码偏置值相比，多减了 1，区别如下：    真值 补码 定点数的移码 浮点数的阶码 对应的无符号数     -128 1000,0000 0000,0000 1111,1111 255   -127 1000,0001 0000,0001 0000,0000 0   -126 1000,0010 0000,0010 0000,0001 1   … … … … …   -2 1111,1110 0111,1110 0111,1101 125   -1 1111,1111 0111,1111 0111,1110 126   0 00...</div></div></div></a></nav></div><div class="aside-content" id="aside-content"><div class="card-widget card-info text-center"><div class="avatar-img"><img src="/img/avatar.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info-name">Mount256</div><div class="author-info-description">心似河水，奔流依旧</div><div class="site-data"><a href="/archives/"><div class="headline">文章</div><div class="length-num">131</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">128</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">25</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/Mount256"><i class="fab fa-github"></i><span>Follow Me</span></a></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">自 2026/07/13 开始本站域名由 mount256.github.io 迁移至 blog.mount256.com, 请知悉。</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#1-%E9%AB%98%E9%80%9F%E7%BC%93%E5%86%B2%E5%AD%98%E5%82%A8%E5%99%A8%EF%BC%88Cache%EF%BC%89"><span class="toc-text">1 高速缓冲存储器（Cache）</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-1-%E7%BB%84%E7%9B%B8%E8%81%94%E6%98%A0%E5%B0%84"><span class="toc-text">1.1 组相联映射</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E4%BE%8B-1%EF%BC%88%E6%8C%89%E5%AD%97%E8%8A%82%E7%BC%96%E5%9D%80%EF%BC%89"><span class="toc-text">例 1（按字节编址）</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E4%BE%8B-2%EF%BC%88%E6%8C%89%E5%AD%97%E7%BC%96%E5%9D%80%EF%BC%89"><span class="toc-text">例 2（按字编址）</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E4%BE%8B-3%EF%BC%88%E6%8C%89%E5%AD%97%E8%8A%82%E7%BC%96%E5%9D%80%EF%BC%8C%E8%80%83%E8%99%91-LRU-%E7%AE%97%E6%B3%95%E3%80%81%E5%9B%9E%E5%86%99%E7%AD%96%E7%95%A5%EF%BC%89"><span class="toc-text">例 3（按字节编址，考虑 LRU 算法、回写策略）</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-2-%E5%85%A8%E7%9B%B8%E8%81%94%E6%98%A0%E5%B0%84"><span class="toc-text">1.2 全相联映射</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E4%BE%8B-4%EF%BC%88%E6%8C%89%E5%AD%97%E8%8A%82%E7%BC%96%E5%9D%80%EF%BC%89"><span class="toc-text">例 4（按字节编址）</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E4%BE%8B-5%EF%BC%88%E6%8C%89%E5%AD%97%E7%BC%96%E5%9D%80%EF%BC%89"><span class="toc-text">例 5（按字编址）</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-3-%E7%9B%B4%E6%8E%A5%E6%98%A0%E5%B0%84"><span class="toc-text">1.3 直接映射</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E4%BE%8B-6%EF%BC%88%E6%8C%89%E5%AD%97%E8%8A%82%E7%BC%96%E5%9D%80%EF%BC%89"><span class="toc-text">例 6（按字节编址）</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-4-Cache-%E5%91%BD%E4%B8%AD%E7%8E%87%E7%9A%84%E8%AE%A1%E7%AE%97"><span class="toc-text">1.4 Cache 命中率的计算</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-%E9%A1%B5%E5%BC%8F%E8%99%9A%E6%8B%9F%E5%AD%98%E5%82%A8%E5%99%A8"><span class="toc-text">2 页式虚拟存储器</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#2-1-%E9%A1%B5%E8%A1%A8"><span class="toc-text">2.1 页表</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-2-%E5%BF%AB%E8%A1%A8%EF%BC%88TLB%EF%BC%89"><span class="toc-text">2.2 快表（TLB）</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#2-2-1-%E7%BB%84%E7%9B%B8%E8%81%94-TLB"><span class="toc-text">2.2.1 组相联 TLB</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-2-2-%E5%85%A8%E7%9B%B8%E8%81%94-TLB"><span class="toc-text">2.2.2 全相联 TLB</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-2-3-%E7%9B%B4%E6%8E%A5%E7%9B%B8%E8%81%94-TLB"><span class="toc-text">2.2.3 直接相联 TLB</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#3-LRU-%E6%9B%BF%E6%8D%A2%E7%AE%97%E6%B3%95"><span class="toc-text">3 LRU 替换算法</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#3-1-%E7%9B%B4%E6%8E%A5%E6%98%A0%E5%B0%84%E7%9A%84-LRU-%E7%AE%97%E6%B3%95"><span class="toc-text">3.1 直接映射的 LRU 算法</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-2-%E7%BB%84%E7%9B%B8%E8%81%94%E7%9A%84-LRU-%E7%AE%97%E6%B3%95"><span class="toc-text">3.2 组相联的 LRU 算法</span></a></li></ol></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item"><a class="thumbnail" href="/posts/19f8fc4.html" title="进行式和终止式"><img src="/img/cover2.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="进行式和终止式"/></a><div class="content"><a class="title" href="/posts/19f8fc4.html" title="进行式和终止式">进行式和终止式</a><time datetime="2026-07-10T16:00:00.000Z" title="发表于 2026-07-11 00:00:00">2026-07-11</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/posts/349744ff.html" title="ABC notation渲染测试"><img src="/img/cover3.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="ABC notation渲染测试"/></a><div class="content"><a class="title" href="/posts/349744ff.html" title="ABC notation渲染测试">ABC notation渲染测试</a><time datetime="2026-06-23T02:42:49.000Z" title="发表于 2026-06-23 10:42:49">2026-06-23</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/posts/f9ae104.html" title="Git的分支操作"><img src="/img/cover0.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Git的分支操作"/></a><div class="content"><a class="title" href="/posts/f9ae104.html" title="Git的分支操作">Git的分支操作</a><time datetime="2026-06-11T16:00:00.000Z" title="发表于 2026-06-12 00:00:00">2026-06-12</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/posts/99b9faf2.html" title="Git的撤销操作"><img src="/img/cover1.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Git的撤销操作"/></a><div class="content"><a class="title" href="/posts/99b9faf2.html" title="Git的撤销操作">Git的撤销操作</a><time datetime="2026-06-11T16:00:00.000Z" title="发表于 2026-06-12 00:00:00">2026-06-12</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/posts/81e19116.html" title="Git多人协作"><img src="/img/cover3.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Git多人协作"/></a><div class="content"><a class="title" href="/posts/81e19116.html" title="Git多人协作">Git多人协作</a><time datetime="2026-06-11T16:00:00.000Z" title="发表于 2026-06-12 00:00:00">2026-06-12</time></div></div></div></div></div></div></main><footer id="footer" style="background-image: url(/img/cover1.jpg);"><div class="footer-other"><div class="footer-copyright"><span class="copyright">&copy;&nbsp;2025 - 2026 By Mount256</span><span class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo 8.1.2</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly 5.5.5</a></span></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="日间和夜间模式切换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js?v=5.5.5"></script><script src="/js/main.js?v=5.5.5"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui@6.1.14/dist/fancybox/fancybox.umd.min.js"></script><div class="js-pjax"><script>(() => {
+  const parseViewBox = viewBox => {
+    if (!viewBox) return null
+    const parts = viewBox.trim().split(/[\s,]+/).map(n => Number(n))
+    if (parts.length !== 4 || parts.some(n => Number.isNaN(n))) return null
+    return parts
+  }
+
+  const getSvgViewBox = svg => {
+    const attr = parseViewBox(svg.getAttribute('viewBox'))
+    if (attr) return attr
+
+    // Fallback: use bbox to build a viewBox
+    try {
+      const bbox = svg.getBBox()
+      if (bbox && bbox.width && bbox.height) return [bbox.x, bbox.y, bbox.width, bbox.height]
+    } catch (e) {
+      // getBBox may fail on some edge cases; ignore
+    }
+
+    const w = Number(svg.getAttribute('width')) || 0
+    const h = Number(svg.getAttribute('height')) || 0
+    if (w > 0 && h > 0) return [0, 0, w, h]
+    return [0, 0, 100, 100]
+  }
+
+  const setSvgViewBox = (svg, vb) => {
+    svg.setAttribute('viewBox', `${vb[0]} ${vb[1]} ${vb[2]} ${vb[3]}`)
+  }
+
+  const clamp = (v, min, max) => Math.max(min, Math.min(max, v))
+
+  const openSvgInNewTab = ({ source, initViewBox }) => {
+    const getClonedSvg = () => {
+      if (typeof source === 'string') {
+        const template = document.createElement('template')
+        template.innerHTML = source.trim()
+        const svg = template.content.querySelector('svg')
+        return svg ? svg.cloneNode(true) : null
+      }
+      if (source && typeof source.cloneNode === 'function') {
+        return source.cloneNode(true)
+      }
+      return null
+    }
+
+    const clone = getClonedSvg()
+    if (!clone) return
+    if (initViewBox && initViewBox.length === 4) {
+      clone.setAttribute('viewBox', initViewBox.join(' '))
+    }
+    if (!clone.getAttribute('xmlns')) clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg')
+    if (!clone.getAttribute('xmlns:xlink') && clone.outerHTML.includes('xlink:')) {
+      clone.setAttribute('xmlns:xlink', 'http://www.w3.org/1999/xlink')
+    }
+    // inject background to match current theme
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark'
+    const bg = getComputedStyle(document.body).backgroundColor || (isDark ? '#1e1e1e' : '#ffffff')
+    if (!clone.style.background) clone.style.background = bg
+
+    const serializer = new XMLSerializer()
+    const svgSource = serializer.serializeToString(clone)
+    const htmlSource = `<!doctype html><html><head><meta charset="utf-8" />
+      <style>
+        html, body { width: 100%; height: 100%; margin: 0; display: flex; align-items: center; justify-content: center; background: ${bg}; }
+        svg { max-width: 100%; max-height: 100%; height: auto; width: auto; }
+      </style>
+      </head><body>${svgSource}</body></html>`
+    const blob = new Blob([htmlSource], { type: 'text/html;charset=utf-8' })
+    const url = URL.createObjectURL(blob)
+    window.open(url, '_blank', 'noopener')
+    setTimeout(() => URL.revokeObjectURL(url), 30000)
+  }
+
+  const attachMermaidViewerButton = wrap => {
+    let btn = wrap.querySelector('.mermaid-open-btn')
+    if (!btn) {
+      btn = document.createElement('button')
+      btn.type = 'button'
+      btn.className = 'mermaid-open-btn'
+      wrap.appendChild(btn)
+    }
+
+    btn.innerHTML = '<i class="fa fa-search fa-fw" aria-hidden="true"></i>'
+
+    if (!btn.__mermaidViewerBound) {
+      btn.addEventListener('click', e => {
+        e.preventDefault()
+        e.stopPropagation()
+        const svg = wrap.__mermaidOriginalSvg || wrap.querySelector('svg')
+        if (!svg) return
+        const initViewBox = wrap.__mermaidInitViewBox
+        if (typeof svg === 'string') {
+          openSvgInNewTab({ source: svg, initViewBox })
+          return
+        }
+        openSvgInNewTab({ source: svg, initViewBox })
+      })
+      btn.__mermaidViewerBound = true
+    }
+  }
+
+  // Zoom around a point (px, py) in the SVG viewport (in viewBox coordinates)
+  const zoomAtPoint = (vb, factor, px, py) => {
+    const w = vb[2] * factor
+    const h = vb[3] * factor
+    const nx = px - (px - vb[0]) * factor
+    const ny = py - (py - vb[1]) * factor
+    return [nx, ny, w, h]
+  }
+
+  const initMermaidGestures = wrap => {
+    const svg = wrap.querySelector('svg')
+    if (!svg) return
+
+    // Ensure viewBox exists so gestures always work
+    const initVb = getSvgViewBox(svg)
+    wrap.__mermaidInitViewBox = initVb
+    wrap.__mermaidCurViewBox = initVb.slice()
+    setSvgViewBox(svg, initVb)
+
+    // Avoid binding multiple times on themeChange/pjax
+    if (wrap.__mermaidGestureBound) return
+    wrap.__mermaidGestureBound = true
+
+    // Helper: map client (viewport) coordinate -> viewBox coordinate
+    const clientToViewBox = (clientX, clientY) => {
+      const rect = svg.getBoundingClientRect()
+      const vb = wrap.__mermaidCurViewBox || getSvgViewBox(svg)
+      const x = vb[0] + (clientX - rect.left) * (vb[2] / rect.width)
+      const y = vb[1] + (clientY - rect.top) * (vb[3] / rect.height)
+      return { x, y, rect, vb }
+    }
+
+    const state = {
+      pointers: new Map(),
+      startVb: null,
+      startDist: 0,
+      startCenter: null
+    }
+
+    const clampVb = vb => {
+      const init = wrap.__mermaidInitViewBox || vb
+      const minW = init[2] * 0.1
+      const maxW = init[2] * 10
+      const minH = init[3] * 0.1
+      const maxH = init[3] * 10
+      vb[2] = clamp(vb[2], minW, maxW)
+      vb[3] = clamp(vb[3], minH, maxH)
+      return vb
+    }
+
+    const setCurVb = vb => {
+      vb = clampVb(vb)
+      wrap.__mermaidCurViewBox = vb
+      setSvgViewBox(svg, vb)
+    }
+
+    const onPointerDown = e => {
+      // Allow only primary button for mouse
+      if (e.pointerType === 'mouse' && e.button !== 0) return
+      svg.setPointerCapture(e.pointerId)
+      state.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY })
+
+      if (state.pointers.size === 1) {
+        state.startVb = (wrap.__mermaidCurViewBox || getSvgViewBox(svg)).slice()
+      } else if (state.pointers.size === 2) {
+        const pts = [...state.pointers.values()]
+        const dx = pts[0].x - pts[1].x
+        const dy = pts[0].y - pts[1].y
+        state.startDist = Math.hypot(dx, dy)
+        state.startVb = (wrap.__mermaidCurViewBox || getSvgViewBox(svg)).slice()
+        state.startCenter = { x: (pts[0].x + pts[1].x) / 2, y: (pts[0].y + pts[1].y) / 2 }
+      }
+    }
+
+    const onPointerMove = e => {
+      if (!state.pointers.has(e.pointerId)) return
+      state.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY })
+
+      // Pan with 1 pointer
+      if (state.pointers.size === 1 && state.startVb) {
+        const p = [...state.pointers.values()][0]
+        const prev = { x: e.clientX - e.movementX, y: e.clientY - e.movementY }
+        // movementX/Y unreliable on touch, compute from stored last position
+        const last = wrap.__mermaidLastSinglePointer || p
+        const dxClient = p.x - last.x
+        const dyClient = p.y - last.y
+        wrap.__mermaidLastSinglePointer = p
+
+        const { rect } = clientToViewBox(p.x, p.y)
+        const vb = (wrap.__mermaidCurViewBox || getSvgViewBox(svg)).slice()
+        const dx = dxClient * (vb[2] / rect.width)
+        const dy = dyClient * (vb[3] / rect.height)
+        setCurVb([vb[0] - dx, vb[1] - dy, vb[2], vb[3]])
+        return
+      }
+
+      // Pinch zoom with 2 pointers
+      if (state.pointers.size === 2 && state.startVb && state.startDist > 0) {
+        const pts = [...state.pointers.values()]
+        const dx = pts[0].x - pts[1].x
+        const dy = pts[0].y - pts[1].y
+        const dist = Math.hypot(dx, dy)
+        if (!dist) return
+        const factor = state.startDist / dist // dist bigger => zoom in (viewBox smaller)
+
+        const cx = (pts[0].x + pts[1].x) / 2
+        const cy = (pts[0].y + pts[1].y) / 2
+        const centerClient = { x: cx, y: cy }
+
+        const pxy = clientToViewBox(centerClient.x, centerClient.y)
+        const cpx = pxy.x
+        const cpy = pxy.y
+
+        const vb = zoomAtPoint(state.startVb, factor, cpx, cpy)
+        setCurVb(vb)
+      }
+    }
+
+    const onPointerUpOrCancel = e => {
+      state.pointers.delete(e.pointerId)
+      if (state.pointers.size === 0) {
+        state.startVb = null
+        state.startDist = 0
+        state.startCenter = null
+        wrap.__mermaidLastSinglePointer = null
+      } else if (state.pointers.size === 1) {
+        // reset single pointer baseline to avoid jump
+        wrap.__mermaidLastSinglePointer = [...state.pointers.values()][0]
+      }
+    }
+
+    // Wheel zoom (mouse/trackpad)
+    const onWheel = e => {
+      // ctrlKey on mac trackpad pinch; we treat both as zoom
+      e.preventDefault()
+      const delta = e.deltaY
+      const zoomFactor = delta > 0 ? 1.1 : 0.9
+      const { x, y } = clientToViewBox(e.clientX, e.clientY)
+      const vb = (wrap.__mermaidCurViewBox || getSvgViewBox(svg)).slice()
+      setCurVb(zoomAtPoint(vb, zoomFactor, x, y))
+    }
+
+    const onDblClick = () => {
+      const init = wrap.__mermaidInitViewBox
+      if (!init) return
+      wrap.__mermaidCurViewBox = init.slice()
+      setSvgViewBox(svg, init)
+    }
+
+    svg.addEventListener('pointerdown', onPointerDown)
+    svg.addEventListener('pointermove', onPointerMove)
+    svg.addEventListener('pointerup', onPointerUpOrCancel)
+    svg.addEventListener('pointercancel', onPointerUpOrCancel)
+    svg.addEventListener('wheel', onWheel, { passive: false })
+    svg.addEventListener('dblclick', onDblClick)
+  }
+
+  const runMermaid = ele => {
+    window.loadMermaid = true
+    const theme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default'
+
+    ele.forEach((item, index) => {
+      const mermaidSrc = item.firstElementChild
+
+      // Clear old render (themeChange/pjax will rerun)
+      const oldSvg = item.querySelector('svg')
+      if (oldSvg) oldSvg.remove()
+      item.__mermaidGestureBound = false
+
+      const config = mermaidSrc.dataset.config ? JSON.parse(mermaidSrc.dataset.config) : {}
+      if (!config.theme) {
+        config.theme = theme
+      }
+      const mermaidThemeConfig = `%%{init: ${JSON.stringify(config)}}%%\n`
+      const mermaidID = `mermaid-${index}`
+      const mermaidDefinition = mermaidThemeConfig + mermaidSrc.textContent
+
+      const renderFn = mermaid.render(mermaidID, mermaidDefinition)
+      const renderMermaid = svg => {
+        mermaidSrc.insertAdjacentHTML('afterend', svg)
+        if (true) initMermaidGestures(item)
+        item.__mermaidOriginalSvg = svg
+        if (true) attachMermaidViewerButton(item)
+      }
+
+
+      // mermaid v9 and v10 compatibility
+      typeof renderFn === 'string' ? renderMermaid(renderFn) : renderFn.then(({ svg }) => renderMermaid(svg))
+    })
+  }
+
+  const codeToMermaid = () => {
+    const codeMermaidEle = document.querySelectorAll('pre > code.mermaid')
+    if (codeMermaidEle.length === 0) return
+
+    codeMermaidEle.forEach(ele => {
+      const preEle = document.createElement('pre')
+      preEle.className = 'mermaid-src'
+      preEle.hidden = true
+      preEle.textContent = ele.textContent
+      const newEle = document.createElement('div')
+      newEle.className = 'mermaid-wrap'
+      newEle.appendChild(preEle)
+      ele.parentNode.replaceWith(newEle)
+    })
+  }
+
+  const loadMermaid = () => {
+    if (true) codeToMermaid()
+    const $mermaid = document.querySelectorAll('#article-container .mermaid-wrap')
+    if ($mermaid.length === 0) return
+
+    const runMermaidFn = () => runMermaid($mermaid)
+    btf.addGlobalFn('themeChange', runMermaidFn, 'mermaid')
+    window.loadMermaid ? runMermaidFn() : btf.getScript('https://cdn.jsdelivr.net/npm/mermaid@11.15.0/dist/mermaid.min.js').then(runMermaidFn)
+  }
+
+  btf.addGlobalFn('encrypt', loadMermaid, 'mermaid')
+  window.pjax ? loadMermaid() : document.addEventListener('DOMContentLoaded', loadMermaid)
+})()</script></div><script src="/js/abcjs-detect.js"></script><script src="/js/bubble.js"></script><script id="click-heart" src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/dist/click-heart.min.js" async="async" mobile="true"></script><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script><div id="local-search"><div class="search-dialog"><nav class="search-nav"><span class="search-dialog-title">搜索</span><i class="fas fa-spinner fa-pulse" id="loading-status" hidden="hidden"></i><button class="search-close-button"><i class="fas fa-times"></i></button></nav><div class="text-center" id="loading-database"><i class="fas fa-spinner fa-pulse"></i><span>  数据加载中</span></div><div class="local-search-input"><input placeholder="输入关键词…" type="text"/></div><hr/><div id="local-search-results"></div><div class="ais-Pagination" id="local-search-pagination" style="display:none;"><ul class="ais-Pagination-list"></ul></div><div id="local-search-stats"></div></div><div id="search-mask"></div><script src="/js/search/local-search.js?v=5.5.5"></script></div></div></body></html>

@@ -1,0 +1,815 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>【组成原理-存储】关于交叉存储器检测访问冲突的一种算法 | Mount256的个人小站</title><meta name="author" content="Mount256"><meta name="copyright" content="Mount256"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="算法规则 昨天本人做有关交叉存储的冲突判断题，感觉如果按照传统的做题方法一个个看，容易漏判一些冲突项而导致失分；如果直接画甘特图，费时间，又容易画错。因此，想了很久，也试了很久，终于想到并逐步完善了一种交叉存储器检测冲突的算法，算法的执行过程中可以有序地找出冲突项，在算法结束后，又可以立即得出访问模块序列的总时间，可谓一举两得。我不太清楚是否有人之前想到过这种方法，如果有，或者是有更简单的方法，请">
+<meta property="og:type" content="article">
+<meta property="og:title" content="【组成原理-存储】关于交叉存储器检测访问冲突的一种算法">
+<meta property="og:url" content="https://blog.mount256.com/posts/d65849d2.html">
+<meta property="og:site_name" content="Mount256的个人小站">
+<meta property="og:description" content="算法规则 昨天本人做有关交叉存储的冲突判断题，感觉如果按照传统的做题方法一个个看，容易漏判一些冲突项而导致失分；如果直接画甘特图，费时间，又容易画错。因此，想了很久，也试了很久，终于想到并逐步完善了一种交叉存储器检测冲突的算法，算法的执行过程中可以有序地找出冲突项，在算法结束后，又可以立即得出访问模块序列的总时间，可谓一举两得。我不太清楚是否有人之前想到过这种方法，如果有，或者是有更简单的方法，请">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://blog.mount256.com/img/cover0.jpg">
+<meta property="article:published_time" content="2022-09-04T16:00:00.000Z">
+<meta property="article:modified_time" content="2026-07-10T16:00:00.000Z">
+<meta property="article:author" content="Mount256">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://blog.mount256.com/img/cover0.jpg"><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "【组成原理-存储】关于交叉存储器检测访问冲突的一种算法",
+  "url": "https://blog.mount256.com/posts/d65849d2.html",
+  "image": "https://blog.mount256.com/img/cover0.jpg",
+  "datePublished": "2022-09-04T16:00:00.000Z",
+  "dateModified": "2026-07-10T16:00:00.000Z",
+  "author": [
+    {
+      "@type": "Person",
+      "name": "Mount256",
+      "url": "https://blog.mount256.com"
+    }
+  ]
+}</script><link rel="shortcut icon" href="/img/favicon.png"><link rel="canonical" href="https://blog.mount256.com/posts/d65849d2.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css?v=5.5.5"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@7.2.0/css/all.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/ui@6.1.14/dist/fancybox/fancybox.min.css" media="print" onload="this.media='all'"><script>
+    (() => {
+      
+    const saveToLocal = {
+      set: (key, value, ttl) => {
+        if (!ttl) return
+        const expiry = Date.now() + ttl * 86400000
+        localStorage.setItem(key, JSON.stringify({ value, expiry }))
+      },
+      get: key => {
+        const itemStr = localStorage.getItem(key)
+        if (!itemStr) return undefined
+        const { value, expiry } = JSON.parse(itemStr)
+        if (Date.now() > expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return value
+      }
+    }
+
+    window.btf = {
+      saveToLocal,
+      getScript: (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        Object.entries(attr).forEach(([key, val]) => script.setAttribute(key, val))
+        script.onload = script.onreadystatechange = () => {
+          if (!script.readyState || /loaded|complete/.test(script.readyState)) resolve()
+        }
+        script.onerror = reject
+        document.head.appendChild(script)
+      }),
+      getCSS: (url, id) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onload = link.onreadystatechange = () => {
+          if (!link.readyState || /loaded|complete/.test(link.readyState)) resolve()
+        }
+        link.onerror = reject
+        document.head.appendChild(link)
+      }),
+      addGlobalFn: (key, fn, name = false, parent = window) => {
+        if (!false && key.startsWith('pjax')) return
+        const globalFn = parent.globalFn || {}
+        globalFn[key] = globalFn[key] || {}
+        globalFn[key][name || Object.keys(globalFn[key]).length] = fn
+        parent.globalFn = globalFn
+      }
+    }
+  
+      
+      const activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      const activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+
+      btf.activateDarkMode = activateDarkMode
+      btf.activateLightMode = activateLightMode
+
+      const theme = saveToLocal.get('theme')
+    
+          theme === 'dark' ? activateDarkMode() : theme === 'light' ? activateLightMode() : null
+        
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        document.documentElement.classList.toggle('hide-aside', asideStatus === 'hide')
+      }
+    
+      
+    const detectApple = () => {
+      if (/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)) {
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+  
+    })()
+  </script><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: {"path":"/search.xml","preload":false,"top_n_per_article":1,"unescape":false,"pagination":{"enable":false,"hitsPerPage":8},"languages":{"hits_empty":"未找到符合您查询的内容：${query}","hits_stats":"共找到 ${hits} 篇文章"}},
+  translate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false,"highlightFullpage":false,"highlightMacStyle":false},
+  copy: {
+    success: '复制成功',
+    error: '复制失败',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'fancybox',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid@4.13.0/dist/infinitegrid.min.js',
+    buttonText: '加载更多'
+  },
+  isPhotoFigcaption: false,
+  islazyloadPlugin: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: '【组成原理-存储】关于交叉存储器检测访问冲突的一种算法',
+  isHighlightShrink: false,
+  isToc: true,
+  pageType: 'post'
+}</script><link rel="stylesheet" href="/css/mouse.css"><script src="/live2d-widget/dist/autoload.js"></script><!-- hexo injector head_end start -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.css">
+<!-- hexo injector head_end end --><meta name="generator" content="Hexo 8.1.2"></head><body><div class="bg-animation" id="web_bg" style="background-image: url(/img/background.png);"></div><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img text-center"><img src="/img/avatar.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data text-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">131</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">128</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">25</div></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 链接</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header" style="background-image: url(/img/cover0.jpg);"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><span class="site-name">Mount256的个人小站</span></a><a class="nav-page-title" href="/"><span class="site-name">【组成原理-存储】关于交叉存储器检测访问冲突的一种算法</span><span class="site-name"><i class="fa-solid fa-circle-arrow-left"></i><span>  返回首页</span></span></a></span><div id="menus"><div id="search-button"><span class="site-page social-icon search"><i class="fas fa-search fa-fw"></i><span> 搜索</span></span></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 链接</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于</span></a></div></div><div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div></div></nav><div id="post-info"><h1 class="post-title">【组成原理-存储】关于交叉存储器检测访问冲突的一种算法</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2022-09-04T16:00:00.000Z" title="发表于 2022-09-05 00:00:00">2022-09-05</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2026-07-10T16:00:00.000Z" title="更新于 2026-07-11 00:00:00">2026-07-11</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80%E5%9B%9B%E5%A4%A7%E4%BB%B6/">计算机基础四大件</a><i class="fas fa-angle-right post-meta-separator"></i><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80%E5%9B%9B%E5%A4%A7%E4%BB%B6/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86/">计算机组成原理</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-wordcount"><i class="far fa-file-word fa-fw post-meta-icon"></i><span class="post-meta-label">总字数:</span><span class="word-count">2.9k</span><span class="post-meta-separator">|</span><i class="far fa-clock fa-fw post-meta-icon"></i><span class="post-meta-label">阅读时长:</span><span>11分钟</span></span><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title=""><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">浏览量:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="container post-content" id="article-container"><h2 id="算法规则">算法规则</h2>
+<p>昨天本人做有关交叉存储的冲突判断题，感觉如果按照传统的做题方法一个个看，容易漏判一些冲突项而导致失分；如果直接画甘特图，费时间，又容易画错。因此，想了很久，也试了很久，终于想到并逐步完善了一种交叉存储器检测冲突的算法，算法的执行过程中可以有序地找出冲突项，在算法结束后，又可以立即得出访问模块序列的总时间，可谓一举两得。我不太清楚是否有人之前想到过这种方法，如果有，或者是有更简单的方法，请私信我，谢谢。这个算法思想类似字符串匹配中的 KMP 算法，但放心，要比 KMP 简单得多。</p>
+<p>由于考试一般考察四体交叉存储器，因此这里默认模块数为 4，现列出该算法规则如下：</p>
+<blockquote>
+<ul>
+<li>访问序列由数字和空位组成，为方便起见，数字和空位我们统一称为元素。</li>
+<li>算法开始时，在序列的头部和尾部各添 3 个空位。</li>
+<li>设置一个滑动组，该滑动组<strong>必须</strong>为四个元素（可以全是数字，亦可部分数字部分空位）。从序列头部开始，依次往后移，一直移到序列尾部，滑动组不足四个元素为止。</li>
+<li>若发现滑动组四个元素中有一对重复项（即两个重复项），则在后一个重复项的<strong>前面</strong>添加一个空位。如果是两对，则每对后一个重复项的<strong>前面</strong>添加一个空位。</li>
+<li>滑动组移到序列尾部，算法结束，删去序列的头部和尾部的 3 个空位，得到最终序列结果。</li>
+</ul>
+</blockquote>
+<p>看起来很繁琐，别急，我们马上来先看一个简单的例子，我将使用括号表示滑动组：</p>
+<h2 id="例-1">例 1</h2>
+<p>【例 1】访问一个四体交叉存储器的模块序列为：3,2,1,3,2。</p>
+<p>【解】</p>
+<table>
+<thead>
+<tr>
+<th>操作</th>
+<th>序列</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>算法开始</td>
+<td>3 2 1 3 2</td>
+</tr>
+<tr>
+<td>前后各添三个空位</td>
+<td>_ _ _ 3 2 1 3 2 _ _ _</td>
+</tr>
+<tr>
+<td>滑动组从序列头部开始，发现没有冲突项</td>
+<td>(_ _ _ 3) 2 1 3 2 _ _ _</td>
+</tr>
+<tr>
+<td>继续滑动，发现没有冲突项</td>
+<td>_ (_ _ 3 2) 1 3 2 _ _ _</td>
+</tr>
+<tr>
+<td>继续滑动，发现没有冲突项</td>
+<td>_ _ (_ 3 2 1) 3 2 _ _ _</td>
+</tr>
+<tr>
+<td>继续滑动，发现有冲突项</td>
+<td>_ _ _ (3 2 1 3) 2 _ _ _</td>
+</tr>
+<tr>
+<td>在后一个冲突项的前面添上一个空位</td>
+<td>_ _ _ (3 2 1 _ 3) 2 _ _ _</td>
+</tr>
+<tr>
+<td>继续滑动，发现没有冲突项</td>
+<td>_ _ _ 3 (2 1 _ 3) 2 _ _ _</td>
+</tr>
+<tr>
+<td>继续滑动，发现没有冲突项</td>
+<td>_ _ _ 3 2 (1 _ 3 2) _ _ _</td>
+</tr>
+<tr>
+<td>继续滑动，发现没有冲突项</td>
+<td>_ _ _ 3 2 1 (_ 3 2 _) _ _</td>
+</tr>
+<tr>
+<td>继续滑动，发现没有冲突项</td>
+<td>_ _ _ 3 2 1 _ (3 2 _ _) _</td>
+</tr>
+<tr>
+<td>继续滑动，发现没有冲突项，此时已到序列尾部</td>
+<td>_ _ _ 3 2 1 _ 3 (2 _ _ _)</td>
+</tr>
+<tr>
+<td>去掉前后的三个空位，得到最终访问序列，算法结束</td>
+<td>3 2 1 _ 3 2</td>
+</tr>
+</tbody>
+</table>
+<p>从最终结果可以看出，访问完模块 3,2,1 后，因为下一个要访问的模块 3 还未恢复结束，因此会停止一个 r 的时间等待其恢复。同时，我们在算法执行过程中也知道了哪两个项会冲突（冲突项已加粗）：<strong>3</strong> 2 1 _ <strong>3</strong> 2。还可以得知，处理器访问这个序列所用的时间为 6r。</p>
+<p>所以从这个例子想跟大家说的是：这个算法<strong>用一个数字表示一个访存周期，而用一个空位表示处理器等待存储体恢复的一个周期。并且，得到的总元素个数，就是我们想要知道的访问时间。</strong></p>
+<p>这个例子还是比较简单的，现稍微修改一下题目，来看看算法又会有怎样的表现：</p>
+<h2 id="例-2">例 2</h2>
+<p>【例 2】访问一个四体交叉存储器的模块序列为：3,1,2,3,2。</p>
+<p>【解】</p>
+<table>
+<thead>
+<tr>
+<th>操作</th>
+<th>序列</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>算法开始</td>
+<td>3 1 2 3 2</td>
+</tr>
+<tr>
+<td>前后各添三个空位</td>
+<td>_ _ _ 3 1 2 3 2 _ _ _</td>
+</tr>
+<tr>
+<td>滑动组从序列头部开始，发现没有冲突项</td>
+<td>(_ _ _ 3) 1 2 3 2 _ _ _</td>
+</tr>
+<tr>
+<td>继续滑动，发现没有冲突项</td>
+<td>_ (_ _ 3 1) 2 3 2 _ _ _</td>
+</tr>
+<tr>
+<td>继续滑动，发现没有冲突项</td>
+<td>_ _ (_ 3 1 2) 3 2 _ _ _</td>
+</tr>
+<tr>
+<td>继续滑动，发现有冲突项</td>
+<td>_ _ _ (3 1 2 3) 2 _ _ _</td>
+</tr>
+<tr>
+<td>在后一个冲突项的前面添上一个空位</td>
+<td>_ _ _ (3 1 2 _ 3) 2 _ _ _</td>
+</tr>
+<tr>
+<td>继续滑动，发现没有冲突项</td>
+<td>_ _ _ 3 (1 2 _ 3) 2 _ _ _</td>
+</tr>
+<tr>
+<td>继续滑动，发现有冲突项</td>
+<td>_ _ _ 3 1 (2 _ 3 2) _ _ _</td>
+</tr>
+<tr>
+<td>在后一个冲突项的前面添上一个空位</td>
+<td>_ _ _ 3 1 (2 _ 3 _ 2) _ _ _</td>
+</tr>
+<tr>
+<td>继续滑动，发现没有冲突项</td>
+<td>_ _ _ 3 1 2 (_ 3 _ 2) _ _ _</td>
+</tr>
+<tr>
+<td>继续滑动，发现没有冲突项</td>
+<td>_ _ _ 3 1 2 _ (3 _ 2 _) _ _</td>
+</tr>
+<tr>
+<td>继续滑动，发现没有冲突项</td>
+<td>_ _ _ 3 1 2 _ 3 (_ 2 _ _) _</td>
+</tr>
+<tr>
+<td>继续滑动，发现没有冲突项，此时已到序列尾部</td>
+<td>_ _ _ 3 1 2 _ 3 _ (2 _ _ _)</td>
+</tr>
+<tr>
+<td>去掉前后的三个空位，得到最终访问序列，算法结束</td>
+<td>3 1 2 _ 3 _ 2</td>
+</tr>
+</tbody>
+</table>
+<p>从最终结果可以看出，访问完模块 3,1,2 后，因为下一个要访问的模块 3 还未恢复结束，因此会停止一个 r 的时间等待其恢复；类似地，当第二次访问完模块 3 后，由于模块 2 还未恢复结束，因此也需要等待一个 r 的时间。同时，我们在算法执行过程中也知道了哪两个项会冲突（冲突项已加粗）：<strong>3</strong> 1 2 _ <strong>3</strong> _ 2 和 3 1 <strong>2</strong> _ 3 _ <strong>2</strong>。还可以得知，处理器访问这个序列所用的时间为 7r。</p>
+<p>下面是一个极端的例子，用以说明为何需要在序列前后添置三个空位，同时我们也将看到序列中多个连续空位的产生：</p>
+<h2 id="例-3">例 3</h2>
+<p>【例 3】访问一个四体交叉存储器的模块序列为：1,1,2,2,3。</p>
+<p>【解】</p>
+<table>
+<thead>
+<tr>
+<th>操作</th>
+<th>序列</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>算法开始</td>
+<td>1 1 2 2 3</td>
+</tr>
+<tr>
+<td>前后各添三个空位</td>
+<td>_ _ _ 1 1 2 2 3 _ _ _</td>
+</tr>
+<tr>
+<td>滑动组从序列头部开始，发现没有冲突项</td>
+<td>(_ _ _ 1) 1 2 2 3 _ _ _</td>
+</tr>
+<tr>
+<td>继续滑动，发现有冲突项</td>
+<td>_ (_ _ 1 1) 2 2 3 _ _ _</td>
+</tr>
+<tr>
+<td>在后一个冲突项的前面添上一个空位</td>
+<td>_ (_ _ 1 _ 1) 2 2 3 _ _ _</td>
+</tr>
+<tr>
+<td>继续滑动，发现有冲突项</td>
+<td>_ _ (_ 1 _ 1) 2 2 3 _ _ _</td>
+</tr>
+<tr>
+<td>在后一个冲突项的前面添上一个空位</td>
+<td>_ _ (_ 1 _ _ 1) 2 2 3 _ _ _</td>
+</tr>
+<tr>
+<td>继续滑动，发现有冲突项</td>
+<td>_ _ _ (1 _ _ 1) 2 2 3 _ _ _</td>
+</tr>
+<tr>
+<td>在后一个冲突项的前面添上一个空位</td>
+<td>_ _ _ (1 _ _ _ 1) 2 2 3 _ _ _</td>
+</tr>
+<tr>
+<td>继续滑动，发现没有冲突项</td>
+<td>_ _ _ 1 (_ _ _ 1) 2 2 3 _ _ _</td>
+</tr>
+<tr>
+<td>继续滑动，发现没有冲突项</td>
+<td>_ _ _ 1 _ (_ _ 1 2) 2 3 _ _ _</td>
+</tr>
+<tr>
+<td>继续滑动，发现有冲突项</td>
+<td>_ _ _ 1 _ _ (_ 1 2 2) 3 _ _ _</td>
+</tr>
+<tr>
+<td>在后一个冲突项的前面添上一个空位</td>
+<td>_ _ _ 1 _ _ (_ 1 2 _ 2) 3 _ _ _</td>
+</tr>
+<tr>
+<td>继续滑动，发现有冲突项</td>
+<td>_ _ _ 1 _ _ _ (1 2 _ 2) 3 _ _ _</td>
+</tr>
+<tr>
+<td>在后一个冲突项的前面添上一个空位</td>
+<td>_ _ _ 1 _ _ _ (1 2 _ _ 2) 3 _ _</td>
+</tr>
+<tr>
+<td>继续滑动，发现有冲突项</td>
+<td>_ _ _ 1 _ _ _ 1 (2 _ _ 2) 3 _ _</td>
+</tr>
+<tr>
+<td>在后一个冲突项的前面添上一个空位</td>
+<td>_ _ _ 1 _ _ _ 1 (2 _ _ _ 2) 3 _ _ _</td>
+</tr>
+<tr>
+<td>继续滑动，发现没有冲突项</td>
+<td>_ _ _ 1 _ _ _ 1 2 (_ _ _ 2) 3 _ _ _</td>
+</tr>
+<tr>
+<td>继续滑动，发现没有冲突项</td>
+<td>_ _ _ 1 _ _ _ 1 2 _ (_ _ 2 3) _ _ _</td>
+</tr>
+<tr>
+<td>继续滑动，发现没有冲突项</td>
+<td>_ _ _ 1 _ _ _ 1 2 _ _ (_ 2 3 _) _ _</td>
+</tr>
+<tr>
+<td>继续滑动，发现没有冲突项</td>
+<td>_ _ _ 1 _ _ _ 1 2 _ _ _ (2 3 _ _) _</td>
+</tr>
+<tr>
+<td>继续滑动，发现没有冲突项，此时已到序列尾部</td>
+<td>_ _ _ 1 _ _ _ 1 2 _ _ _ 2 (3 _ _ _)</td>
+</tr>
+<tr>
+<td>去掉前后的三个空位，得到最终访问序列，算法结束</td>
+<td>1 _ _ _ 1 2 _ _ _ 2 3</td>
+</tr>
+</tbody>
+</table>
+<p>显然，处理器访问这个序列所需时间为 11r。</p>
+<p>从这个例子中我们可以看到，如果序列头部不加三个空位，而是直接开始滑动的话，那么就会出现“1 _ 1 2 _ _ _ 2 3”的情况，这是不对的。</p>
+<p>最后再来看一个更加长的例子：</p>
+<h2 id="例-4">例 4</h2>
+<p>【例 4】访问模块号的顺序：3，1，2，3，0，2，1，3，1，2，0，2。</p>
+<p>【解】（我们直接跳过没有冲突的步骤，只列出发生冲突的步骤）</p>
+<table>
+<thead>
+<tr>
+<th>操作</th>
+<th>序列</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>算法开始</td>
+<td>3 1 2 3 0 2 1 3 1 2 0 2</td>
+</tr>
+<tr>
+<td>前后各添三个空位</td>
+<td>_ _ _ 3 1 2 3 0 2 1 3 1 2 0 2 _ _ _</td>
+</tr>
+<tr>
+<td>滑动组发现冲突项</td>
+<td>_ _ _ (3 1 2 3) 0 2 1 3 1 2 0 2 _ _ _</td>
+</tr>
+<tr>
+<td>在后一个冲突项的前面添上一个空位</td>
+<td>_ _ _ (3 1 2 _ 3) 0 2 1 3 1 2 0 2 _ _ _</td>
+</tr>
+<tr>
+<td>滑动组发现冲突项</td>
+<td>_ _ _ 3 1 2 _ 3 0 (2 1 3 1) 2 0 2 _ _ _</td>
+</tr>
+<tr>
+<td>在后一个冲突项的前面添上一个空位</td>
+<td>_ _ _ 3 1 2 _ 3 0 (2 1 3 _ 1) 2 0 2 _ _ _</td>
+</tr>
+<tr>
+<td>滑动组发现冲突项</td>
+<td>_ _ _ 3 1 2 _ 3 0 2 (1 3 _ 1) 2 0 2 _ _ _</td>
+</tr>
+<tr>
+<td>在后一个冲突项的前面添上一个空位</td>
+<td>_ _ _ 3 1 2 _ 3 0 2 (1 3 _ _ 1) 2 0 2 _ _ _</td>
+</tr>
+<tr>
+<td>滑动组发现冲突项</td>
+<td>_ _ _ 3 1 2 _ 3 0 2 1 3 _ _ (1 2 0 2) _ _ _</td>
+</tr>
+<tr>
+<td>在后一个冲突项的前面添上一个空位</td>
+<td>_ _ _ 3 1 2 _ 3 0 2 1 3 _ _ (1 2 0 _ 2) _ _ _</td>
+</tr>
+<tr>
+<td>滑动组发现冲突项</td>
+<td>_ _ _ 3 1 2 _ 3 0 2 1 3 _ _ 1 (2 0 _ 2) _ _ _</td>
+</tr>
+<tr>
+<td>在后一个冲突项的前面添上一个空位</td>
+<td>_ _ _ 3 1 2 _ 3 0 2 1 3 _ _ 1 (2 0 _ _ 2) _ _ _</td>
+</tr>
+<tr>
+<td>没有其余冲突项，算法结束</td>
+<td>3 1 2 _ 3 0 2 1 3 _ _ 1 2 0 _ _ 2</td>
+</tr>
+</tbody>
+</table>
+<p>显然，处理器访问这个序列所需时间为 17r。</p>
+<p>在做题的时候，你可以只写出冲突的步骤，不冲突的步骤没有必要写出来。有的时候，你甚至可以一眼看出要加多少个空位。OK，那么就暂时写到这了。</p>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>文章作者: </span><span class="post-copyright-info"><a href="https://blog.mount256.com">Mount256</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>文章链接: </span><span class="post-copyright-info"><a href="https://blog.mount256.com/posts/d65849d2.html">https://blog.mount256.com/posts/d65849d2.html</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来源 <a href="https://blog.mount256.com" target="_blank">Mount256的个人小站</a>！</span></div></div><div class="tag_share"><div class="post-share"><div class="social-share" data-image="/img/cover0.jpg" data-sites="facebook,x,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><a class="pagination-related" href="/posts/a193c5f2.html" title="【组成原理-处理器】处理器的相关概念"><img class="cover" src="/img/cover1.jpg" onerror="onerror=null;src='/img/404.jpg'" alt="cover of previous post"><div class="info"><div class="info-1"><div class="info-item-1">上一篇</div><div class="info-item-2">【组成原理-处理器】处理器的相关概念</div></div><div class="info-2"><div class="info-item-1">1 CPU 的性能参数 1.1 常用性能参数    CPU 性能参数 别名 描述 公式     CPU 时钟周期 时钟周期、节拍、T 周期 处理器的时钟周期，是 CPU 操作的基本单位 时钟周期 = 1/主频（单位：s）   CPU 时钟频率 主频 处理器的时钟频率 主频 = 1/时钟周期（单位：Hz）   平均指令周期数 CPI、平均执行周期数 执行一条指令所需的时钟周期数，一般取平均值 CPI = 机器周期数 * (每个机器周期所包含的)时钟周期数（无单位）   平均指令周期 平均执行周期 执行一条指令所需的时钟周期，一般取平均值 平均指令周期 = 执行时间/指令条数 = 1/平均指令执行速度 = CPI*CPU时钟周期(T) = CPI/主频（单位：s）   CPU 执行时间 ~ 运行一个程序所花费的时间 执行时间 = CPU时钟周期数/主频 = (指令条数*CPI)/主频（单位：s）   IPS 平均指令执行速度 每秒执行多少条指令 平均指令执行速度 = 1/平均指令周期 = 指令条数/执行时间 = 主频/CPI（单位：IPS，无量纲）   MIPS 平均指令执行速度 每...</div></div></div></a><a class="pagination-related" href="/posts/7c4b6bdb.html" title="【组成原理-存储】存储器的相关知识"><img class="cover" src="/img/cover2.jpg" onerror="onerror=null;src='/img/404.jpg'" alt="cover of next post"><div class="info text-right"><div class="info-1"><div class="info-item-1">下一篇</div><div class="info-item-2">【组成原理-存储】存储器的相关知识</div></div><div class="info-2"><div class="info-item-1">1 存储器的分类 1.1 随机存储器 RAM    特点 SRAM（静态） DRAM（动态）     存储信息 触发器 电容   破坏性读出 否 是   需要刷新 不要 需要（分散刷新（无死区时间）、集中刷新、异步刷新）   地址传送 行、列地址同时送 行、列地址分开两次送（地址复用技术）   读写速度 快 慢   成本 高 低   用途 Cache 主存    1.2 只读存储器 ROM 【注】只读存储器并非“只能读而不能写”，现在的只读存储器可通过电擦除等方式写入。  MROM（只读存储器） PROM（一次可编程只读存储器） EPROM（可编程可擦除只读存储器） EEPROM（带电可编程可擦除只读存储器） Flash（闪存、U盘）：具有 EEPROM 的特点，即带电可擦除重写 SSD（固态硬盘）：     项目 描述     原理 Flash 芯片   组成 多个闪存芯片，每个芯片有多个块，每个块有多个页   读写特性 以“页”为单位读写，支持随机访问（读快、写慢）   擦除特性 以“块”为单位擦除，一个块如果被擦除次数过多会损坏   磨损均衡技术 动态磨损均衡（优先写入擦除...</div></div></div></a></nav></div><div class="aside-content" id="aside-content"><div class="card-widget card-info text-center"><div class="avatar-img"><img src="/img/avatar.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info-name">Mount256</div><div class="author-info-description">心似河水，奔流依旧</div><div class="site-data"><a href="/archives/"><div class="headline">文章</div><div class="length-num">131</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">128</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">25</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/Mount256"><i class="fab fa-github"></i><span>Follow Me</span></a></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">自 2026/07/13 开始本站域名由 mount256.github.io 迁移至 blog.mount256.com, 请知悉。</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%AE%97%E6%B3%95%E8%A7%84%E5%88%99"><span class="toc-text">算法规则</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BE%8B-1"><span class="toc-text">例 1</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BE%8B-2"><span class="toc-text">例 2</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BE%8B-3"><span class="toc-text">例 3</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BE%8B-4"><span class="toc-text">例 4</span></a></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item"><a class="thumbnail" href="/posts/19f8fc4.html" title="进行式和终止式"><img src="/img/cover2.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="进行式和终止式"/></a><div class="content"><a class="title" href="/posts/19f8fc4.html" title="进行式和终止式">进行式和终止式</a><time datetime="2026-07-10T16:00:00.000Z" title="发表于 2026-07-11 00:00:00">2026-07-11</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/posts/349744ff.html" title="ABC notation渲染测试"><img src="/img/cover3.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="ABC notation渲染测试"/></a><div class="content"><a class="title" href="/posts/349744ff.html" title="ABC notation渲染测试">ABC notation渲染测试</a><time datetime="2026-06-23T02:42:49.000Z" title="发表于 2026-06-23 10:42:49">2026-06-23</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/posts/f9ae104.html" title="Git的分支操作"><img src="/img/cover0.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Git的分支操作"/></a><div class="content"><a class="title" href="/posts/f9ae104.html" title="Git的分支操作">Git的分支操作</a><time datetime="2026-06-11T16:00:00.000Z" title="发表于 2026-06-12 00:00:00">2026-06-12</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/posts/99b9faf2.html" title="Git的撤销操作"><img src="/img/cover1.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Git的撤销操作"/></a><div class="content"><a class="title" href="/posts/99b9faf2.html" title="Git的撤销操作">Git的撤销操作</a><time datetime="2026-06-11T16:00:00.000Z" title="发表于 2026-06-12 00:00:00">2026-06-12</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/posts/81e19116.html" title="Git多人协作"><img src="/img/cover3.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Git多人协作"/></a><div class="content"><a class="title" href="/posts/81e19116.html" title="Git多人协作">Git多人协作</a><time datetime="2026-06-11T16:00:00.000Z" title="发表于 2026-06-12 00:00:00">2026-06-12</time></div></div></div></div></div></div></main><footer id="footer" style="background-image: url(/img/cover0.jpg);"><div class="footer-other"><div class="footer-copyright"><span class="copyright">&copy;&nbsp;2025 - 2026 By Mount256</span><span class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo 8.1.2</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly 5.5.5</a></span></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="日间和夜间模式切换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js?v=5.5.5"></script><script src="/js/main.js?v=5.5.5"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui@6.1.14/dist/fancybox/fancybox.umd.min.js"></script><div class="js-pjax"><script>(() => {
+  const parseViewBox = viewBox => {
+    if (!viewBox) return null
+    const parts = viewBox.trim().split(/[\s,]+/).map(n => Number(n))
+    if (parts.length !== 4 || parts.some(n => Number.isNaN(n))) return null
+    return parts
+  }
+
+  const getSvgViewBox = svg => {
+    const attr = parseViewBox(svg.getAttribute('viewBox'))
+    if (attr) return attr
+
+    // Fallback: use bbox to build a viewBox
+    try {
+      const bbox = svg.getBBox()
+      if (bbox && bbox.width && bbox.height) return [bbox.x, bbox.y, bbox.width, bbox.height]
+    } catch (e) {
+      // getBBox may fail on some edge cases; ignore
+    }
+
+    const w = Number(svg.getAttribute('width')) || 0
+    const h = Number(svg.getAttribute('height')) || 0
+    if (w > 0 && h > 0) return [0, 0, w, h]
+    return [0, 0, 100, 100]
+  }
+
+  const setSvgViewBox = (svg, vb) => {
+    svg.setAttribute('viewBox', `${vb[0]} ${vb[1]} ${vb[2]} ${vb[3]}`)
+  }
+
+  const clamp = (v, min, max) => Math.max(min, Math.min(max, v))
+
+  const openSvgInNewTab = ({ source, initViewBox }) => {
+    const getClonedSvg = () => {
+      if (typeof source === 'string') {
+        const template = document.createElement('template')
+        template.innerHTML = source.trim()
+        const svg = template.content.querySelector('svg')
+        return svg ? svg.cloneNode(true) : null
+      }
+      if (source && typeof source.cloneNode === 'function') {
+        return source.cloneNode(true)
+      }
+      return null
+    }
+
+    const clone = getClonedSvg()
+    if (!clone) return
+    if (initViewBox && initViewBox.length === 4) {
+      clone.setAttribute('viewBox', initViewBox.join(' '))
+    }
+    if (!clone.getAttribute('xmlns')) clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg')
+    if (!clone.getAttribute('xmlns:xlink') && clone.outerHTML.includes('xlink:')) {
+      clone.setAttribute('xmlns:xlink', 'http://www.w3.org/1999/xlink')
+    }
+    // inject background to match current theme
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark'
+    const bg = getComputedStyle(document.body).backgroundColor || (isDark ? '#1e1e1e' : '#ffffff')
+    if (!clone.style.background) clone.style.background = bg
+
+    const serializer = new XMLSerializer()
+    const svgSource = serializer.serializeToString(clone)
+    const htmlSource = `<!doctype html><html><head><meta charset="utf-8" />
+      <style>
+        html, body { width: 100%; height: 100%; margin: 0; display: flex; align-items: center; justify-content: center; background: ${bg}; }
+        svg { max-width: 100%; max-height: 100%; height: auto; width: auto; }
+      </style>
+      </head><body>${svgSource}</body></html>`
+    const blob = new Blob([htmlSource], { type: 'text/html;charset=utf-8' })
+    const url = URL.createObjectURL(blob)
+    window.open(url, '_blank', 'noopener')
+    setTimeout(() => URL.revokeObjectURL(url), 30000)
+  }
+
+  const attachMermaidViewerButton = wrap => {
+    let btn = wrap.querySelector('.mermaid-open-btn')
+    if (!btn) {
+      btn = document.createElement('button')
+      btn.type = 'button'
+      btn.className = 'mermaid-open-btn'
+      wrap.appendChild(btn)
+    }
+
+    btn.innerHTML = '<i class="fa fa-search fa-fw" aria-hidden="true"></i>'
+
+    if (!btn.__mermaidViewerBound) {
+      btn.addEventListener('click', e => {
+        e.preventDefault()
+        e.stopPropagation()
+        const svg = wrap.__mermaidOriginalSvg || wrap.querySelector('svg')
+        if (!svg) return
+        const initViewBox = wrap.__mermaidInitViewBox
+        if (typeof svg === 'string') {
+          openSvgInNewTab({ source: svg, initViewBox })
+          return
+        }
+        openSvgInNewTab({ source: svg, initViewBox })
+      })
+      btn.__mermaidViewerBound = true
+    }
+  }
+
+  // Zoom around a point (px, py) in the SVG viewport (in viewBox coordinates)
+  const zoomAtPoint = (vb, factor, px, py) => {
+    const w = vb[2] * factor
+    const h = vb[3] * factor
+    const nx = px - (px - vb[0]) * factor
+    const ny = py - (py - vb[1]) * factor
+    return [nx, ny, w, h]
+  }
+
+  const initMermaidGestures = wrap => {
+    const svg = wrap.querySelector('svg')
+    if (!svg) return
+
+    // Ensure viewBox exists so gestures always work
+    const initVb = getSvgViewBox(svg)
+    wrap.__mermaidInitViewBox = initVb
+    wrap.__mermaidCurViewBox = initVb.slice()
+    setSvgViewBox(svg, initVb)
+
+    // Avoid binding multiple times on themeChange/pjax
+    if (wrap.__mermaidGestureBound) return
+    wrap.__mermaidGestureBound = true
+
+    // Helper: map client (viewport) coordinate -> viewBox coordinate
+    const clientToViewBox = (clientX, clientY) => {
+      const rect = svg.getBoundingClientRect()
+      const vb = wrap.__mermaidCurViewBox || getSvgViewBox(svg)
+      const x = vb[0] + (clientX - rect.left) * (vb[2] / rect.width)
+      const y = vb[1] + (clientY - rect.top) * (vb[3] / rect.height)
+      return { x, y, rect, vb }
+    }
+
+    const state = {
+      pointers: new Map(),
+      startVb: null,
+      startDist: 0,
+      startCenter: null
+    }
+
+    const clampVb = vb => {
+      const init = wrap.__mermaidInitViewBox || vb
+      const minW = init[2] * 0.1
+      const maxW = init[2] * 10
+      const minH = init[3] * 0.1
+      const maxH = init[3] * 10
+      vb[2] = clamp(vb[2], minW, maxW)
+      vb[3] = clamp(vb[3], minH, maxH)
+      return vb
+    }
+
+    const setCurVb = vb => {
+      vb = clampVb(vb)
+      wrap.__mermaidCurViewBox = vb
+      setSvgViewBox(svg, vb)
+    }
+
+    const onPointerDown = e => {
+      // Allow only primary button for mouse
+      if (e.pointerType === 'mouse' && e.button !== 0) return
+      svg.setPointerCapture(e.pointerId)
+      state.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY })
+
+      if (state.pointers.size === 1) {
+        state.startVb = (wrap.__mermaidCurViewBox || getSvgViewBox(svg)).slice()
+      } else if (state.pointers.size === 2) {
+        const pts = [...state.pointers.values()]
+        const dx = pts[0].x - pts[1].x
+        const dy = pts[0].y - pts[1].y
+        state.startDist = Math.hypot(dx, dy)
+        state.startVb = (wrap.__mermaidCurViewBox || getSvgViewBox(svg)).slice()
+        state.startCenter = { x: (pts[0].x + pts[1].x) / 2, y: (pts[0].y + pts[1].y) / 2 }
+      }
+    }
+
+    const onPointerMove = e => {
+      if (!state.pointers.has(e.pointerId)) return
+      state.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY })
+
+      // Pan with 1 pointer
+      if (state.pointers.size === 1 && state.startVb) {
+        const p = [...state.pointers.values()][0]
+        const prev = { x: e.clientX - e.movementX, y: e.clientY - e.movementY }
+        // movementX/Y unreliable on touch, compute from stored last position
+        const last = wrap.__mermaidLastSinglePointer || p
+        const dxClient = p.x - last.x
+        const dyClient = p.y - last.y
+        wrap.__mermaidLastSinglePointer = p
+
+        const { rect } = clientToViewBox(p.x, p.y)
+        const vb = (wrap.__mermaidCurViewBox || getSvgViewBox(svg)).slice()
+        const dx = dxClient * (vb[2] / rect.width)
+        const dy = dyClient * (vb[3] / rect.height)
+        setCurVb([vb[0] - dx, vb[1] - dy, vb[2], vb[3]])
+        return
+      }
+
+      // Pinch zoom with 2 pointers
+      if (state.pointers.size === 2 && state.startVb && state.startDist > 0) {
+        const pts = [...state.pointers.values()]
+        const dx = pts[0].x - pts[1].x
+        const dy = pts[0].y - pts[1].y
+        const dist = Math.hypot(dx, dy)
+        if (!dist) return
+        const factor = state.startDist / dist // dist bigger => zoom in (viewBox smaller)
+
+        const cx = (pts[0].x + pts[1].x) / 2
+        const cy = (pts[0].y + pts[1].y) / 2
+        const centerClient = { x: cx, y: cy }
+
+        const pxy = clientToViewBox(centerClient.x, centerClient.y)
+        const cpx = pxy.x
+        const cpy = pxy.y
+
+        const vb = zoomAtPoint(state.startVb, factor, cpx, cpy)
+        setCurVb(vb)
+      }
+    }
+
+    const onPointerUpOrCancel = e => {
+      state.pointers.delete(e.pointerId)
+      if (state.pointers.size === 0) {
+        state.startVb = null
+        state.startDist = 0
+        state.startCenter = null
+        wrap.__mermaidLastSinglePointer = null
+      } else if (state.pointers.size === 1) {
+        // reset single pointer baseline to avoid jump
+        wrap.__mermaidLastSinglePointer = [...state.pointers.values()][0]
+      }
+    }
+
+    // Wheel zoom (mouse/trackpad)
+    const onWheel = e => {
+      // ctrlKey on mac trackpad pinch; we treat both as zoom
+      e.preventDefault()
+      const delta = e.deltaY
+      const zoomFactor = delta > 0 ? 1.1 : 0.9
+      const { x, y } = clientToViewBox(e.clientX, e.clientY)
+      const vb = (wrap.__mermaidCurViewBox || getSvgViewBox(svg)).slice()
+      setCurVb(zoomAtPoint(vb, zoomFactor, x, y))
+    }
+
+    const onDblClick = () => {
+      const init = wrap.__mermaidInitViewBox
+      if (!init) return
+      wrap.__mermaidCurViewBox = init.slice()
+      setSvgViewBox(svg, init)
+    }
+
+    svg.addEventListener('pointerdown', onPointerDown)
+    svg.addEventListener('pointermove', onPointerMove)
+    svg.addEventListener('pointerup', onPointerUpOrCancel)
+    svg.addEventListener('pointercancel', onPointerUpOrCancel)
+    svg.addEventListener('wheel', onWheel, { passive: false })
+    svg.addEventListener('dblclick', onDblClick)
+  }
+
+  const runMermaid = ele => {
+    window.loadMermaid = true
+    const theme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default'
+
+    ele.forEach((item, index) => {
+      const mermaidSrc = item.firstElementChild
+
+      // Clear old render (themeChange/pjax will rerun)
+      const oldSvg = item.querySelector('svg')
+      if (oldSvg) oldSvg.remove()
+      item.__mermaidGestureBound = false
+
+      const config = mermaidSrc.dataset.config ? JSON.parse(mermaidSrc.dataset.config) : {}
+      if (!config.theme) {
+        config.theme = theme
+      }
+      const mermaidThemeConfig = `%%{init: ${JSON.stringify(config)}}%%\n`
+      const mermaidID = `mermaid-${index}`
+      const mermaidDefinition = mermaidThemeConfig + mermaidSrc.textContent
+
+      const renderFn = mermaid.render(mermaidID, mermaidDefinition)
+      const renderMermaid = svg => {
+        mermaidSrc.insertAdjacentHTML('afterend', svg)
+        if (true) initMermaidGestures(item)
+        item.__mermaidOriginalSvg = svg
+        if (true) attachMermaidViewerButton(item)
+      }
+
+
+      // mermaid v9 and v10 compatibility
+      typeof renderFn === 'string' ? renderMermaid(renderFn) : renderFn.then(({ svg }) => renderMermaid(svg))
+    })
+  }
+
+  const codeToMermaid = () => {
+    const codeMermaidEle = document.querySelectorAll('pre > code.mermaid')
+    if (codeMermaidEle.length === 0) return
+
+    codeMermaidEle.forEach(ele => {
+      const preEle = document.createElement('pre')
+      preEle.className = 'mermaid-src'
+      preEle.hidden = true
+      preEle.textContent = ele.textContent
+      const newEle = document.createElement('div')
+      newEle.className = 'mermaid-wrap'
+      newEle.appendChild(preEle)
+      ele.parentNode.replaceWith(newEle)
+    })
+  }
+
+  const loadMermaid = () => {
+    if (true) codeToMermaid()
+    const $mermaid = document.querySelectorAll('#article-container .mermaid-wrap')
+    if ($mermaid.length === 0) return
+
+    const runMermaidFn = () => runMermaid($mermaid)
+    btf.addGlobalFn('themeChange', runMermaidFn, 'mermaid')
+    window.loadMermaid ? runMermaidFn() : btf.getScript('https://cdn.jsdelivr.net/npm/mermaid@11.15.0/dist/mermaid.min.js').then(runMermaidFn)
+  }
+
+  btf.addGlobalFn('encrypt', loadMermaid, 'mermaid')
+  window.pjax ? loadMermaid() : document.addEventListener('DOMContentLoaded', loadMermaid)
+})()</script></div><script src="/js/abcjs-detect.js"></script><script src="/js/bubble.js"></script><script id="click-heart" src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/dist/click-heart.min.js" async="async" mobile="true"></script><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script><div id="local-search"><div class="search-dialog"><nav class="search-nav"><span class="search-dialog-title">搜索</span><i class="fas fa-spinner fa-pulse" id="loading-status" hidden="hidden"></i><button class="search-close-button"><i class="fas fa-times"></i></button></nav><div class="text-center" id="loading-database"><i class="fas fa-spinner fa-pulse"></i><span>  数据加载中</span></div><div class="local-search-input"><input placeholder="输入关键词…" type="text"/></div><hr/><div id="local-search-results"></div><div class="ais-Pagination" id="local-search-pagination" style="display:none;"><ul class="ais-Pagination-list"></ul></div><div id="local-search-stats"></div></div><div id="search-mask"></div><script src="/js/search/local-search.js?v=5.5.5"></script></div></div></body></html>

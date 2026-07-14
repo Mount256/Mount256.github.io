@@ -1,0 +1,606 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>Mount256的个人小站 - 欢迎常来玩!</title><meta name="author" content="Mount256"><meta name="copyright" content="Mount256"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="心似河水，奔流依旧">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Mount256的个人小站">
+<meta property="og:url" content="https://blog.mount256.com/page/11/index.html">
+<meta property="og:site_name" content="Mount256的个人小站">
+<meta property="og:description" content="心似河水，奔流依旧">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://blog.mount256.com/img/avatar.png">
+<meta property="article:author" content="Mount256">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://blog.mount256.com/img/avatar.png"><script type="application/ld+json"></script><link rel="shortcut icon" href="/img/favicon.png"><link rel="canonical" href="https://blog.mount256.com/page/11/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css?v=5.5.5"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@7.2.0/css/all.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/ui@6.1.14/dist/fancybox/fancybox.min.css" media="print" onload="this.media='all'"><script>
+    (() => {
+      
+    const saveToLocal = {
+      set: (key, value, ttl) => {
+        if (!ttl) return
+        const expiry = Date.now() + ttl * 86400000
+        localStorage.setItem(key, JSON.stringify({ value, expiry }))
+      },
+      get: key => {
+        const itemStr = localStorage.getItem(key)
+        if (!itemStr) return undefined
+        const { value, expiry } = JSON.parse(itemStr)
+        if (Date.now() > expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return value
+      }
+    }
+
+    window.btf = {
+      saveToLocal,
+      getScript: (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        Object.entries(attr).forEach(([key, val]) => script.setAttribute(key, val))
+        script.onload = script.onreadystatechange = () => {
+          if (!script.readyState || /loaded|complete/.test(script.readyState)) resolve()
+        }
+        script.onerror = reject
+        document.head.appendChild(script)
+      }),
+      getCSS: (url, id) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onload = link.onreadystatechange = () => {
+          if (!link.readyState || /loaded|complete/.test(link.readyState)) resolve()
+        }
+        link.onerror = reject
+        document.head.appendChild(link)
+      }),
+      addGlobalFn: (key, fn, name = false, parent = window) => {
+        if (!false && key.startsWith('pjax')) return
+        const globalFn = parent.globalFn || {}
+        globalFn[key] = globalFn[key] || {}
+        globalFn[key][name || Object.keys(globalFn[key]).length] = fn
+        parent.globalFn = globalFn
+      }
+    }
+  
+      
+      const activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      const activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+
+      btf.activateDarkMode = activateDarkMode
+      btf.activateLightMode = activateLightMode
+
+      const theme = saveToLocal.get('theme')
+    
+          theme === 'dark' ? activateDarkMode() : theme === 'light' ? activateLightMode() : null
+        
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        document.documentElement.classList.toggle('hide-aside', asideStatus === 'hide')
+      }
+    
+      
+    const detectApple = () => {
+      if (/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)) {
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+  
+    })()
+  </script><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: {"path":"/search.xml","preload":false,"top_n_per_article":1,"unescape":false,"pagination":{"enable":false,"hitsPerPage":8},"languages":{"hits_empty":"未找到符合您查询的内容：${query}","hits_stats":"共找到 ${hits} 篇文章"}},
+  translate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false,"highlightFullpage":false,"highlightMacStyle":false},
+  copy: {
+    success: '复制成功',
+    error: '复制失败',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'fancybox',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid@4.13.0/dist/infinitegrid.min.js',
+    buttonText: '加载更多'
+  },
+  isPhotoFigcaption: false,
+  islazyloadPlugin: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'Mount256的个人小站',
+  isHighlightShrink: false,
+  isToc: false,
+  pageType: 'home'
+}</script><link rel="stylesheet" href="/css/mouse.css"><script src="/live2d-widget/dist/autoload.js"></script><!-- hexo injector head_end start -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.css">
+<!-- hexo injector head_end end --><meta name="generator" content="Hexo 8.1.2"></head><body><div class="bg-animation" id="web_bg" style="background-image: url(/img/background.png);"></div><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img text-center"><img src="/img/avatar.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data text-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">131</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">128</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">25</div></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 链接</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于</span></a></div></div></div></div><div class="page" id="body-wrap"><header class="full_page" id="page-header" style="background-image: url(/img/top.jpg);"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><span class="site-name">Mount256的个人小站</span></a></span><div id="menus"><div id="search-button"><span class="site-page social-icon search"><i class="fas fa-search fa-fw"></i><span> 搜索</span></span></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 链接</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于</span></a></div></div><div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div></div></nav><div id="site-info"><h1 id="site-title">Mount256的个人小站</h1><div id="site-subtitle"><span id="subtitle"></span></div></div><div id="scroll-down"><i class="fas fa-angle-down scroll-down-effects"></i></div></header><main class="layout" id="content-inner"><div class="recent-posts nc masonry" id="recent-posts"><div class="recent-post-items"><div class="recent-post-item"><div class="post_cover"><a href="/posts/984f334f.html" title="STM32学习笔记（11）——定时器初步应用（1）"><img class="post-bg" src="/img/cover2.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="STM32学习笔记（11）——定时器初步应用（1）"></a></div><div class="recent-post-info"><a class="article-title" href="/posts/984f334f.html" title="STM32学习笔记（11）——定时器初步应用（1）">STM32学习笔记（11）——定时器初步应用（1）</a><div class="article-meta-wrap"><span class="post-meta-date"><i class="far fa-calendar-alt"></i><span class="article-meta-label">发表于</span><time class="post-meta-date-created" datetime="2021-05-18T16:00:00.000Z" title="发表于 2021-05-19 00:00:00">2021-05-19</time><span class="article-meta-separator">|</span><i class="fas fa-history"></i><span class="article-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2026-07-09T16:00:00.000Z" title="更新于 2026-07-10 00:00:00">2026-07-10</time></span><span class="article-meta"><span class="article-meta-separator">|</span><i class="fas fa-inbox"></i><a class="article-meta__categories" href="/categories/%E5%B5%8C%E5%85%A5%E5%BC%8F%E5%BC%80%E5%8F%91/">嵌入式开发</a><i class="fas fa-angle-right article-meta-link"></i><i class="fas fa-inbox"></i><a class="article-meta__categories" href="/categories/%E5%B5%8C%E5%85%A5%E5%BC%8F%E5%BC%80%E5%8F%91/STM32/">STM32</a></span></div><div class="content">前排提示一下：这些代码都是本人跟着野火的教程视频写的（与野火的例程会有出入），编程思路则由本人编写。 之前我们已经详细过了一遍高级定时器的功能框图，现在来简要说一下其他定时器。STM32 有三种定时器，定时器分类如下：  其中，高级定时器（定时、输出比较、输入捕获、互补输出） 的功能最齐全，其次是通用定时器（定时、输出比较、输入捕获），最后是基本定时器 （定时，只能向上计数）。 一、基本定时器——LED循环亮灭 【实现功能】通过基本定时器（TIM6、TIM7），使 LED 每隔 1000ms 反转一次工作模式，即实现循环亮灭的效果。 【基本思路】要产生 1000ms 的时间间隔，首先要想办法产生 1ms 的时间。时钟源的频率为 72MHz，想要得到 1MHz 的定时器频率，就必须使分频因子 PSC = 72 - 1，这样定时器频率就为 72 / (PSC+1) = 1MHz，定时器周期为 1/10^6 秒，那么只要重复1000次这样的周期就是 1ms，所以 Period（ARR） = 1000 - 1。因此，1ms 时间后将会产生一次更新事件。 通过更新事件产生一次中断，进而运行...</div></div></div><div class="recent-post-item"><div class="post_cover"><a href="/posts/3e9bae14.html" title="STM32学习笔记（10）——高级定时器TIM"><img class="post-bg" src="/img/cover3.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="STM32学习笔记（10）——高级定时器TIM"></a></div><div class="recent-post-info"><a class="article-title" href="/posts/3e9bae14.html" title="STM32学习笔记（10）——高级定时器TIM">STM32学习笔记（10）——高级定时器TIM</a><div class="article-meta-wrap"><span class="post-meta-date"><i class="far fa-calendar-alt"></i><span class="article-meta-label">发表于</span><time class="post-meta-date-created" datetime="2021-05-04T16:00:00.000Z" title="发表于 2021-05-05 00:00:00">2021-05-05</time><span class="article-meta-separator">|</span><i class="fas fa-history"></i><span class="article-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2026-07-09T16:00:00.000Z" title="更新于 2026-07-10 00:00:00">2026-07-10</time></span><span class="article-meta"><span class="article-meta-separator">|</span><i class="fas fa-inbox"></i><a class="article-meta__categories" href="/categories/%E5%B5%8C%E5%85%A5%E5%BC%8F%E5%BC%80%E5%8F%91/">嵌入式开发</a><i class="fas fa-angle-right article-meta-link"></i><i class="fas fa-inbox"></i><a class="article-meta__categories" href="/categories/%E5%B5%8C%E5%85%A5%E5%BC%8F%E5%BC%80%E5%8F%91/STM32/">STM32</a></span></div><div class="content">前排提示：本笔记参考了野火PPT的大部分内容。 STM32F103系列有8个定时器，其中分为2个高级定时器，4个通用定时器、2个基本定时器。 下面为高级定时器TIM功能框图（来自野火PPT），由于高级定时器功能相当复杂，因此本文将大篇幅介绍每种功能（定时、输入捕获、输出比较、刹车输入）。我们将功能框图分为6个部分进行讲解：  一、时钟源 本部分内容可见STM32中文参考手册13.3.4时钟选择。 计数器时钟可由内部时钟源（CK_INT）、外部时钟模式1（外部的GPIO TIx（x = 1、2、3、4））、外部时钟模式2（外部的GPIO ETR）、内部触发模式（ITRx）提供。无论是由什么时钟源提供，最终都会成为CK_PSC，经过预分频器，成为计数器时钟。 1. 内部时钟源 我们最常用的是内部时钟源，通常的频率为72MHz。这个数字是怎么来的呢？ 内部时钟源来自 RCC 时钟的 TIMx_CLK，可以查看 STM32 的时钟树，它是经过 APB2 预分频器后得到的，如果预分频因子等于 1，则时钟频率x 1，否则频率x 2。由于经过 APB1 和 APB2 预分频后得到的 PCLK1...</div></div></div><div class="recent-post-item"><div class="post_cover"><a href="/posts/cce28100.html" title="STM32学习笔记（9）——（I2C续）读写EEPROM"><img class="post-bg" src="/img/cover1.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="STM32学习笔记（9）——（I2C续）读写EEPROM"></a></div><div class="recent-post-info"><a class="article-title" href="/posts/cce28100.html" title="STM32学习笔记（9）——（I2C续）读写EEPROM">STM32学习笔记（9）——（I2C续）读写EEPROM</a><div class="article-meta-wrap"><span class="post-meta-date"><i class="far fa-calendar-alt"></i><span class="article-meta-label">发表于</span><time class="post-meta-date-created" datetime="2021-04-20T16:00:00.000Z" title="发表于 2021-04-21 00:00:00">2021-04-21</time><span class="article-meta-separator">|</span><i class="fas fa-history"></i><span class="article-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2026-07-09T16:00:00.000Z" title="更新于 2026-07-10 00:00:00">2026-07-10</time></span><span class="article-meta"><span class="article-meta-separator">|</span><i class="fas fa-inbox"></i><a class="article-meta__categories" href="/categories/%E5%B5%8C%E5%85%A5%E5%BC%8F%E5%BC%80%E5%8F%91/">嵌入式开发</a><i class="fas fa-angle-right article-meta-link"></i><i class="fas fa-inbox"></i><a class="article-meta__categories" href="/categories/%E5%B5%8C%E5%85%A5%E5%BC%8F%E5%BC%80%E5%8F%91/STM32/">STM32</a></span></div><div class="content">一、概述 1. 背景介绍 在微机发展的早期，出现了BIOS（Basic Input Output System），它是个人电脑启动时加载的第一个软件，用来完成对系统的加电自检、各功能模块的初始化、基本输入输出的驱动程序及引导操作系统。人们希望掉电之后 BIOS 数据不能丢失，于是将 BIOS 烧录到 ROM。事实上它是一组固化到计算机内主板上一个 ROM 芯片上的程序。 最初的最初，BIOS 都是通过一种特殊的烧录方法烧入 ROM 中的，但是一旦烧进去，你只能读 ROM，里面的内容是无法更改的。万一发现错误，只能丢弃，换另一块ROM，重做一遍，这就非常麻烦了。 后来的后来，一位以色列工程师发明了EPROM（Erasable Programmable Read-Only Memory），这种芯片比较奇葩，封装顶部开了一个透明小窗口，如果要往芯片内部录入程序，就需要使用强紫外线进行擦除（当然你放到太阳底下也是可以的）。因此，一般情况下为了不破坏内部的数据，就需要用纸来盖住窗口。好景不长，程序员和硬件工程师还是觉得这样太麻烦了。 最后的最后，EEPROM（Electrically Er...</div></div></div><div class="recent-post-item"><div class="post_cover"><a href="/posts/4def1e60.html" title="STM32学习笔记（8）——I2C总线设备"><img class="post-bg" src="/img/cover0.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="STM32学习笔记（8）——I2C总线设备"></a></div><div class="recent-post-info"><a class="article-title" href="/posts/4def1e60.html" title="STM32学习笔记（8）——I2C总线设备">STM32学习笔记（8）——I2C总线设备</a><div class="article-meta-wrap"><span class="post-meta-date"><i class="far fa-calendar-alt"></i><span class="article-meta-label">发表于</span><time class="post-meta-date-created" datetime="2021-04-18T16:00:00.000Z" title="发表于 2021-04-19 00:00:00">2021-04-19</time><span class="article-meta-separator">|</span><i class="fas fa-history"></i><span class="article-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2026-07-09T16:00:00.000Z" title="更新于 2026-07-10 00:00:00">2026-07-10</time></span><span class="article-meta"><span class="article-meta-separator">|</span><i class="fas fa-inbox"></i><a class="article-meta__categories" href="/categories/%E5%B5%8C%E5%85%A5%E5%BC%8F%E5%BC%80%E5%8F%91/">嵌入式开发</a><i class="fas fa-angle-right article-meta-link"></i><i class="fas fa-inbox"></i><a class="article-meta__categories" href="/categories/%E5%B5%8C%E5%85%A5%E5%BC%8F%E5%BC%80%E5%8F%91/STM32/">STM32</a></span></div><div class="content">一、I2C协议简介 I2C通讯协议 (Inter-Integrated Circuit，读作I平方C、I方C) 是由Phiilps公司开发的，由于它引脚少，硬件实现简单，可扩展性强，不需要USART、CAN等通讯协议的外部收发设备，现在被广泛地使用在系统内多个集成电路间的通讯。 1. 物理层 （感谢野火的PPT，一部分内容参考了野火）如下图所示即为I2C的物理层：  下面来简要介绍物理层需要了解的知识点：  总线： 多个设备共用的信号线，有两条：一条双向串行数据线 (SDA)，一条串行时钟线 (SCL)。 主机和从机： 总线上挂载着多个通讯主机和通讯从机，每个连接到总线的从机设备都有独一无二的通讯地址，主机通过这些地址对从机设备进行访问。一般来说，总线上挂载着五六个从机和一个主机就够用了。 通讯： 当主机与从机正在进行通讯的时候，从机设备输出低电平，将总线拉成低电平，其他设备输出高阻态，不能参与通讯。 上拉电阻： 两条总线均通过上拉电阻连接到电源。当所有从机设备空闲时，这些设备会输出高阻态，由上拉电阻把总线拉成高电平，这些设备就相当于与总线断开了。   如果不是用高阻态表示高电平...</div></div></div><div class="recent-post-item"><div class="post_cover"><a href="/posts/e69a2b98.html" title="STM32学习笔记（7）——DMA直接存储器访问"><img class="post-bg" src="/img/cover2.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="STM32学习笔记（7）——DMA直接存储器访问"></a></div><div class="recent-post-info"><a class="article-title" href="/posts/e69a2b98.html" title="STM32学习笔记（7）——DMA直接存储器访问">STM32学习笔记（7）——DMA直接存储器访问</a><div class="article-meta-wrap"><span class="post-meta-date"><i class="far fa-calendar-alt"></i><span class="article-meta-label">发表于</span><time class="post-meta-date-created" datetime="2021-04-13T16:00:00.000Z" title="发表于 2021-04-14 00:00:00">2021-04-14</time><span class="article-meta-separator">|</span><i class="fas fa-history"></i><span class="article-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2026-07-09T16:00:00.000Z" title="更新于 2026-07-10 00:00:00">2026-07-10</time></span><span class="article-meta"><span class="article-meta-separator">|</span><i class="fas fa-inbox"></i><a class="article-meta__categories" href="/categories/%E5%B5%8C%E5%85%A5%E5%BC%8F%E5%BC%80%E5%8F%91/">嵌入式开发</a><i class="fas fa-angle-right article-meta-link"></i><i class="fas fa-inbox"></i><a class="article-meta__categories" href="/categories/%E5%B5%8C%E5%85%A5%E5%BC%8F%E5%BC%80%E5%8F%91/STM32/">STM32</a></span></div><div class="content">一、DMA简介 可参考STM32中文参考手册第10章DMA控制器。 直接存储器存取(Direct Memory Access，DMA) 用来提供在外设和存储器之间或者存储器和存储器之间的高速数据传输。无须CPU干预，数据可以通过DMA快速地移动，这就节省了CPU的资源来做其他操作。DMA 传输方式无需 CPU 直接控制传输，也没有中断处理方式那样保留现场和恢复现场的过程，通过硬件为 RAM 与 I/O 设备开辟一条直接传送数据的通路， 能使 CPU 的效率大为提高。 DMA 是干什么用的呢？一般来说，如果没有DMA ，CPU如果想从外设“搬运”数据到存储器（Peripheral to Memory，P2M），或者从一个存储器到另一个存储器（Memory To Memory，M2M），数据必须要经过CPU，这就需要CPU 去亲力亲为。在运行过程中，CPU经常要为这种琐碎的事情被打断，很影响效率。所以，就有了DMA。现在，CPU 就不用那么麻烦了，CPU 只需要“叫”一声DMA，说你帮我去搬一下数据，从这搬到那，DMA 就会代替 CPU 完成这份工作，再也不用 CPU 自己去做了。 ...</div></div></div><div class="recent-post-item"><div class="post_cover"><a href="/posts/770d36fe.html" title="STM32学习笔记（6）——USART串口通信"><img class="post-bg" src="/img/cover3.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="STM32学习笔记（6）——USART串口通信"></a></div><div class="recent-post-info"><a class="article-title" href="/posts/770d36fe.html" title="STM32学习笔记（6）——USART串口通信">STM32学习笔记（6）——USART串口通信</a><div class="article-meta-wrap"><span class="post-meta-date"><i class="far fa-calendar-alt"></i><span class="article-meta-label">发表于</span><time class="post-meta-date-created" datetime="2021-04-08T16:00:00.000Z" title="发表于 2021-04-09 00:00:00">2021-04-09</time><span class="article-meta-separator">|</span><i class="fas fa-history"></i><span class="article-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2026-07-09T16:00:00.000Z" title="更新于 2026-07-10 00:00:00">2026-07-10</time></span><span class="article-meta"><span class="article-meta-separator">|</span><i class="fas fa-inbox"></i><a class="article-meta__categories" href="/categories/%E5%B5%8C%E5%85%A5%E5%BC%8F%E5%BC%80%E5%8F%91/">嵌入式开发</a><i class="fas fa-angle-right article-meta-link"></i><i class="fas fa-inbox"></i><a class="article-meta__categories" href="/categories/%E5%B5%8C%E5%85%A5%E5%BC%8F%E5%BC%80%E5%8F%91/STM32/">STM32</a></span></div><div class="content">零、基础知识 本节主要写一下通信的一些基础知识，简单过一遍，防忘。 1. 通信基本知识 （1）数据传送方式 分类：串行和并行。   （2）数据通信方向 分类：全双工、半双工和单工。  （3）数据同步方式 分类：同步和异步。  （4）通信速率 比特率（Bitrate）：每秒钟传输的二进制位数，单位为比特每秒(bit/s)。 波特率（Baudrate）：表示每秒钟传输的码元个数，单位为波特（B），没有每秒！（常用的波特率：4800、9600、19200、38400、43000、56000、57600、115200） 码元：举个例子，当我们用一个二进制数（0或1）表示信息时，0或1为一个码元，它只有一个位数；当用两个二进制数（00,01,10,11）表示信息时，譬如01，就是一个码元，它有两个位数。 2. 串口通信协议 （1）物理层 物理层：规定通讯系统中具有机械、电子功能部分的特性，确保原始数据在物理媒体的传输。其实就是硬件部分。 RS-232标准  RS232标准串口主要用于工业设备直接通信。电平转换芯片一般有MAX3232，SP3232。 TTL电平标准是5V表示逻辑1，0V表示...</div></div></div><div class="recent-post-item"><div class="post_cover"><a href="/posts/32cdd741.html" title="STM32学习笔记（5）——系统定时器SysTick"><img class="post-bg" src="/img/cover1.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="STM32学习笔记（5）——系统定时器SysTick"></a></div><div class="recent-post-info"><a class="article-title" href="/posts/32cdd741.html" title="STM32学习笔记（5）——系统定时器SysTick">STM32学习笔记（5）——系统定时器SysTick</a><div class="article-meta-wrap"><span class="post-meta-date"><i class="far fa-calendar-alt"></i><span class="article-meta-label">发表于</span><time class="post-meta-date-created" datetime="2021-04-07T16:00:00.000Z" title="发表于 2021-04-08 00:00:00">2021-04-08</time><span class="article-meta-separator">|</span><i class="fas fa-history"></i><span class="article-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2026-07-09T16:00:00.000Z" title="更新于 2026-07-10 00:00:00">2026-07-10</time></span><span class="article-meta"><span class="article-meta-separator">|</span><i class="fas fa-inbox"></i><a class="article-meta__categories" href="/categories/%E5%B5%8C%E5%85%A5%E5%BC%8F%E5%BC%80%E5%8F%91/">嵌入式开发</a><i class="fas fa-angle-right article-meta-link"></i><i class="fas fa-inbox"></i><a class="article-meta__categories" href="/categories/%E5%B5%8C%E5%85%A5%E5%BC%8F%E5%BC%80%E5%8F%91/STM32/">STM32</a></span></div><div class="content">单独拿出来讲的一个内核外设（所以不要期望在STM32中文参考手册找到它！即使找到也只会叫你看cm3内核编程手册），说明它真的很重要。 一、系统定时器Systick 1. SysTick简介 SysTick是一个24位的系统节拍定时器，具有自动重载和溢出中断功能，所有基于Cortex M3或Cortex M4处理器的微控制器都有这个定时器。 Systick定时器常用来做延时，或者用来做实时系统的心跳时钟。这样可以节省MCU资源，不用浪费一个定时器。比如UCOS中，分时复用，需要一个最小的时间戳，一般在STM32+UCOS系统中，都采用Systick做UCOS心跳时钟。 它一个24位的倒计数定时器（意味着有2^24个时间间隔），计到0时，将从RELOAD寄存器中自动重装载定时初值。只要不把它在SysTick控制及状态寄存器中的使能位清除，就永不停息，即使在睡眠模式下也能工作。 学过51单片机的同学应该对计数器比较熟悉了。 SysTick在NVIC的中断向量号为6（可对照STM32中文参考手册9.1.2节中断和异常向量中表格的灰色部分）。 2. SysTick相关寄存器 SysTick...</div></div></div><div class="recent-post-item"><div class="post_cover"><a href="/posts/efd46ec1.html" title="STM32学习笔记（4）——NVIC中断优先级管理和外部中断EXTI"><img class="post-bg" src="/img/cover0.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="STM32学习笔记（4）——NVIC中断优先级管理和外部中断EXTI"></a></div><div class="recent-post-info"><a class="article-title" href="/posts/efd46ec1.html" title="STM32学习笔记（4）——NVIC中断优先级管理和外部中断EXTI">STM32学习笔记（4）——NVIC中断优先级管理和外部中断EXTI</a><div class="article-meta-wrap"><span class="post-meta-date"><i class="far fa-calendar-alt"></i><span class="article-meta-label">发表于</span><time class="post-meta-date-created" datetime="2021-04-05T16:00:00.000Z" title="发表于 2021-04-06 00:00:00">2021-04-06</time><span class="article-meta-separator">|</span><i class="fas fa-history"></i><span class="article-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2026-07-09T16:00:00.000Z" title="更新于 2026-07-10 00:00:00">2026-07-10</time></span><span class="article-meta"><span class="article-meta-separator">|</span><i class="fas fa-inbox"></i><a class="article-meta__categories" href="/categories/%E5%B5%8C%E5%85%A5%E5%BC%8F%E5%BC%80%E5%8F%91/">嵌入式开发</a><i class="fas fa-angle-right article-meta-link"></i><i class="fas fa-inbox"></i><a class="article-meta__categories" href="/categories/%E5%B5%8C%E5%85%A5%E5%BC%8F%E5%BC%80%E5%8F%91/STM32/">STM32</a></span></div><div class="content">一、NVIC中断优先级管理 1. 中断简介 在Cortex-M3（CM3）内核中，每个中断的优先级都是用寄存器中的8位来设置的，这样就有2^8 =256级中断，意味着可以支持256个中断，这其中包含了16个内核中断和240个外部中断，并且具有256级的可编程中断设置。但许多芯片厂商并没有使用CM3内核的全部东西，而是只用了它的一部分，而多余的部分应该是设计者考虑到后续应用发展而冗余设计的。 实际情况中，芯片厂商根据自己生产的芯片做出了调整。比如ST（意法半导体）公司的STM32F1xx和F4xx系列只使用了这个（寄存器NVIC-&gt;IPR，如图所示）8位中的高四位[7:4]，低四位取零，这样2^4=16，只能表示16级中断嵌套。  STM32有84个中断，包括16个内核中断和68个可屏蔽中断，具有16级可编程的中断优先级。我们使用的是STM32F103系列，只有60个可屏蔽中断，而在107系列有68个。 2. 中断向量表 中断向量表为每个外设作了硬件编号，可以把它理解为默认顺序。如果有两个外设工作顺序发生冲突（一般在NVIC设置好后就很少发生这种情况）时，就按照这个表来分执行...</div></div></div><div class="recent-post-item"><div class="post_cover"><a href="/posts/1cbb95a2.html" title="STM32学习笔记（3）——时钟系统"><img class="post-bg" src="/img/cover2.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="STM32学习笔记（3）——时钟系统"></a></div><div class="recent-post-info"><a class="article-title" href="/posts/1cbb95a2.html" title="STM32学习笔记（3）——时钟系统">STM32学习笔记（3）——时钟系统</a><div class="article-meta-wrap"><span class="post-meta-date"><i class="far fa-calendar-alt"></i><span class="article-meta-label">发表于</span><time class="post-meta-date-created" datetime="2021-04-03T16:00:00.000Z" title="发表于 2021-04-04 00:00:00">2021-04-04</time><span class="article-meta-separator">|</span><i class="fas fa-history"></i><span class="article-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2026-07-09T16:00:00.000Z" title="更新于 2026-07-10 00:00:00">2026-07-10</time></span><span class="article-meta"><span class="article-meta-separator">|</span><i class="fas fa-inbox"></i><a class="article-meta__categories" href="/categories/%E5%B5%8C%E5%85%A5%E5%BC%8F%E5%BC%80%E5%8F%91/">嵌入式开发</a><i class="fas fa-angle-right article-meta-link"></i><i class="fas fa-inbox"></i><a class="article-meta__categories" href="/categories/%E5%B5%8C%E5%85%A5%E5%BC%8F%E5%BC%80%E5%8F%91/STM32/">STM32</a></span></div><div class="content">一、STM32时钟系统 1. STM32时钟系统框图 STM32的时钟系统非常强大，但也非常复杂。下面为时钟树：  下面分别介绍图中的各个元素 （STM32中文参考手册6.2节时钟）： （1）最左边 最左边的OSC_IN和OSC_OUT是两个引脚，默认是外部晶振引脚。（我们的板子接了8MHz的晶振，数据手册表示可以接4——16MHz的晶振） MCO（microcontroller clock output）是输出内部时钟，该功能能将STM32内部的时钟通过引脚PA8输出，要进行引脚复用与功能设置。我们可以通过示波器（可惜我们没有，要到实验室去接）监控 MCO 引脚的时钟输出来验证系统时钟配置是否正确。STM32可以选择一个时钟信号输出到MCO上，可以选择为PLL输出的2分频、HSI、HSE、或者系统时钟（SYSCLK）。 （2） STM32的5个时钟源（蓝色框图） 这些时钟源由晶振电路或RC振荡器组成，为系统提供一定的工作频率。   HSI(high speed internal)是高速内部时钟，RC振荡器，频率为8MHz，精度不高。   HSE(high speed exter...</div></div></div><div class="recent-post-item"><div class="post_cover"><a href="/posts/9fc09be.html" title="C++并发与多线程（5）——call_once和条件变量condition_varible"><img class="post-bg" src="/img/cover3.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="C++并发与多线程（5）——call_once和条件变量condition_varible"></a></div><div class="recent-post-info"><a class="article-title" href="/posts/9fc09be.html" title="C++并发与多线程（5）——call_once和条件变量condition_varible">C++并发与多线程（5）——call_once和条件变量condition_varible</a><div class="article-meta-wrap"><span class="post-meta-date"><i class="far fa-calendar-alt"></i><span class="article-meta-label">发表于</span><time class="post-meta-date-created" datetime="2021-02-24T16:00:00.000Z" title="发表于 2021-02-25 00:00:00">2021-02-25</time><span class="article-meta-separator">|</span><i class="fas fa-history"></i><span class="article-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2026-06-19T16:00:00.000Z" title="更新于 2026-06-20 00:00:00">2026-06-20</time></span><span class="article-meta"><span class="article-meta-separator">|</span><i class="fas fa-inbox"></i><a class="article-meta__categories" href="/categories/C%E5%92%8CC/">C和C++</a><i class="fas fa-angle-right article-meta-link"></i><i class="fas fa-inbox"></i><a class="article-meta__categories" href="/categories/C%E5%92%8CC/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B/">并发编程</a></span></div><div class="content">一、call_once 在多线程的环境下，有些时候我们不需要某给函数被调用多次或者某些变量被初始化多次，它们仅仅只需要被调用一次或者初始化一次即可。 为了解决上述多线程中出现的资源竞争导致的数据不一致问题，我们大多数的处理方法就是使用互斥锁来处理。在C++11中提供了最新的处理方法：使用std::call_once函数模板来处理，需包含头文件#include&lt;mutex&gt;。 头文件内对此的定义如下： 12template &lt;class Fn, class... Args&gt;void call_once (once_flag&amp; flag, Fn&amp;&amp; fn, Args&amp;&amp;... args); 第一个参数是一个标记，第二个参数可以是函数、成员函数、函数对象、lambda函数。 call_once()需要与一个标记结合使用，这个标记为std::once_flag。其实once_flag是一个结构，call_once()就是通过标记来决定函数是否执行，调用成功后，就把标记设置为一种已调用状态。 多个线程同时执行时，一个线程会等待...</div></div></div></div><nav id="pagination"><div class="pagination"><a class="extend prev" rel="prev" href="/page/10/#content-inner"><i class="fas fa-chevron-left fa-fw"></i></a><a class="page-number" href="/">1</a><span class="space">&hellip;</span><a class="page-number" href="/page/10/#content-inner">10</a><span class="page-number current">11</span><a class="page-number" href="/page/12/#content-inner">12</a><span class="space">&hellip;</span><a class="page-number" href="/page/14/#content-inner">14</a><a class="extend next" rel="next" href="/page/12/#content-inner"><i class="fas fa-chevron-right fa-fw"></i></a></div></nav></div><div class="aside-content" id="aside-content"><div class="card-widget card-info text-center"><div class="avatar-img"><img src="/img/avatar.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info-name">Mount256</div><div class="author-info-description">心似河水，奔流依旧</div><div class="site-data"><a href="/archives/"><div class="headline">文章</div><div class="length-num">131</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">128</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">25</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/Mount256"><i class="fab fa-github"></i><span>Follow Me</span></a></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">自 2026/07/13 开始本站域名由 mount256.github.io 迁移至 blog.mount256.com, 请知悉。</div></div><div class="sticky_layout"><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item"><a class="thumbnail" href="/posts/19f8fc4.html" title="进行式和终止式"><img src="/img/cover2.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="进行式和终止式"/></a><div class="content"><a class="title" href="/posts/19f8fc4.html" title="进行式和终止式">进行式和终止式</a><time datetime="2026-07-10T16:00:00.000Z" title="发表于 2026-07-11 00:00:00">2026-07-11</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/posts/349744ff.html" title="ABC notation渲染测试"><img src="/img/cover3.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="ABC notation渲染测试"/></a><div class="content"><a class="title" href="/posts/349744ff.html" title="ABC notation渲染测试">ABC notation渲染测试</a><time datetime="2026-06-23T02:42:49.000Z" title="发表于 2026-06-23 10:42:49">2026-06-23</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/posts/f9ae104.html" title="Git的分支操作"><img src="/img/cover0.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Git的分支操作"/></a><div class="content"><a class="title" href="/posts/f9ae104.html" title="Git的分支操作">Git的分支操作</a><time datetime="2026-06-11T16:00:00.000Z" title="发表于 2026-06-12 00:00:00">2026-06-12</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/posts/99b9faf2.html" title="Git的撤销操作"><img src="/img/cover1.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Git的撤销操作"/></a><div class="content"><a class="title" href="/posts/99b9faf2.html" title="Git的撤销操作">Git的撤销操作</a><time datetime="2026-06-11T16:00:00.000Z" title="发表于 2026-06-12 00:00:00">2026-06-12</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/posts/81e19116.html" title="Git多人协作"><img src="/img/cover3.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Git多人协作"/></a><div class="content"><a class="title" href="/posts/81e19116.html" title="Git多人协作">Git多人协作</a><time datetime="2026-06-11T16:00:00.000Z" title="发表于 2026-06-12 00:00:00">2026-06-12</time></div></div></div></div><div class="card-widget card-categories"><div class="item-headline">
+            <i class="fas fa-folder-open"></i>
+            <span>分类</span>
+            <a class="card-more-btn" href="/categories/" title="查看更多">
+      <i class="fas fa-angle-right"></i></a>
+          </div>
+          <ul class="card-category-list" id="aside-cat-list">
+            <li class="card-category-list-item "><a class="card-category-list-link" href="/categories/C%E5%92%8CC/"><span class="card-category-list-name">C和C++</span><span class="card-category-list-count">25</span></a><ul class="card-category-list child"><li class="card-category-list-item "><a class="card-category-list-link" href="/categories/C%E5%92%8CC/Qt-C/"><span class="card-category-list-name">Qt-C++</span><span class="card-category-list-count">1</span></a></li><li class="card-category-list-item "><a class="card-category-list-link" href="/categories/C%E5%92%8CC/%E4%B8%80%E4%BA%9B%E7%9F%A5%E8%AF%86%E7%82%B9/"><span class="card-category-list-name">一些知识点</span><span class="card-category-list-count">7</span></a></li><li class="card-category-list-item "><a class="card-category-list-link" href="/categories/C%E5%92%8CC/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B/"><span class="card-category-list-name">并发编程</span><span class="card-category-list-count">5</span></a></li><li class="card-category-list-item "><a class="card-category-list-link" href="/categories/C%E5%92%8CC/%E6%B3%9B%E5%9E%8B%E7%BC%96%E7%A8%8B/"><span class="card-category-list-name">泛型编程</span><span class="card-category-list-count">5</span></a></li><li class="card-category-list-item "><a class="card-category-list-link" href="/categories/C%E5%92%8CC/%E9%9D%A2%E5%90%91%E5%AF%B9%E8%B1%A1%E7%BC%96%E7%A8%8B/"><span class="card-category-list-name">面向对象编程</span><span class="card-category-list-count">7</span></a></li></ul></li><li class="card-category-list-item "><a class="card-category-list-link" href="/categories/FPGA%E5%BC%80%E5%8F%91/"><span class="card-category-list-name">FPGA开发</span><span class="card-category-list-count">9</span></a><ul class="card-category-list child"><li class="card-category-list-item "><a class="card-category-list-link" href="/categories/FPGA%E5%BC%80%E5%8F%91/HDLBits%E5%88%B7%E9%A2%98/"><span class="card-category-list-name">HDLBits刷题</span><span class="card-category-list-count">9</span></a></li></ul></li>
+          </ul></div><div class="card-widget card-tags"><div class="item-headline"><i class="fas fa-tags"></i><span>标签</span></div><div class="card-tag-cloud"><a href="/tags/%E7%BA%BF%E6%80%A7%E7%9B%B8%E5%85%B3/" style="font-size: 1.1em; color: #999">线性相关</a> <a href="/tags/ADC/" style="font-size: 1.23em; color: #999ea6">ADC</a> <a href="/tags/%E8%93%9D%E7%89%99/" style="font-size: 1.1em; color: #999">蓝牙</a> <a href="/tags/USART/" style="font-size: 1.1em; color: #999">USART</a> <a href="/tags/%E5%8A%A8%E6%80%81%E6%95%B0%E7%BB%84/" style="font-size: 1.1em; color: #999">动态数组</a> <a href="/tags/%E7%BC%93%E5%86%B2%E5%8C%BA/" style="font-size: 1.1em; color: #999">缓冲区</a> <a href="/tags/%E9%80%92%E6%8E%A8%E5%BC%8F/" style="font-size: 1.1em; color: #999">递推式</a> <a href="/tags/%E6%B5%81%E6%B0%B4%E7%BA%BF/" style="font-size: 1.1em; color: #999">流水线</a> <a href="/tags/%E7%BB%84%E5%90%88%E6%95%B0%E5%AD%A6/" style="font-size: 1.1em; color: #999">组合数学</a> <a href="/tags/%E6%B3%9B%E5%9E%8B/" style="font-size: 1.1em; color: #999">泛型</a> <a href="/tags/%E4%BA%A4%E6%8D%A2%E6%9C%BA/" style="font-size: 1.1em; color: #999">交换机</a> <a href="/tags/Flash/" style="font-size: 1.1em; color: #999">Flash</a> <a href="/tags/%E5%AE%9A%E6%97%B6%E5%99%A8/" style="font-size: 1.37em; color: #99a4b2">定时器</a> <a href="/tags/%E7%A1%AC%E7%9B%98/" style="font-size: 1.1em; color: #999">硬盘</a> <a href="/tags/%E6%8A%BD%E8%B1%A1%E7%B1%BB/" style="font-size: 1.1em; color: #999">抽象类</a> <a href="/tags/I2C/" style="font-size: 1.23em; color: #999ea6">I2C</a> <a href="/tags/GPIO/" style="font-size: 1.23em; color: #999ea6">GPIO</a> <a href="/tags/EEPROM/" style="font-size: 1.1em; color: #999">EEPROM</a> <a href="/tags/ARP/" style="font-size: 1.1em; color: #999">ARP</a> <a href="/tags/IO/" style="font-size: 1.1em; color: #999">IO</a> <a href="/tags/conda/" style="font-size: 1.1em; color: #999">conda</a> <a href="/tags/FTP/" style="font-size: 1.1em; color: #999">FTP</a> <a href="/tags/%E7%A6%BB%E6%95%A3%E6%95%B0%E5%AD%A6/" style="font-size: 1.1em; color: #999">离散数学</a> <a href="/tags/%E5%B5%8C%E5%85%A5%E5%BC%8F/" style="font-size: 1.5em; color: #99a9bf">嵌入式</a> <a href="/tags/%E6%B8%B8%E6%88%8F/" style="font-size: 1.1em; color: #999">游戏</a> <a href="/tags/%E4%B8%AD%E6%96%AD%E7%AE%A1%E7%90%86/" style="font-size: 1.23em; color: #999ea6">中断管理</a> <a href="/tags/%E6%9E%90%E6%9E%84%E5%87%BD%E6%95%B0/" style="font-size: 1.1em; color: #999">析构函数</a> <a href="/tags/%E6%B5%8B%E8%AF%95/" style="font-size: 1.23em; color: #999ea6">测试</a> <a href="/tags/const/" style="font-size: 1.1em; color: #999">const</a> <a href="/tags/TCP%E5%8D%8F%E8%AE%AE/" style="font-size: 1.1em; color: #999">TCP协议</a> <a href="/tags/%E4%BA%92%E6%96%A5%E9%94%81/" style="font-size: 1.23em; color: #999ea6">互斥锁</a> <a href="/tags/%E9%A1%B5%E9%9D%A2%E7%AE%97%E6%B3%95/" style="font-size: 1.1em; color: #999">页面算法</a> <a href="/tags/%E8%99%9A%E5%87%BD%E6%95%B0/" style="font-size: 1.1em; color: #999">虚函数</a> <a href="/tags/%E4%BC%A0%E5%8F%82/" style="font-size: 1.1em; color: #999">传参</a> <a href="/tags/%E5%AD%90%E7%BD%91%E5%88%92%E5%88%86/" style="font-size: 1.1em; color: #999">子网划分</a> <a href="/tags/%E5%AE%9A%E7%A7%AF%E5%88%86/" style="font-size: 1.1em; color: #999">定积分</a> <a href="/tags/%E5%B1%80%E5%9F%9F%E7%BD%91/" style="font-size: 1.1em; color: #999">局域网</a> <a href="/tags/%E5%87%BD%E6%95%B0%E6%8C%87%E9%92%88/" style="font-size: 1.1em; color: #999">函数指针</a> <a href="/tags/%E6%AD%A3%E4%BA%A4%E5%8C%96/" style="font-size: 1.1em; color: #999">正交化</a> <a href="/tags/Qt/" style="font-size: 1.1em; color: #999">Qt</a></div></div><div class="card-widget card-archives">
+    <div class="item-headline">
+      <i class="fas fa-archive"></i>
+      <span>归档</span>
+      <a class="card-more-btn" href="/archives/"
+            title="查看更多">
+            <i class="fas fa-angle-right"></i>
+          </a>
+    </div>
+  
+    <ul class="card-archive-list">
+      
+        <li class="card-archive-list-item">
+          <a class="card-archive-list-link" href="/archives/2026/07/">
+            <span class="card-archive-list-date">
+              七月 2026
+            </span>
+            <span class="card-archive-list-count">1</span>
+          </a>
+        </li>
+      
+        <li class="card-archive-list-item">
+          <a class="card-archive-list-link" href="/archives/2026/06/">
+            <span class="card-archive-list-date">
+              六月 2026
+            </span>
+            <span class="card-archive-list-count">8</span>
+          </a>
+        </li>
+      
+        <li class="card-archive-list-item">
+          <a class="card-archive-list-link" href="/archives/2024/06/">
+            <span class="card-archive-list-date">
+              六月 2024
+            </span>
+            <span class="card-archive-list-count">1</span>
+          </a>
+        </li>
+      
+        <li class="card-archive-list-item">
+          <a class="card-archive-list-link" href="/archives/2024/01/">
+            <span class="card-archive-list-date">
+              一月 2024
+            </span>
+            <span class="card-archive-list-count">1</span>
+          </a>
+        </li>
+      
+        <li class="card-archive-list-item">
+          <a class="card-archive-list-link" href="/archives/2023/12/">
+            <span class="card-archive-list-date">
+              十二月 2023
+            </span>
+            <span class="card-archive-list-count">1</span>
+          </a>
+        </li>
+      
+        <li class="card-archive-list-item">
+          <a class="card-archive-list-link" href="/archives/2023/11/">
+            <span class="card-archive-list-date">
+              十一月 2023
+            </span>
+            <span class="card-archive-list-count">4</span>
+          </a>
+        </li>
+      
+        <li class="card-archive-list-item">
+          <a class="card-archive-list-link" href="/archives/2023/08/">
+            <span class="card-archive-list-date">
+              八月 2023
+            </span>
+            <span class="card-archive-list-count">6</span>
+          </a>
+        </li>
+      
+        <li class="card-archive-list-item">
+          <a class="card-archive-list-link" href="/archives/2023/07/">
+            <span class="card-archive-list-date">
+              七月 2023
+            </span>
+            <span class="card-archive-list-count">2</span>
+          </a>
+        </li>
+      
+    </ul>
+  </div><div class="card-widget card-webinfo"><div class="item-headline"><i class="fas fa-chart-line"></i><span>网站信息</span></div><div class="webinfo"><div class="webinfo-item"><div class="item-name">文章数目 :</div><div class="item-count">131</div></div><div class="webinfo-item"><div class="item-name">本站总字数 :</div><div class="item-count">423.5k</div></div><div class="webinfo-item"><div class="item-name">本站访客数 :</div><div class="item-count" id="busuanzi_value_site_uv"><i class="fa-solid fa-spinner fa-spin"></i></div></div><div class="webinfo-item"><div class="item-name">本站总浏览量 :</div><div class="item-count" id="busuanzi_value_site_pv"><i class="fa-solid fa-spinner fa-spin"></i></div></div><div class="webinfo-item"><div class="item-name">最后更新时间 :</div><div class="item-count" id="last-push-date" data-lastPushDate="2026-07-14T03:16:04.848Z"><i class="fa-solid fa-spinner fa-spin"></i></div></div></div></div></div></div></main><footer id="footer" style="background-image: url(/img/top.jpg);"><div class="footer-other"><div class="footer-copyright"><span class="copyright">&copy;&nbsp;2025 - 2026 By Mount256</span><span class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo 8.1.2</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly 5.5.5</a></span></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="darkmode" type="button" title="日间和夜间模式切换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js?v=5.5.5"></script><script src="/js/main.js?v=5.5.5"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui@6.1.14/dist/fancybox/fancybox.umd.min.js"></script><div class="js-pjax"><script>window.typedJSFn = {
+  init: str => {
+    window.typed = new Typed('#subtitle', Object.assign({
+      strings: str,
+      startDelay: 300,
+      typeSpeed: 150,
+      loop: true,
+      backSpeed: 50,
+    }, null))
+  },
+  run: subtitleType => {
+    if (true) {
+      if (typeof Typed === 'function') {
+        subtitleType()
+      } else {
+        btf.getScript('https://cdn.jsdelivr.net/npm/typed.js@3.0.0/dist/typed.umd.min.js').then(subtitleType)
+      }
+    } else {
+      subtitleType()
+    }
+  },
+  processSubtitle: (content, extraContents = []) => {
+    if (true) {
+      const sub = ["唯有那份眩目，无法遗忘"].slice()
+
+      if (extraContents.length > 0) {
+        sub.unshift(...extraContents)
+      }
+
+      if (typeof content === 'string') {
+        sub.unshift(content)
+      } else if (Array.isArray(content)) {
+        sub.unshift(...content)
+      }
+
+      sub.length > 0 && typedJSFn.init(sub)
+    } else {
+      document.getElementById('subtitle').textContent = typeof content === 'string' ? content :
+        (Array.isArray(content) && content.length > 0 ? content[0] : '')
+    }
+  }
+}
+btf.addGlobalFn('pjaxSendOnce', () => { typed.destroy() }, 'typedDestroy')
+</script><script>function subtitleType () {
+  typedJSFn.processSubtitle(["唯有那份眩目，无法遗忘"])
+}
+typedJSFn.run(subtitleType)</script><script>(() => {
+  const parseViewBox = viewBox => {
+    if (!viewBox) return null
+    const parts = viewBox.trim().split(/[\s,]+/).map(n => Number(n))
+    if (parts.length !== 4 || parts.some(n => Number.isNaN(n))) return null
+    return parts
+  }
+
+  const getSvgViewBox = svg => {
+    const attr = parseViewBox(svg.getAttribute('viewBox'))
+    if (attr) return attr
+
+    // Fallback: use bbox to build a viewBox
+    try {
+      const bbox = svg.getBBox()
+      if (bbox && bbox.width && bbox.height) return [bbox.x, bbox.y, bbox.width, bbox.height]
+    } catch (e) {
+      // getBBox may fail on some edge cases; ignore
+    }
+
+    const w = Number(svg.getAttribute('width')) || 0
+    const h = Number(svg.getAttribute('height')) || 0
+    if (w > 0 && h > 0) return [0, 0, w, h]
+    return [0, 0, 100, 100]
+  }
+
+  const setSvgViewBox = (svg, vb) => {
+    svg.setAttribute('viewBox', `${vb[0]} ${vb[1]} ${vb[2]} ${vb[3]}`)
+  }
+
+  const clamp = (v, min, max) => Math.max(min, Math.min(max, v))
+
+  const openSvgInNewTab = ({ source, initViewBox }) => {
+    const getClonedSvg = () => {
+      if (typeof source === 'string') {
+        const template = document.createElement('template')
+        template.innerHTML = source.trim()
+        const svg = template.content.querySelector('svg')
+        return svg ? svg.cloneNode(true) : null
+      }
+      if (source && typeof source.cloneNode === 'function') {
+        return source.cloneNode(true)
+      }
+      return null
+    }
+
+    const clone = getClonedSvg()
+    if (!clone) return
+    if (initViewBox && initViewBox.length === 4) {
+      clone.setAttribute('viewBox', initViewBox.join(' '))
+    }
+    if (!clone.getAttribute('xmlns')) clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg')
+    if (!clone.getAttribute('xmlns:xlink') && clone.outerHTML.includes('xlink:')) {
+      clone.setAttribute('xmlns:xlink', 'http://www.w3.org/1999/xlink')
+    }
+    // inject background to match current theme
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark'
+    const bg = getComputedStyle(document.body).backgroundColor || (isDark ? '#1e1e1e' : '#ffffff')
+    if (!clone.style.background) clone.style.background = bg
+
+    const serializer = new XMLSerializer()
+    const svgSource = serializer.serializeToString(clone)
+    const htmlSource = `<!doctype html><html><head><meta charset="utf-8" />
+      <style>
+        html, body { width: 100%; height: 100%; margin: 0; display: flex; align-items: center; justify-content: center; background: ${bg}; }
+        svg { max-width: 100%; max-height: 100%; height: auto; width: auto; }
+      </style>
+      </head><body>${svgSource}</body></html>`
+    const blob = new Blob([htmlSource], { type: 'text/html;charset=utf-8' })
+    const url = URL.createObjectURL(blob)
+    window.open(url, '_blank', 'noopener')
+    setTimeout(() => URL.revokeObjectURL(url), 30000)
+  }
+
+  const attachMermaidViewerButton = wrap => {
+    let btn = wrap.querySelector('.mermaid-open-btn')
+    if (!btn) {
+      btn = document.createElement('button')
+      btn.type = 'button'
+      btn.className = 'mermaid-open-btn'
+      wrap.appendChild(btn)
+    }
+
+    btn.innerHTML = '<i class="fa fa-search fa-fw" aria-hidden="true"></i>'
+
+    if (!btn.__mermaidViewerBound) {
+      btn.addEventListener('click', e => {
+        e.preventDefault()
+        e.stopPropagation()
+        const svg = wrap.__mermaidOriginalSvg || wrap.querySelector('svg')
+        if (!svg) return
+        const initViewBox = wrap.__mermaidInitViewBox
+        if (typeof svg === 'string') {
+          openSvgInNewTab({ source: svg, initViewBox })
+          return
+        }
+        openSvgInNewTab({ source: svg, initViewBox })
+      })
+      btn.__mermaidViewerBound = true
+    }
+  }
+
+  // Zoom around a point (px, py) in the SVG viewport (in viewBox coordinates)
+  const zoomAtPoint = (vb, factor, px, py) => {
+    const w = vb[2] * factor
+    const h = vb[3] * factor
+    const nx = px - (px - vb[0]) * factor
+    const ny = py - (py - vb[1]) * factor
+    return [nx, ny, w, h]
+  }
+
+  const initMermaidGestures = wrap => {
+    const svg = wrap.querySelector('svg')
+    if (!svg) return
+
+    // Ensure viewBox exists so gestures always work
+    const initVb = getSvgViewBox(svg)
+    wrap.__mermaidInitViewBox = initVb
+    wrap.__mermaidCurViewBox = initVb.slice()
+    setSvgViewBox(svg, initVb)
+
+    // Avoid binding multiple times on themeChange/pjax
+    if (wrap.__mermaidGestureBound) return
+    wrap.__mermaidGestureBound = true
+
+    // Helper: map client (viewport) coordinate -> viewBox coordinate
+    const clientToViewBox = (clientX, clientY) => {
+      const rect = svg.getBoundingClientRect()
+      const vb = wrap.__mermaidCurViewBox || getSvgViewBox(svg)
+      const x = vb[0] + (clientX - rect.left) * (vb[2] / rect.width)
+      const y = vb[1] + (clientY - rect.top) * (vb[3] / rect.height)
+      return { x, y, rect, vb }
+    }
+
+    const state = {
+      pointers: new Map(),
+      startVb: null,
+      startDist: 0,
+      startCenter: null
+    }
+
+    const clampVb = vb => {
+      const init = wrap.__mermaidInitViewBox || vb
+      const minW = init[2] * 0.1
+      const maxW = init[2] * 10
+      const minH = init[3] * 0.1
+      const maxH = init[3] * 10
+      vb[2] = clamp(vb[2], minW, maxW)
+      vb[3] = clamp(vb[3], minH, maxH)
+      return vb
+    }
+
+    const setCurVb = vb => {
+      vb = clampVb(vb)
+      wrap.__mermaidCurViewBox = vb
+      setSvgViewBox(svg, vb)
+    }
+
+    const onPointerDown = e => {
+      // Allow only primary button for mouse
+      if (e.pointerType === 'mouse' && e.button !== 0) return
+      svg.setPointerCapture(e.pointerId)
+      state.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY })
+
+      if (state.pointers.size === 1) {
+        state.startVb = (wrap.__mermaidCurViewBox || getSvgViewBox(svg)).slice()
+      } else if (state.pointers.size === 2) {
+        const pts = [...state.pointers.values()]
+        const dx = pts[0].x - pts[1].x
+        const dy = pts[0].y - pts[1].y
+        state.startDist = Math.hypot(dx, dy)
+        state.startVb = (wrap.__mermaidCurViewBox || getSvgViewBox(svg)).slice()
+        state.startCenter = { x: (pts[0].x + pts[1].x) / 2, y: (pts[0].y + pts[1].y) / 2 }
+      }
+    }
+
+    const onPointerMove = e => {
+      if (!state.pointers.has(e.pointerId)) return
+      state.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY })
+
+      // Pan with 1 pointer
+      if (state.pointers.size === 1 && state.startVb) {
+        const p = [...state.pointers.values()][0]
+        const prev = { x: e.clientX - e.movementX, y: e.clientY - e.movementY }
+        // movementX/Y unreliable on touch, compute from stored last position
+        const last = wrap.__mermaidLastSinglePointer || p
+        const dxClient = p.x - last.x
+        const dyClient = p.y - last.y
+        wrap.__mermaidLastSinglePointer = p
+
+        const { rect } = clientToViewBox(p.x, p.y)
+        const vb = (wrap.__mermaidCurViewBox || getSvgViewBox(svg)).slice()
+        const dx = dxClient * (vb[2] / rect.width)
+        const dy = dyClient * (vb[3] / rect.height)
+        setCurVb([vb[0] - dx, vb[1] - dy, vb[2], vb[3]])
+        return
+      }
+
+      // Pinch zoom with 2 pointers
+      if (state.pointers.size === 2 && state.startVb && state.startDist > 0) {
+        const pts = [...state.pointers.values()]
+        const dx = pts[0].x - pts[1].x
+        const dy = pts[0].y - pts[1].y
+        const dist = Math.hypot(dx, dy)
+        if (!dist) return
+        const factor = state.startDist / dist // dist bigger => zoom in (viewBox smaller)
+
+        const cx = (pts[0].x + pts[1].x) / 2
+        const cy = (pts[0].y + pts[1].y) / 2
+        const centerClient = { x: cx, y: cy }
+
+        const pxy = clientToViewBox(centerClient.x, centerClient.y)
+        const cpx = pxy.x
+        const cpy = pxy.y
+
+        const vb = zoomAtPoint(state.startVb, factor, cpx, cpy)
+        setCurVb(vb)
+      }
+    }
+
+    const onPointerUpOrCancel = e => {
+      state.pointers.delete(e.pointerId)
+      if (state.pointers.size === 0) {
+        state.startVb = null
+        state.startDist = 0
+        state.startCenter = null
+        wrap.__mermaidLastSinglePointer = null
+      } else if (state.pointers.size === 1) {
+        // reset single pointer baseline to avoid jump
+        wrap.__mermaidLastSinglePointer = [...state.pointers.values()][0]
+      }
+    }
+
+    // Wheel zoom (mouse/trackpad)
+    const onWheel = e => {
+      // ctrlKey on mac trackpad pinch; we treat both as zoom
+      e.preventDefault()
+      const delta = e.deltaY
+      const zoomFactor = delta > 0 ? 1.1 : 0.9
+      const { x, y } = clientToViewBox(e.clientX, e.clientY)
+      const vb = (wrap.__mermaidCurViewBox || getSvgViewBox(svg)).slice()
+      setCurVb(zoomAtPoint(vb, zoomFactor, x, y))
+    }
+
+    const onDblClick = () => {
+      const init = wrap.__mermaidInitViewBox
+      if (!init) return
+      wrap.__mermaidCurViewBox = init.slice()
+      setSvgViewBox(svg, init)
+    }
+
+    svg.addEventListener('pointerdown', onPointerDown)
+    svg.addEventListener('pointermove', onPointerMove)
+    svg.addEventListener('pointerup', onPointerUpOrCancel)
+    svg.addEventListener('pointercancel', onPointerUpOrCancel)
+    svg.addEventListener('wheel', onWheel, { passive: false })
+    svg.addEventListener('dblclick', onDblClick)
+  }
+
+  const runMermaid = ele => {
+    window.loadMermaid = true
+    const theme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default'
+
+    ele.forEach((item, index) => {
+      const mermaidSrc = item.firstElementChild
+
+      // Clear old render (themeChange/pjax will rerun)
+      const oldSvg = item.querySelector('svg')
+      if (oldSvg) oldSvg.remove()
+      item.__mermaidGestureBound = false
+
+      const config = mermaidSrc.dataset.config ? JSON.parse(mermaidSrc.dataset.config) : {}
+      if (!config.theme) {
+        config.theme = theme
+      }
+      const mermaidThemeConfig = `%%{init: ${JSON.stringify(config)}}%%\n`
+      const mermaidID = `mermaid-${index}`
+      const mermaidDefinition = mermaidThemeConfig + mermaidSrc.textContent
+
+      const renderFn = mermaid.render(mermaidID, mermaidDefinition)
+      const renderMermaid = svg => {
+        mermaidSrc.insertAdjacentHTML('afterend', svg)
+        if (true) initMermaidGestures(item)
+        item.__mermaidOriginalSvg = svg
+        if (true) attachMermaidViewerButton(item)
+      }
+
+
+      // mermaid v9 and v10 compatibility
+      typeof renderFn === 'string' ? renderMermaid(renderFn) : renderFn.then(({ svg }) => renderMermaid(svg))
+    })
+  }
+
+  const codeToMermaid = () => {
+    const codeMermaidEle = document.querySelectorAll('pre > code.mermaid')
+    if (codeMermaidEle.length === 0) return
+
+    codeMermaidEle.forEach(ele => {
+      const preEle = document.createElement('pre')
+      preEle.className = 'mermaid-src'
+      preEle.hidden = true
+      preEle.textContent = ele.textContent
+      const newEle = document.createElement('div')
+      newEle.className = 'mermaid-wrap'
+      newEle.appendChild(preEle)
+      ele.parentNode.replaceWith(newEle)
+    })
+  }
+
+  const loadMermaid = () => {
+    if (true) codeToMermaid()
+    const $mermaid = document.querySelectorAll('#article-container .mermaid-wrap')
+    if ($mermaid.length === 0) return
+
+    const runMermaidFn = () => runMermaid($mermaid)
+    btf.addGlobalFn('themeChange', runMermaidFn, 'mermaid')
+    window.loadMermaid ? runMermaidFn() : btf.getScript('https://cdn.jsdelivr.net/npm/mermaid@11.15.0/dist/mermaid.min.js').then(runMermaidFn)
+  }
+
+  btf.addGlobalFn('encrypt', loadMermaid, 'mermaid')
+  window.pjax ? loadMermaid() : document.addEventListener('DOMContentLoaded', loadMermaid)
+})()</script></div><script src="/js/abcjs-detect.js"></script><script src="/js/bubble.js"></script><script id="click-heart" src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/dist/click-heart.min.js" async="async" mobile="true"></script><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script><div id="local-search"><div class="search-dialog"><nav class="search-nav"><span class="search-dialog-title">搜索</span><i class="fas fa-spinner fa-pulse" id="loading-status" hidden="hidden"></i><button class="search-close-button"><i class="fas fa-times"></i></button></nav><div class="text-center" id="loading-database"><i class="fas fa-spinner fa-pulse"></i><span>  数据加载中</span></div><div class="local-search-input"><input placeholder="输入关键词…" type="text"/></div><hr/><div id="local-search-results"></div><div class="ais-Pagination" id="local-search-pagination" style="display:none;"><ul class="ais-Pagination-list"></ul></div><div id="local-search-stats"></div></div><div id="search-mask"></div><script src="/js/search/local-search.js?v=5.5.5"></script></div></div></body></html>

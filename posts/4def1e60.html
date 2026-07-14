@@ -1,0 +1,633 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>STM32学习笔记（8）——I2C总线设备 | Mount256的个人小站</title><meta name="author" content="Mount256"><meta name="copyright" content="Mount256"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="一、I2C协议简介 I2C通讯协议 (Inter-Integrated Circuit，读作I平方C、I方C) 是由Phiilps公司开发的，由于它引脚少，硬件实现简单，可扩展性强，不需要USART、CAN等通讯协议的外部收发设备，现在被广泛地使用在系统内多个集成电路间的通讯。 1. 物理层 （感谢野火的PPT，一部分内容参考了野火）如下图所示即为I2C的物理层：  下面来简要介绍物理层需要了解的">
+<meta property="og:type" content="article">
+<meta property="og:title" content="STM32学习笔记（8）——I2C总线设备">
+<meta property="og:url" content="https://blog.mount256.com/posts/4def1e60.html">
+<meta property="og:site_name" content="Mount256的个人小站">
+<meta property="og:description" content="一、I2C协议简介 I2C通讯协议 (Inter-Integrated Circuit，读作I平方C、I方C) 是由Phiilps公司开发的，由于它引脚少，硬件实现简单，可扩展性强，不需要USART、CAN等通讯协议的外部收发设备，现在被广泛地使用在系统内多个集成电路间的通讯。 1. 物理层 （感谢野火的PPT，一部分内容参考了野火）如下图所示即为I2C的物理层：  下面来简要介绍物理层需要了解的">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://blog.mount256.com/img/cover0.jpg">
+<meta property="article:published_time" content="2021-04-18T16:00:00.000Z">
+<meta property="article:modified_time" content="2026-07-09T16:00:00.000Z">
+<meta property="article:author" content="Mount256">
+<meta property="article:tag" content="I2C">
+<meta property="article:tag" content="单片机">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://blog.mount256.com/img/cover0.jpg"><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "STM32学习笔记（8）——I2C总线设备",
+  "url": "https://blog.mount256.com/posts/4def1e60.html",
+  "image": "https://blog.mount256.com/img/cover0.jpg",
+  "datePublished": "2021-04-18T16:00:00.000Z",
+  "dateModified": "2026-07-09T16:00:00.000Z",
+  "author": [
+    {
+      "@type": "Person",
+      "name": "Mount256",
+      "url": "https://blog.mount256.com"
+    }
+  ]
+}</script><link rel="shortcut icon" href="/img/favicon.png"><link rel="canonical" href="https://blog.mount256.com/posts/4def1e60.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css?v=5.5.5"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@7.2.0/css/all.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/ui@6.1.14/dist/fancybox/fancybox.min.css" media="print" onload="this.media='all'"><script>
+    (() => {
+      
+    const saveToLocal = {
+      set: (key, value, ttl) => {
+        if (!ttl) return
+        const expiry = Date.now() + ttl * 86400000
+        localStorage.setItem(key, JSON.stringify({ value, expiry }))
+      },
+      get: key => {
+        const itemStr = localStorage.getItem(key)
+        if (!itemStr) return undefined
+        const { value, expiry } = JSON.parse(itemStr)
+        if (Date.now() > expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return value
+      }
+    }
+
+    window.btf = {
+      saveToLocal,
+      getScript: (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        Object.entries(attr).forEach(([key, val]) => script.setAttribute(key, val))
+        script.onload = script.onreadystatechange = () => {
+          if (!script.readyState || /loaded|complete/.test(script.readyState)) resolve()
+        }
+        script.onerror = reject
+        document.head.appendChild(script)
+      }),
+      getCSS: (url, id) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onload = link.onreadystatechange = () => {
+          if (!link.readyState || /loaded|complete/.test(link.readyState)) resolve()
+        }
+        link.onerror = reject
+        document.head.appendChild(link)
+      }),
+      addGlobalFn: (key, fn, name = false, parent = window) => {
+        if (!false && key.startsWith('pjax')) return
+        const globalFn = parent.globalFn || {}
+        globalFn[key] = globalFn[key] || {}
+        globalFn[key][name || Object.keys(globalFn[key]).length] = fn
+        parent.globalFn = globalFn
+      }
+    }
+  
+      
+      const activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      const activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+
+      btf.activateDarkMode = activateDarkMode
+      btf.activateLightMode = activateLightMode
+
+      const theme = saveToLocal.get('theme')
+    
+          theme === 'dark' ? activateDarkMode() : theme === 'light' ? activateLightMode() : null
+        
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        document.documentElement.classList.toggle('hide-aside', asideStatus === 'hide')
+      }
+    
+      
+    const detectApple = () => {
+      if (/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)) {
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+  
+    })()
+  </script><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: {"path":"/search.xml","preload":false,"top_n_per_article":1,"unescape":false,"pagination":{"enable":false,"hitsPerPage":8},"languages":{"hits_empty":"未找到符合您查询的内容：${query}","hits_stats":"共找到 ${hits} 篇文章"}},
+  translate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false,"highlightFullpage":false,"highlightMacStyle":false},
+  copy: {
+    success: '复制成功',
+    error: '复制失败',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'fancybox',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid@4.13.0/dist/infinitegrid.min.js',
+    buttonText: '加载更多'
+  },
+  isPhotoFigcaption: false,
+  islazyloadPlugin: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'STM32学习笔记（8）——I2C总线设备',
+  isHighlightShrink: false,
+  isToc: true,
+  pageType: 'post'
+}</script><link rel="stylesheet" href="/css/mouse.css"><script src="/live2d-widget/dist/autoload.js"></script><!-- hexo injector head_end start -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.css">
+<!-- hexo injector head_end end --><meta name="generator" content="Hexo 8.1.2"></head><body><div class="bg-animation" id="web_bg" style="background-image: url(/img/background.png);"></div><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img text-center"><img src="/img/avatar.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data text-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">131</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">128</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">25</div></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 链接</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header" style="background-image: url(/img/cover0.jpg);"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><span class="site-name">Mount256的个人小站</span></a><a class="nav-page-title" href="/"><span class="site-name">STM32学习笔记（8）——I2C总线设备</span><span class="site-name"><i class="fa-solid fa-circle-arrow-left"></i><span>  返回首页</span></span></a></span><div id="menus"><div id="search-button"><span class="site-page social-icon search"><i class="fas fa-search fa-fw"></i><span> 搜索</span></span></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 链接</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于</span></a></div></div><div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div></div></nav><div id="post-info"><h1 class="post-title">STM32学习笔记（8）——I2C总线设备</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2021-04-18T16:00:00.000Z" title="发表于 2021-04-19 00:00:00">2021-04-19</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2026-07-09T16:00:00.000Z" title="更新于 2026-07-10 00:00:00">2026-07-10</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/%E5%B5%8C%E5%85%A5%E5%BC%8F%E5%BC%80%E5%8F%91/">嵌入式开发</a><i class="fas fa-angle-right post-meta-separator"></i><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/%E5%B5%8C%E5%85%A5%E5%BC%8F%E5%BC%80%E5%8F%91/STM32/">STM32</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-wordcount"><i class="far fa-file-word fa-fw post-meta-icon"></i><span class="post-meta-label">总字数:</span><span class="word-count">3.7k</span><span class="post-meta-separator">|</span><i class="far fa-clock fa-fw post-meta-icon"></i><span class="post-meta-label">阅读时长:</span><span>12分钟</span></span><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title=""><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">浏览量:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="container post-content" id="article-container"><h2 id="一、I2C协议简介">一、I2C协议简介</h2>
+<p><strong>I2C通讯协议</strong> (Inter-Integrated Circuit，读作<strong>I平方C、I方C</strong>) 是由Phiilps公司开发的，由于它引脚少，硬件实现简单，可扩展性强，不需要USART、CAN等通讯协议的外部收发设备，现在被广泛地使用在系统内多个集成电路间的通讯。</p>
+<h3 id="1-物理层">1. 物理层</h3>
+<p>（感谢野火的PPT，一部分内容参考了野火）如下图所示即为I2C的物理层：</p>
+<img src="/posts/4def1e60/20210419231358892.png" class="" title="物理层">
+<p>下面来简要介绍物理层需要了解的知识点：</p>
+<ul>
+<li><strong>总线：</strong> 多个设备共用的信号线，有两条：一条双向串行数据线 (SDA)，一条串行时钟线 (SCL)。</li>
+<li><strong>主机和从机：</strong> 总线上挂载着多个通讯主机和通讯从机，每个连接到总线的从机设备都有独一无二的通讯地址，主机通过这些地址对从机设备进行访问。一般来说，总线上挂载着五六个从机和一个主机就够用了。</li>
+<li><strong>通讯：</strong> 当主机与从机正在进行通讯的时候，从机设备输出低电平，将总线拉成低电平，其他设备输出高阻态，不能参与通讯。</li>
+<li><strong>上拉电阻：</strong> 两条总线均通过上拉电阻连接到电源。当所有从机设备空闲时，这些设备会输出高阻态，由上拉电阻把总线拉成高电平，<strong>这些设备就相当于与总线断开了。</strong></li>
+</ul>
+<blockquote>
+<p>如果不是用高阻态表示高电平而是用接地表示，那么当一个设备通讯时，这个设备接电源，整个总线通过上拉电阻也接了电源，其他未通讯设备接地，就把其它设备短路掉了。</p>
+</blockquote>
+<ul>
+<li><strong>仲裁：</strong> 当有多个设备想跟主机通讯时，为防止数据冲突，会采用仲裁的方式（类似DMA）决定由哪个设备占用总线。在通讯分点已经说明了<strong>一次通讯只能有一个主机和一个从机。</strong></li>
+<li><strong>传输模式：</strong> 标准模式传输速率为 100kbit/s，快速模式为 400kbit/s，高速模式下可达 3.4Mbit/s，<strong>但目前大多I2C设备尚不支持高速模式，一般情况下快速模式就已经够了</strong>。</li>
+<li><strong>注意：</strong> 连接到相同总线的 IC 数量受到总线的最大电容 400pF 限制。</li>
+</ul>
+<h3 id="2-协议层">2. 协议层</h3>
+<p>这个部分的内容相当重要，它是我们后面写代码的基础。</p>
+<h4 id="（1）主机写数据到从机">（1）主机写数据到从机</h4>
+<p>一个数据包的组成如下：</p>
+<img src="/posts/4def1e60/20210419231456905.png" class="" title="write_data">
+<ul>
+<li><strong>图例：</strong> 条纹框：数据由主机传输到从机；白色框：数据由从机传输到主机。</li>
+<li><strong>S（传输开始信号）：</strong> 主机向总线广播，说，我要开始通讯了！至于向谁通讯呢？待会再说。</li>
+<li><strong>SLAVE_ADDRESS（从机地址）：</strong> 主机现在说，我要访问这个地址所在的设备！I2C总线上的每个设备都有自己的独立地址，主机发起通讯时，通过SDA信号线发送设备地址(SLAVE_ADDRESS)来查找从机。设备地址可以是7位或10位。</li>
+<li><strong>R/W（读写位）：</strong> 接下来主机表示，我的访问操作是向这个设备写入数据，R/W置为0，表示我要写入！这个设备，你听到了吗？听到请回答！因此实际上主机发送了一个位数为8或11的数据。</li>
+<li><strong>A（应答位）：</strong> 设备发送应答信号（ACK，Acknowledged）给主机，表示，主机我收到了，我可以工作，你说！</li>
+<li><strong>DATA（数据）：</strong> 主机说，那好我们开始吧！开始发送数据，一共n字节。发完以后，主机问，设备你收到了吗？设备说，收到（ACK）！现在写入数据，并发送一个应答信号给主机。如此往复，便实现了写的过程。</li>
+<li><strong>A（应答位）：</strong> 最后一次数据写入后，设备说，够了够了，不要再写了，并发送一个非应答信号（NACK，Not Acknowledged）给主机。</li>
+<li><strong>P（停止位）：</strong> 主机发送一位停止位告诉设备，我停止访问了！于是设备重新拉回高阻态。</li>
+</ul>
+<h4 id="（2）主机由从机读数据">（2）主机由从机读数据</h4>
+<p>一个数据包的组成如下：</p>
+<img src="/posts/4def1e60/20210419231507735.png" class="" title="read_data">
+<ul>
+<li><strong>图例：</strong> 条纹框：数据由主机传输到从机；白色框：数据由从机传输到主机。</li>
+<li><strong>S（传输开始信号）：</strong> 主机向总线广播，说，我要开始通讯了！至于向谁通讯呢？待会再说。</li>
+<li><strong>SLAVE_ADDRESS（从机地址）：</strong> 主机现在说，我要访问这个地址所在的设备！这个地址是7位或10位长。</li>
+<li><strong>R/W（读写位）：</strong> 接下来主机表示，我的访问操作是向这个设备写入数据，R/W置为1，表示我要读数据！这个设备，你听到了吗？听到请回答！因此实际上主机发送了一个位数为8或11的数据。</li>
+<li><strong>A（应答位）：</strong> 设备发送应答信号（ACK，Acknowledged）给主机，表示，主机我收到了，我可以工作了！</li>
+<li><strong>DATA（数据）：</strong> 设备接着开始发送数据给主机，一共n字节。发完以后，设备问，主机你收到了吗？主机说，收到（ACK）！如此往复，便实现了读的过程。</li>
+<li><strong>A（应答位）：</strong> 最后一次读数据后，主机说，我不想再读了，并发送一个非应答信号（NACK，Not Acknowledged）给设备。</li>
+<li><strong>P（停止位）：</strong> 主机发送一位停止位告诉设备，我停止访问了！于是设备重新拉回高阻态。</li>
+</ul>
+<h4 id="（3）读和写交替进行">（3）读和写交替进行</h4>
+<img src="/posts/4def1e60/20210419231526833.png" class="" title="write_read">
+<p>这个就是以上读和写的复合格式，关键在于主机的读写位，主机想要读就用读的格式，主机想要写就用写的格式。</p>
+<h4 id="（4）信号和时钟的配合">（4）信号和时钟的配合</h4>
+<p><strong>通讯起始和停止</strong></p>
+<img src="/posts/4def1e60/20210419231534731.png" class="" title="start_stop">
+<ul>
+<li>当 SCL 线是高电平时 SDA 线从高电平向低电平切换，这个情况表示通讯的起始。</li>
+<li>当 SCL 是高电平时 SDA 线由低电平向高电平切换，表示通讯的停止。</li>
+<li>起始和停止信号一般由主机产生。</li>
+</ul>
+<p><strong>数据有效性</strong></p>
+<img src="/posts/4def1e60/20210419231542783.png" class="" title="valid">
+<p>SDA数据线在SCL的每个时钟周期传输一位数据。</p>
+<ul>
+<li>当SCL为<strong>高电平</strong>时，SDA表示的数据有效，即此时的SDA为稳定高电平时表示数据“1”，为稳定低电平时表示数据“0”。</li>
+<li>当SCL为<strong>低电平</strong>时，SDA的数据无效，一般在这个时候SDA<strong>趁机</strong>（你可以这么理解）进行电平切换，为下一次表示数据做好准备。</li>
+</ul>
+<p><strong>响应</strong></p>
+<img src="/posts/4def1e60/20210419231551509.png" class="" title="answer">
+<p>传输时主机产生时钟，在第9个时钟时，数据发送端会释放SDA的控制权，由数据接收端控制SDA，若SDA为高电平，表示非应答信号(NACK)，低电平表示应答信号(ACK)。</p>
+<h2 id="二、STM32中的I2C总线">二、STM32中的I2C总线</h2>
+<p>首先声明一下，<strong>STM32的硬件I2C是有缺陷的，因此我们基本都是用软件模拟I2C！</strong> 但是下面这些内容还是要了解一下，初学不必深入。</p>
+<h3 id="1-I2C框图">1. I2C框图</h3>
+<p>本部分可参考<strong>STM32中文参考手册第24章I2C接口</strong>。</p>
+<img src="/posts/4def1e60/20210419231602887.png" class="" title="i2c">
+<p>下面将框图分为四个部分做简要介绍：</p>
+<h4 id="（1）通讯引脚">（1）通讯引脚</h4>
+<p>STM32芯片有两个I2C外设，它们的I2C通讯信号引出到不同的GPIO引脚上，使用时必须配置到这些指定的引脚。</p>
+<p>SCL、SDA引脚和编号对应关系如下（可参考电路原理图）：</p>
+<table>
+<thead>
+<tr>
+<th>引脚</th>
+<th>I2C1</th>
+<th>I2C2</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>SCL</td>
+<td>PB5（默认）/PB8（重映射）</td>
+<td>PB10</td>
+</tr>
+<tr>
+<td>SDA</td>
+<td>PB6（默认）/PB9（重映射）</td>
+<td>PB11</td>
+</tr>
+</tbody>
+</table>
+<p>需要注意的是：在 SMBus 模式下， SMBALERT 是可选信号。如果禁止了 SMBus ，则不能使用该信号。</p>
+<blockquote>
+<p>SMBus (System Management Bus,系统管理总线) 是1995年由Intel提出的，应用于移动PC和桌面PC系统中的低速率通讯。希望通过一条廉价并且功能强大的总线（由两条线组成），来控制主板上的设备并收集相应的信息。SMBus 为系统和电源管理这样的任务提供了一条控制总线，使用 SMBus 的系统，设备之间发送和接收消息都是通过 SMBus，而不是使用单独的控制线，这样可以节省设备的管脚数。</p>
+</blockquote>
+<h4 id="（2）时钟控制逻辑">（2）时钟控制逻辑</h4>
+<p>本部分可参考<strong>STM32中文参考手册24.6.8时钟控制寄存器(I2C_CCR)</strong>。</p>
+<p>I2C时钟是由时钟控制寄存器控制的。寄存器位15可设置标准模式或快速模式，位14可设置快速模式下的占空比（THIGH/TLOW）。位11-0设置SCL时钟的配置因子CCR。CCR的计算过程了解即可（PCLK1 = APB1，默认36MHz）：</p>
+<img src="/posts/4def1e60/20210419231615305.png" class="" title="ccr">
+<h4 id="（3）数据控制逻辑">（3）数据控制逻辑</h4>
+<p>SDA信号主要连接到数据移位寄存器上，数据移位寄存器的数据<br>
+来源及目标是<strong>数据寄存器(DR)</strong>、地址寄存器(OAR)、PEC寄存器以及SDA数据线。（感觉与USART工作原理比较类似，也是一位一位的发送、接收。）</p>
+<h4 id="（4）整体控制逻辑">（4）整体控制逻辑</h4>
+<p>本部分可参考<strong>STM32中文参考手册24.6.1 控制寄存器 1(I2C_CR1)和24.6.2 控制寄存器 2(I2C_CR2)以及24.6.6 状态寄存器 1(I2C_SR1)和24.6.7 状态寄存器 2 (I2C_SR2)</strong>。</p>
+<p>整体控制逻辑负责协调整个I2C外设，控制逻辑的工作模式根据我们配置的控制寄存器(CR1/CR2)的参数而改变。在外设工作时，控制逻辑会根据外设的工作状态修改状态寄存器(SR1<br>
+和SR2)，只要读取这些寄存器相关的寄存器位，就可以了解I2C的工作状态。需要注意的寄存器几个位：</p>
+<p>CR1寄存器：位10（ACK）、位9（STOP）、位8（START）。</p>
+<p>SR1寄存器：位7（TxE：数据寄存器为空(发送时) (Data register empty (transmitters)) ）、位6（RxNE：数据寄存器非空(接收时) (Data register not empty (receivers)) ）、位1（ADDR：地址已被发送(主模式)/地址匹配(从模式) (Address sent (master mode)/matched<br>
+(slave mode))）、位0（SB：起始位(主模式) (Start bit (Master mode)) ）。</p>
+<p>SR2寄存器：位2（TRA：发送/接收 (Transmitter/receiver) ）、位1（BUSY：总线忙 (Bus busy)）。</p>
+<h3 id="2-STM32的I2C通讯过程">2. STM32的I2C通讯过程</h3>
+<p>本部分可参考<strong>STM32中文参考手册24.3.3 I2C主模式</strong>，同时文字内容借鉴了野火PPT。本部分比较重要，也是我们写I2C代码的基础。</p>
+<h4 id="（1）主发送器通讯过程">（1）主发送器通讯过程</h4>
+<p>如图所示，上面一行是控制寄存器要发送接收的内容，下面一行是状态寄存器标志的内容，库函数就是通过检测这些状态寄存器来判断这些事件是否已完成。</p>
+<img src="/posts/4def1e60/20210419231721401.png" class="" title="send">
+<ul>
+<li>当发生起始信号（S）后，<strong>产生事件EV5</strong>，并会对SR1寄存器的SB位置1，表示起始信号已经发送。</li>
+<li>发送设备地址并等待应答信号，若有从机应答，则<strong>产生事件EV6及EV8</strong>，这时SR1寄存器的ADDR位及TXE位置1，ADDR为1表示地址已经发送，TXE为1表示数据寄存器为空。</li>
+<li>往DR寄存器写入要发送的数据，这时SR1寄存器的TXE位置0，表示数据寄存器非空，I2C外设通过SDA信号线一位位把数据发送出去后，又会<strong>产生EV8事件</strong>，即TXE位置1，重复这个过程，可以发送多个字节数据。</li>
+<li>发送数据完成后，控制I2C设备产生一个停止信号（P），这个时候会<strong>产生EV2事件</strong>，SR1的TXE位及BTF位都置1，表示通讯结束。</li>
+</ul>
+<h4 id="（2）主接收器通讯过程">（2）主接收器通讯过程</h4>
+<p>如图所示，上面一行是控制寄存器要发送接收的内容，下面一行是状态寄存器标志的内容，库函数就是通过检测这些状态寄存器来判断这些事件是否已完成。</p>
+<img src="/posts/4def1e60/20210419231734637.png" class="" title="receive">
+<ul>
+<li>起始信号(S)是由主机端产生的，控制发生起始信号后，<strong>产生事件EV5</strong>，并会对SR1寄存器的SB位置1，表示起始信号已经发送。</li>
+<li>发送设备地址并等待应答信号，若有从机应答，则<strong>产生事件EV6</strong>，这时SR1寄存器的ADDR位置1，表示地址已经发送。</li>
+<li>从机端接收到地址后，开始向主机端发送数据。当主机接收到这些数据后，会<strong>产生EV7事件</strong>，SR1寄存器的RXNE置1，表示接收数据寄存器非空，读取该寄存器后，可对数据寄存器清空，以便接收下一次数据。此时可以控制I2C发送应答信号(ACK)或非应答信号(NACK)，若应答，则重复以上步骤接收数据，若非应答，则停止传输。</li>
+<li>发送非应答信号后，产生停止信号(P)，结束传输。</li>
+</ul>
+<h3 id="3-I2C的结构体定义和库函数">3. I2C的结构体定义和库函数</h3>
+<p>位于头文件<strong>stm32f10x_i2c.h</strong>，结构体定义如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span></span></span><br><span class="line"><span class="class">&#123;</span></span><br><span class="line">  <span class="type">uint32_t</span> I2C_ClockSpeed;          <span class="comment">/*!&lt; 设置SCL时钟频率*/</span></span><br><span class="line">  <span class="type">uint16_t</span> I2C_Mode;                <span class="comment">/*!&lt; 设置工作模式*/</span></span><br><span class="line">  <span class="type">uint16_t</span> I2C_DutyCycle;           <span class="comment">/*!&lt; 设置时钟占空比*/</span></span><br><span class="line">  <span class="type">uint16_t</span> I2C_OwnAddress1;         <span class="comment">/*!&lt; 指定自身I2C设备地址 */</span></span><br><span class="line">  <span class="type">uint16_t</span> I2C_Ack;                 <span class="comment">/*!&lt;  响应使能或关闭响应使能*/</span></span><br><span class="line">  <span class="type">uint16_t</span> I2C_AcknowledgedAddress; <span class="comment">/*!&lt;  指定地址长度（7或10位）*/</span></span><br><span class="line">&#125;I2C_InitTypeDef;</span><br></pre></td></tr></table></figure>
+<p>这里着重说明一下<code>I2C_OwnAddress1</code>，这个是配置I2C设备自己的地址，对于STM32主机设备，可以不用关心这个地址位，但是如果是两个MCU进行通讯的话，是必须要进行配置的。这个地址是7位还是10位，取决于<code>I2C_AcknowledgedAddress</code>，只有它设置为10位模式，<code>I2C_OwnAddress1</code>才能使用10位地址。</p>
+<p>部分常用库函数如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//初始化</span></span><br><span class="line"><span class="type">void</span> <span class="title function_">I2C_DeInit</span><span class="params">(I2C_TypeDef* I2Cx)</span>;</span><br><span class="line"><span class="type">void</span> <span class="title function_">I2C_Init</span><span class="params">(I2C_TypeDef* I2Cx, I2C_InitTypeDef* I2C_InitStruct)</span>;</span><br><span class="line"><span class="type">void</span> <span class="title function_">I2C_StructInit</span><span class="params">(I2C_InitTypeDef* I2C_InitStruct)</span>;</span><br><span class="line"><span class="type">void</span> <span class="title function_">I2C_Cmd</span><span class="params">(I2C_TypeDef* I2Cx, FunctionalState NewState)</span>;</span><br><span class="line"></span><br><span class="line"><span class="comment">//产生起始条件、终止条件、使能应答、设置设备的第二个地址</span></span><br><span class="line"><span class="type">void</span> <span class="title function_">I2C_GenerateSTART</span><span class="params">(I2C_TypeDef* I2Cx, FunctionalState NewState)</span>;</span><br><span class="line"><span class="type">void</span> <span class="title function_">I2C_GenerateSTOP</span><span class="params">(I2C_TypeDef* I2Cx, FunctionalState NewState)</span>;</span><br><span class="line"><span class="type">void</span> <span class="title function_">I2C_AcknowledgeConfig</span><span class="params">(I2C_TypeDef* I2Cx, FunctionalState NewState)</span>;</span><br><span class="line"><span class="type">void</span> <span class="title function_">I2C_OwnAddress2Config</span><span class="params">(I2C_TypeDef* I2Cx, <span class="type">uint8_t</span> Address)</span>;</span><br><span class="line"></span><br><span class="line"><span class="comment">//发送数据、接收数据、发送地址、读取I2C的寄存器</span></span><br><span class="line"><span class="type">void</span> <span class="title function_">I2C_SendData</span><span class="params">(I2C_TypeDef* I2Cx, <span class="type">uint8_t</span> Data)</span>;</span><br><span class="line"><span class="type">uint8_t</span> <span class="title function_">I2C_ReceiveData</span><span class="params">(I2C_TypeDef* I2Cx)</span>;</span><br><span class="line"><span class="type">void</span> <span class="title function_">I2C_Send7bitAddress</span><span class="params">(I2C_TypeDef* I2Cx, <span class="type">uint8_t</span> Address, <span class="type">uint8_t</span> I2C_Direction)</span>;</span><br><span class="line"><span class="type">uint16_t</span> <span class="title function_">I2C_ReadRegister</span><span class="params">(I2C_TypeDef* I2Cx, <span class="type">uint8_t</span> I2C_Register)</span>;</span><br><span class="line"></span><br><span class="line"><span class="comment">//清除标志位、获得标志位（重要）、标志位中断</span></span><br><span class="line"><span class="type">void</span> <span class="title function_">I2C_ClearFlag</span><span class="params">(I2C_TypeDef* I2Cx, <span class="type">uint32_t</span> I2C_FLAG)</span>;</span><br><span class="line">ITStatus <span class="title function_">I2C_GetITStatus</span><span class="params">(I2C_TypeDef* I2Cx, <span class="type">uint32_t</span> I2C_IT)</span>;</span><br><span class="line"><span class="type">void</span> <span class="title function_">I2C_ClearITPendingBit</span><span class="params">(I2C_TypeDef* I2Cx, <span class="type">uint32_t</span> I2C_IT)</span>;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<p>配置流程如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">ifndef</span>  __I2C_H</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span>  __I2C_H</span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&quot;stm32f10x.h&quot;</span></span></span><br><span class="line"></span><br><span class="line"><span class="comment">/****** 选择使用：I2C1 ******/</span></span><br><span class="line"></span><br><span class="line"><span class="comment">/******  宏定义区  ******/</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> I2C_CLK_SPEED	400000</span></span><br><span class="line"></span><br><span class="line"><span class="comment">/* STM32设备地址可随意定义，只要与EEPROM地址不重合即可 */</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> STM32_ADDR 		0x5F</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> EEPROM_ADDR   	0xA0</span></span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> SCL_PORT_CLK 	RCC_APB2Periph_GPIOB</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> SDA_PORT_CLK 	RCC_APB2Periph_GPIOB</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> I2Cx_CLK		RCC_APB1Periph_I2C1</span></span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> I2Cx			I2C1</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> SCL_GPIO_PORT   GPIOB</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> SDA_GPIO_PORT   GPIOB</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> SCL_GPIO_PIN	GPIO_Pin_6</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> SDA_GPIO_PIN	GPIO_Pin_7</span></span><br><span class="line"></span><br><span class="line"><span class="comment">/******  函数声明区  ******/</span></span><br><span class="line"><span class="type">void</span> <span class="title function_">I2C_Config</span><span class="params">(<span class="type">void</span>)</span>;</span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="keyword">endif</span> <span class="comment">/* __I2C_H */</span></span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment">  * @brief  I2C初始化配置</span></span><br><span class="line"><span class="comment">  * @param  无</span></span><br><span class="line"><span class="comment">  * @retval	无</span></span><br><span class="line"><span class="comment">  */</span></span><br><span class="line"><span class="type">void</span> <span class="title function_">I2C_Config</span><span class="params">(<span class="type">void</span>)</span></span><br><span class="line">&#123;</span><br><span class="line">	GPIO_InitTypeDef GPIO_InitStructure;</span><br><span class="line">	I2C_InitTypeDef  I2C_InitStructure;</span><br><span class="line">	</span><br><span class="line">	<span class="comment">/* 开启SCL和SDA时钟 */</span></span><br><span class="line">	RCC_APB1PeriphClockCmd(SCL_PORT_CLK | SDA_PORT_CLK, ENABLE);</span><br><span class="line">	RCC_APB1PeriphClockCmd(I2Cx_CLK, ENABLE);</span><br><span class="line">	</span><br><span class="line">	<span class="comment">/* 配置SCL对应的GPIO */</span></span><br><span class="line">	GPIO_InitStructure.GPIO_Pin = SCL_GPIO_PIN;</span><br><span class="line">	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_OD;</span><br><span class="line">	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;</span><br><span class="line">	GPIO_Init(SCL_GPIO_PORT, &amp;GPIO_InitStructure);</span><br><span class="line">	</span><br><span class="line">	<span class="comment">/* 配置SDA对应的GPIO */</span></span><br><span class="line">	GPIO_InitStructure.GPIO_Pin = SDA_GPIO_PIN;</span><br><span class="line">	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_OD;</span><br><span class="line">	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;</span><br><span class="line">	GPIO_Init(SDA_GPIO_PORT, &amp;GPIO_InitStructure);</span><br><span class="line">	</span><br><span class="line">	<span class="comment">/* 配置I2C */</span></span><br><span class="line">	I2C_InitStructure.I2C_ClockSpeed = I2C_CLK_SPEED;</span><br><span class="line">	I2C_InitStructure.I2C_Mode = I2C_Mode_I2C;</span><br><span class="line">	I2C_InitStructure.I2C_DutyCycle = I2C_DutyCycle_2;</span><br><span class="line">	I2C_InitStructure.I2C_OwnAddress1 = STM32_ADDR;</span><br><span class="line">	I2C_InitStructure.I2C_Ack = I2C_Ack_Enable;</span><br><span class="line">	I2C_InitStructure.I2C_AcknowledgedAddress = I2C_AcknowledgedAddress_7bit;</span><br><span class="line">	I2C_Init(I2Cx, &amp;I2C_InitStructure);</span><br><span class="line">	I2C_Cmd(I2Cx, ENABLE);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>未完待续···</p>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>文章作者: </span><span class="post-copyright-info"><a href="https://blog.mount256.com">Mount256</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>文章链接: </span><span class="post-copyright-info"><a href="https://blog.mount256.com/posts/4def1e60.html">https://blog.mount256.com/posts/4def1e60.html</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来源 <a href="https://blog.mount256.com" target="_blank">Mount256的个人小站</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/%E5%8D%95%E7%89%87%E6%9C%BA/">单片机</a><a class="post-meta__tags" href="/tags/I2C/">I2C</a></div><div class="post-share"><div class="social-share" data-image="/img/cover0.jpg" data-sites="facebook,x,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><a class="pagination-related" href="/posts/cce28100.html" title="STM32学习笔记（9）——（I2C续）读写EEPROM"><img class="cover" src="/img/cover1.jpg" onerror="onerror=null;src='/img/404.jpg'" alt="cover of previous post"><div class="info"><div class="info-1"><div class="info-item-1">上一篇</div><div class="info-item-2">STM32学习笔记（9）——（I2C续）读写EEPROM</div></div><div class="info-2"><div class="info-item-1">一、概述 1. 背景介绍 在微机发展的早期，出现了BIOS（Basic Input Output System），它是个人电脑启动时加载的第一个软件，用来完成对系统的加电自检、各功能模块的初始化、基本输入输出的驱动程序及引导操作系统。人们希望掉电之后 BIOS 数据不能丢失，于是将 BIOS 烧录到 ROM。事实上它是一组固化到计算机内主板上一个 ROM 芯片上的程序。 最初的最初，BIOS 都是通过一种特殊的烧录方法烧入 ROM 中的，但是一旦烧进去，你只能读 ROM，里面的内容是无法更改的。万一发现错误，只能丢弃，换另一块ROM，重做一遍，这就非常麻烦了。 后来的后来，一位以色列工程师发明了EPROM（Erasable Programmable Read-Only Memory），这种芯片比较奇葩，封装顶部开了一个透明小窗口，如果要往芯片内部录入程序，就需要使用强紫外线进行擦除（当然你放到太阳底下也是可以的）。因此，一般情况下为了不破坏内部的数据，就需要用纸来盖住窗口。好景不长，程序员和硬件工程师还是觉得这样太麻烦了。 最后的最后，EEPROM（Electrically Er...</div></div></div></a><a class="pagination-related" href="/posts/e69a2b98.html" title="STM32学习笔记（7）——DMA直接存储器访问"><img class="cover" src="/img/cover2.jpg" onerror="onerror=null;src='/img/404.jpg'" alt="cover of next post"><div class="info text-right"><div class="info-1"><div class="info-item-1">下一篇</div><div class="info-item-2">STM32学习笔记（7）——DMA直接存储器访问</div></div><div class="info-2"><div class="info-item-1">一、DMA简介 可参考STM32中文参考手册第10章DMA控制器。 直接存储器存取(Direct Memory Access，DMA) 用来提供在外设和存储器之间或者存储器和存储器之间的高速数据传输。无须CPU干预，数据可以通过DMA快速地移动，这就节省了CPU的资源来做其他操作。DMA 传输方式无需 CPU 直接控制传输，也没有中断处理方式那样保留现场和恢复现场的过程，通过硬件为 RAM 与 I/O 设备开辟一条直接传送数据的通路， 能使 CPU 的效率大为提高。 DMA 是干什么用的呢？一般来说，如果没有DMA ，CPU如果想从外设“搬运”数据到存储器（Peripheral to Memory，P2M），或者从一个存储器到另一个存储器（Memory To Memory，M2M），数据必须要经过CPU，这就需要CPU 去亲力亲为。在运行过程中，CPU经常要为这种琐碎的事情被打断，很影响效率。所以，就有了DMA。现在，CPU 就不用那么麻烦了，CPU 只需要“叫”一声DMA，说你帮我去搬一下数据，从这搬到那，DMA 就会代替 CPU 完成这份工作，再也不用 CPU 自己去做了。 ...</div></div></div></a></nav><div class="relatedPosts"><div class="headline"><i class="fas fa-thumbs-up fa-fw"></i><span>相关推荐</span></div><div class="relatedPosts-list"><a class="pagination-related" href="/posts/cce28100.html" title="STM32学习笔记（9）——（I2C续）读写EEPROM"><img class="cover" src="/img/cover1.jpg" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2021-04-21</div><div class="info-item-2">STM32学习笔记（9）——（I2C续）读写EEPROM</div></div><div class="info-2"><div class="info-item-1">一、概述 1. 背景介绍 在微机发展的早期，出现了BIOS（Basic Input Output System），它是个人电脑启动时加载的第一个软件，用来完成对系统的加电自检、各功能模块的初始化、基本输入输出的驱动程序及引导操作系统。人们希望掉电之后 BIOS 数据不能丢失，于是将 BIOS 烧录到 ROM。事实上它是一组固化到计算机内主板上一个 ROM 芯片上的程序。 最初的最初，BIOS 都是通过一种特殊的烧录方法烧入 ROM 中的，但是一旦烧进去，你只能读 ROM，里面的内容是无法更改的。万一发现错误，只能丢弃，换另一块ROM，重做一遍，这就非常麻烦了。 后来的后来，一位以色列工程师发明了EPROM（Erasable Programmable Read-Only Memory），这种芯片比较奇葩，封装顶部开了一个透明小窗口，如果要往芯片内部录入程序，就需要使用强紫外线进行擦除（当然你放到太阳底下也是可以的）。因此，一般情况下为了不破坏内部的数据，就需要用纸来盖住窗口。好景不长，程序员和硬件工程师还是觉得这样太麻烦了。 最后的最后，EEPROM（Electrically Er...</div></div></div></a><a class="pagination-related" href="/posts/1cbb95a2.html" title="STM32学习笔记（3）——时钟系统"><img class="cover" src="/img/cover2.jpg" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2021-04-04</div><div class="info-item-2">STM32学习笔记（3）——时钟系统</div></div><div class="info-2"><div class="info-item-1">一、STM32时钟系统 1. STM32时钟系统框图 STM32的时钟系统非常强大，但也非常复杂。下面为时钟树：  下面分别介绍图中的各个元素 （STM32中文参考手册6.2节时钟）： （1）最左边 最左边的OSC_IN和OSC_OUT是两个引脚，默认是外部晶振引脚。（我们的板子接了8MHz的晶振，数据手册表示可以接4——16MHz的晶振） MCO（microcontroller clock output）是输出内部时钟，该功能能将STM32内部的时钟通过引脚PA8输出，要进行引脚复用与功能设置。我们可以通过示波器（可惜我们没有，要到实验室去接）监控 MCO 引脚的时钟输出来验证系统时钟配置是否正确。STM32可以选择一个时钟信号输出到MCO上，可以选择为PLL输出的2分频、HSI、HSE、或者系统时钟（SYSCLK）。 （2） STM32的5个时钟源（蓝色框图） 这些时钟源由晶振电路或RC振荡器组成，为系统提供一定的工作频率。   HSI(high speed internal)是高速内部时钟，RC振荡器，频率为8MHz，精度不高。   HSE(high speed exter...</div></div></div></a><a class="pagination-related" href="/posts/60b0a184.html" title="STM32学习笔记（1）——LED和蜂鸣器"><img class="cover" src="/img/cover0.jpg" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2021-01-19</div><div class="info-item-2">STM32学习笔记（1）——LED和蜂鸣器</div></div><div class="info-2"><div class="info-item-1">阅读前提示： 我们使用的板子是正点原子的ALIENTEK精英STM32F103。本文使用固件库进行编程，因为使用固件库编程较为方便，且阅读程序也较易理解。 零、GPIO简介及其库函数 1. GPIO简介 7组IO口（具体地址可见头文件stm32f10x.h）： GPIOA ~ GPIOG。每组IO口可控制7个寄存器，这7个寄存器可控制一组GPIO的16个IO口：  GPIOx_CRL:端口配置低寄存器 GPIOx_CRH:端口配置高寄存器 GPIOx_IDR:端口输入寄存器 GPIOx_ODR:端口输出寄存器 GPIOx_BSRR:端口位设置/清除寄存器 GPIOx_BRR:端口位清除寄存器 GPIOx_LCKR:端口配置锁存寄存器  16个管脚（GPIO_Pin）（位于头文件stm32f10x_gpio.h）： GPIO_Pin_0 ~ GPIO_Pin_15，若想全部选中则GPIO_Pin_All。 4种输入模式（GPIO_Mode）（位于头文件stm32f10x_gpio.h）：  浮空输入（GPIO_Mode_IN_FLOATING） 上拉输入（GPIO_Mode_IPU...</div></div></div></a><a class="pagination-related" href="/posts/c7129cc6.html" title="STM32学习笔记（12）——定时器初步应用（2）"><img class="cover" src="/img/cover0.jpg" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2021-06-01</div><div class="info-item-2">STM32学习笔记（12）——定时器初步应用（2）</div></div><div class="info-2"><div class="info-item-1">三、高级定时器——PWM互补输出 【实现功能】通过使用高级定时器 TIM1 的输出通道 CH1，输出一对互补信号 PWM。要求占空比为 50%。 【基本思路】查看原理图，在 STM32F103ZE 中，高级定时器 TIM1 的输出通道 1 对应的引脚是 PA8，互补输出通道 1 对应的引脚是 PB13，刹车通道对应的引脚是 PB12。只需初始化这三个引脚即可。 还是跟以前一样，我们设置分频因子为 72，则得到了一次计数周期为 1us，再设置重装载值为 1000，则计数器数到 1000 会重新清零，此时过去了 1000 * 1us = 1000us = 1ms。于是我们得到了 1ms 为周期的方波信号，不过此时还未设置占空比。 现在我们已经设置重装载值为 1000（对应的寄存器是ARR），为了使占空比为 50%，则我们要将脉冲宽度设置为 500（对应的寄存器是CCR1），因为 500/1000 = 50%。如果我们需要将占空比调整至 30%，则寄存器 CCR1 的值应该设置为 300。 在配置互补输出信号的时候，将两者电平极性设置为高电平，这样我们之前设置的占空比才是对应高电平的；...</div></div></div></a><a class="pagination-related" href="/posts/35835ae5.html" title="STM8串口通信UART驱动"><img class="cover" src="/img/cover2.jpg" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2021-12-24</div><div class="info-item-2">STM8串口通信UART驱动</div></div><div class="info-2"><div class="info-item-1">使用软件：IAR FOR STM8 编程方式：固件库 硬件配套：STM8S105K4T6最小系统板 注意事项：需在IAR工程配置中：在 General Options-&gt;Library Configuration-&gt;Library 选择 Full；在 General Options-&gt;Library Options-&gt;Printf formatter 选择 Large，Math functions 选择 Default；另外不能串口打印小数，需进一步处理数据 这是我在做课设时参考的代码，现记录如下： 1. uart.h 1234567891011121314151617181920212223#ifndef __UART_H#define __UART_H#include &quot;stm8s.h&quot;#include &quot;stdio.h&quot;#ifdef _RAISONANCE_#define PUTCHAR_PROTOTYPE int putchar (char c)#define GETCHAR_PROTOTYPE int ge...</div></div></div></a><a class="pagination-related" href="/posts/48f24887.html" title="STM32学习笔记（2）——按键输入实验"><img class="cover" src="/img/cover1.jpg" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2021-01-20</div><div class="info-item-2">STM32学习笔记（2）——按键输入实验</div></div><div class="info-2"><div class="info-item-1">前情提示： 我们之前简要做了LED和蜂鸣器的学习笔记。因此，本文程序涉及到LED和蜂鸣器的程序段不再重复出现。 零、按键基本认识 1、防抖 按键机械触点断开、闭合的时候，由于触点的弹性作用，按键开关不会马上稳定接通或一下子断开，而是会产生一些波纹信号，这些波纹信号会干扰高低电平的判断。如下图所示，在按键按下的前后均有信号抖动：  为了解决这个问题，有一些电路自带消抖功能，利用电容充放电的延时，消除了干扰波纹，从而简化了软件的处理，软件只需检测引脚的高低电平即可。这叫硬件消抖。 然而，我们的实验板却没有硬件消抖功能，因此，当用户按下按键时，软件需要延时一会儿（一般为10ms左右），待引脚的输入电平稳定后再判断高低电平。这叫软件消抖。 大致的思路如下： 123456789101112uint8_t KEY_Scan(void)&#123;    if(KEY按下）    &#123;        delay_ms(10)；//延时10-20ms，防抖。        if(KEY确实按下)        &#123;            return KEY_Value；    ...</div></div></div></a></div></div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info text-center"><div class="avatar-img"><img src="/img/avatar.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info-name">Mount256</div><div class="author-info-description">心似河水，奔流依旧</div><div class="site-data"><a href="/archives/"><div class="headline">文章</div><div class="length-num">131</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">128</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">25</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/Mount256"><i class="fab fa-github"></i><span>Follow Me</span></a></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">自 2026/07/13 开始本站域名由 mount256.github.io 迁移至 blog.mount256.com, 请知悉。</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%80%E3%80%81I2C%E5%8D%8F%E8%AE%AE%E7%AE%80%E4%BB%8B"><span class="toc-text">一、I2C协议简介</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-%E7%89%A9%E7%90%86%E5%B1%82"><span class="toc-text">1. 物理层</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-%E5%8D%8F%E8%AE%AE%E5%B1%82"><span class="toc-text">2. 协议层</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%EF%BC%881%EF%BC%89%E4%B8%BB%E6%9C%BA%E5%86%99%E6%95%B0%E6%8D%AE%E5%88%B0%E4%BB%8E%E6%9C%BA"><span class="toc-text">（1）主机写数据到从机</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%EF%BC%882%EF%BC%89%E4%B8%BB%E6%9C%BA%E7%94%B1%E4%BB%8E%E6%9C%BA%E8%AF%BB%E6%95%B0%E6%8D%AE"><span class="toc-text">（2）主机由从机读数据</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%EF%BC%883%EF%BC%89%E8%AF%BB%E5%92%8C%E5%86%99%E4%BA%A4%E6%9B%BF%E8%BF%9B%E8%A1%8C"><span class="toc-text">（3）读和写交替进行</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%EF%BC%884%EF%BC%89%E4%BF%A1%E5%8F%B7%E5%92%8C%E6%97%B6%E9%92%9F%E7%9A%84%E9%85%8D%E5%90%88"><span class="toc-text">（4）信号和时钟的配合</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%8C%E3%80%81STM32%E4%B8%AD%E7%9A%84I2C%E6%80%BB%E7%BA%BF"><span class="toc-text">二、STM32中的I2C总线</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-I2C%E6%A1%86%E5%9B%BE"><span class="toc-text">1. I2C框图</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%EF%BC%881%EF%BC%89%E9%80%9A%E8%AE%AF%E5%BC%95%E8%84%9A"><span class="toc-text">（1）通讯引脚</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%EF%BC%882%EF%BC%89%E6%97%B6%E9%92%9F%E6%8E%A7%E5%88%B6%E9%80%BB%E8%BE%91"><span class="toc-text">（2）时钟控制逻辑</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%EF%BC%883%EF%BC%89%E6%95%B0%E6%8D%AE%E6%8E%A7%E5%88%B6%E9%80%BB%E8%BE%91"><span class="toc-text">（3）数据控制逻辑</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%EF%BC%884%EF%BC%89%E6%95%B4%E4%BD%93%E6%8E%A7%E5%88%B6%E9%80%BB%E8%BE%91"><span class="toc-text">（4）整体控制逻辑</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-STM32%E7%9A%84I2C%E9%80%9A%E8%AE%AF%E8%BF%87%E7%A8%8B"><span class="toc-text">2. STM32的I2C通讯过程</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%EF%BC%881%EF%BC%89%E4%B8%BB%E5%8F%91%E9%80%81%E5%99%A8%E9%80%9A%E8%AE%AF%E8%BF%87%E7%A8%8B"><span class="toc-text">（1）主发送器通讯过程</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%EF%BC%882%EF%BC%89%E4%B8%BB%E6%8E%A5%E6%94%B6%E5%99%A8%E9%80%9A%E8%AE%AF%E8%BF%87%E7%A8%8B"><span class="toc-text">（2）主接收器通讯过程</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-I2C%E7%9A%84%E7%BB%93%E6%9E%84%E4%BD%93%E5%AE%9A%E4%B9%89%E5%92%8C%E5%BA%93%E5%87%BD%E6%95%B0"><span class="toc-text">3. I2C的结构体定义和库函数</span></a></li></ol></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item"><a class="thumbnail" href="/posts/19f8fc4.html" title="进行式和终止式"><img src="/img/cover2.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="进行式和终止式"/></a><div class="content"><a class="title" href="/posts/19f8fc4.html" title="进行式和终止式">进行式和终止式</a><time datetime="2026-07-10T16:00:00.000Z" title="发表于 2026-07-11 00:00:00">2026-07-11</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/posts/349744ff.html" title="ABC notation渲染测试"><img src="/img/cover3.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="ABC notation渲染测试"/></a><div class="content"><a class="title" href="/posts/349744ff.html" title="ABC notation渲染测试">ABC notation渲染测试</a><time datetime="2026-06-23T02:42:49.000Z" title="发表于 2026-06-23 10:42:49">2026-06-23</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/posts/f9ae104.html" title="Git的分支操作"><img src="/img/cover0.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Git的分支操作"/></a><div class="content"><a class="title" href="/posts/f9ae104.html" title="Git的分支操作">Git的分支操作</a><time datetime="2026-06-11T16:00:00.000Z" title="发表于 2026-06-12 00:00:00">2026-06-12</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/posts/99b9faf2.html" title="Git的撤销操作"><img src="/img/cover1.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Git的撤销操作"/></a><div class="content"><a class="title" href="/posts/99b9faf2.html" title="Git的撤销操作">Git的撤销操作</a><time datetime="2026-06-11T16:00:00.000Z" title="发表于 2026-06-12 00:00:00">2026-06-12</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/posts/81e19116.html" title="Git多人协作"><img src="/img/cover3.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Git多人协作"/></a><div class="content"><a class="title" href="/posts/81e19116.html" title="Git多人协作">Git多人协作</a><time datetime="2026-06-11T16:00:00.000Z" title="发表于 2026-06-12 00:00:00">2026-06-12</time></div></div></div></div></div></div></main><footer id="footer" style="background-image: url(/img/cover0.jpg);"><div class="footer-other"><div class="footer-copyright"><span class="copyright">&copy;&nbsp;2025 - 2026 By Mount256</span><span class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo 8.1.2</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly 5.5.5</a></span></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="日间和夜间模式切换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js?v=5.5.5"></script><script src="/js/main.js?v=5.5.5"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui@6.1.14/dist/fancybox/fancybox.umd.min.js"></script><div class="js-pjax"><script>(() => {
+  const parseViewBox = viewBox => {
+    if (!viewBox) return null
+    const parts = viewBox.trim().split(/[\s,]+/).map(n => Number(n))
+    if (parts.length !== 4 || parts.some(n => Number.isNaN(n))) return null
+    return parts
+  }
+
+  const getSvgViewBox = svg => {
+    const attr = parseViewBox(svg.getAttribute('viewBox'))
+    if (attr) return attr
+
+    // Fallback: use bbox to build a viewBox
+    try {
+      const bbox = svg.getBBox()
+      if (bbox && bbox.width && bbox.height) return [bbox.x, bbox.y, bbox.width, bbox.height]
+    } catch (e) {
+      // getBBox may fail on some edge cases; ignore
+    }
+
+    const w = Number(svg.getAttribute('width')) || 0
+    const h = Number(svg.getAttribute('height')) || 0
+    if (w > 0 && h > 0) return [0, 0, w, h]
+    return [0, 0, 100, 100]
+  }
+
+  const setSvgViewBox = (svg, vb) => {
+    svg.setAttribute('viewBox', `${vb[0]} ${vb[1]} ${vb[2]} ${vb[3]}`)
+  }
+
+  const clamp = (v, min, max) => Math.max(min, Math.min(max, v))
+
+  const openSvgInNewTab = ({ source, initViewBox }) => {
+    const getClonedSvg = () => {
+      if (typeof source === 'string') {
+        const template = document.createElement('template')
+        template.innerHTML = source.trim()
+        const svg = template.content.querySelector('svg')
+        return svg ? svg.cloneNode(true) : null
+      }
+      if (source && typeof source.cloneNode === 'function') {
+        return source.cloneNode(true)
+      }
+      return null
+    }
+
+    const clone = getClonedSvg()
+    if (!clone) return
+    if (initViewBox && initViewBox.length === 4) {
+      clone.setAttribute('viewBox', initViewBox.join(' '))
+    }
+    if (!clone.getAttribute('xmlns')) clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg')
+    if (!clone.getAttribute('xmlns:xlink') && clone.outerHTML.includes('xlink:')) {
+      clone.setAttribute('xmlns:xlink', 'http://www.w3.org/1999/xlink')
+    }
+    // inject background to match current theme
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark'
+    const bg = getComputedStyle(document.body).backgroundColor || (isDark ? '#1e1e1e' : '#ffffff')
+    if (!clone.style.background) clone.style.background = bg
+
+    const serializer = new XMLSerializer()
+    const svgSource = serializer.serializeToString(clone)
+    const htmlSource = `<!doctype html><html><head><meta charset="utf-8" />
+      <style>
+        html, body { width: 100%; height: 100%; margin: 0; display: flex; align-items: center; justify-content: center; background: ${bg}; }
+        svg { max-width: 100%; max-height: 100%; height: auto; width: auto; }
+      </style>
+      </head><body>${svgSource}</body></html>`
+    const blob = new Blob([htmlSource], { type: 'text/html;charset=utf-8' })
+    const url = URL.createObjectURL(blob)
+    window.open(url, '_blank', 'noopener')
+    setTimeout(() => URL.revokeObjectURL(url), 30000)
+  }
+
+  const attachMermaidViewerButton = wrap => {
+    let btn = wrap.querySelector('.mermaid-open-btn')
+    if (!btn) {
+      btn = document.createElement('button')
+      btn.type = 'button'
+      btn.className = 'mermaid-open-btn'
+      wrap.appendChild(btn)
+    }
+
+    btn.innerHTML = '<i class="fa fa-search fa-fw" aria-hidden="true"></i>'
+
+    if (!btn.__mermaidViewerBound) {
+      btn.addEventListener('click', e => {
+        e.preventDefault()
+        e.stopPropagation()
+        const svg = wrap.__mermaidOriginalSvg || wrap.querySelector('svg')
+        if (!svg) return
+        const initViewBox = wrap.__mermaidInitViewBox
+        if (typeof svg === 'string') {
+          openSvgInNewTab({ source: svg, initViewBox })
+          return
+        }
+        openSvgInNewTab({ source: svg, initViewBox })
+      })
+      btn.__mermaidViewerBound = true
+    }
+  }
+
+  // Zoom around a point (px, py) in the SVG viewport (in viewBox coordinates)
+  const zoomAtPoint = (vb, factor, px, py) => {
+    const w = vb[2] * factor
+    const h = vb[3] * factor
+    const nx = px - (px - vb[0]) * factor
+    const ny = py - (py - vb[1]) * factor
+    return [nx, ny, w, h]
+  }
+
+  const initMermaidGestures = wrap => {
+    const svg = wrap.querySelector('svg')
+    if (!svg) return
+
+    // Ensure viewBox exists so gestures always work
+    const initVb = getSvgViewBox(svg)
+    wrap.__mermaidInitViewBox = initVb
+    wrap.__mermaidCurViewBox = initVb.slice()
+    setSvgViewBox(svg, initVb)
+
+    // Avoid binding multiple times on themeChange/pjax
+    if (wrap.__mermaidGestureBound) return
+    wrap.__mermaidGestureBound = true
+
+    // Helper: map client (viewport) coordinate -> viewBox coordinate
+    const clientToViewBox = (clientX, clientY) => {
+      const rect = svg.getBoundingClientRect()
+      const vb = wrap.__mermaidCurViewBox || getSvgViewBox(svg)
+      const x = vb[0] + (clientX - rect.left) * (vb[2] / rect.width)
+      const y = vb[1] + (clientY - rect.top) * (vb[3] / rect.height)
+      return { x, y, rect, vb }
+    }
+
+    const state = {
+      pointers: new Map(),
+      startVb: null,
+      startDist: 0,
+      startCenter: null
+    }
+
+    const clampVb = vb => {
+      const init = wrap.__mermaidInitViewBox || vb
+      const minW = init[2] * 0.1
+      const maxW = init[2] * 10
+      const minH = init[3] * 0.1
+      const maxH = init[3] * 10
+      vb[2] = clamp(vb[2], minW, maxW)
+      vb[3] = clamp(vb[3], minH, maxH)
+      return vb
+    }
+
+    const setCurVb = vb => {
+      vb = clampVb(vb)
+      wrap.__mermaidCurViewBox = vb
+      setSvgViewBox(svg, vb)
+    }
+
+    const onPointerDown = e => {
+      // Allow only primary button for mouse
+      if (e.pointerType === 'mouse' && e.button !== 0) return
+      svg.setPointerCapture(e.pointerId)
+      state.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY })
+
+      if (state.pointers.size === 1) {
+        state.startVb = (wrap.__mermaidCurViewBox || getSvgViewBox(svg)).slice()
+      } else if (state.pointers.size === 2) {
+        const pts = [...state.pointers.values()]
+        const dx = pts[0].x - pts[1].x
+        const dy = pts[0].y - pts[1].y
+        state.startDist = Math.hypot(dx, dy)
+        state.startVb = (wrap.__mermaidCurViewBox || getSvgViewBox(svg)).slice()
+        state.startCenter = { x: (pts[0].x + pts[1].x) / 2, y: (pts[0].y + pts[1].y) / 2 }
+      }
+    }
+
+    const onPointerMove = e => {
+      if (!state.pointers.has(e.pointerId)) return
+      state.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY })
+
+      // Pan with 1 pointer
+      if (state.pointers.size === 1 && state.startVb) {
+        const p = [...state.pointers.values()][0]
+        const prev = { x: e.clientX - e.movementX, y: e.clientY - e.movementY }
+        // movementX/Y unreliable on touch, compute from stored last position
+        const last = wrap.__mermaidLastSinglePointer || p
+        const dxClient = p.x - last.x
+        const dyClient = p.y - last.y
+        wrap.__mermaidLastSinglePointer = p
+
+        const { rect } = clientToViewBox(p.x, p.y)
+        const vb = (wrap.__mermaidCurViewBox || getSvgViewBox(svg)).slice()
+        const dx = dxClient * (vb[2] / rect.width)
+        const dy = dyClient * (vb[3] / rect.height)
+        setCurVb([vb[0] - dx, vb[1] - dy, vb[2], vb[3]])
+        return
+      }
+
+      // Pinch zoom with 2 pointers
+      if (state.pointers.size === 2 && state.startVb && state.startDist > 0) {
+        const pts = [...state.pointers.values()]
+        const dx = pts[0].x - pts[1].x
+        const dy = pts[0].y - pts[1].y
+        const dist = Math.hypot(dx, dy)
+        if (!dist) return
+        const factor = state.startDist / dist // dist bigger => zoom in (viewBox smaller)
+
+        const cx = (pts[0].x + pts[1].x) / 2
+        const cy = (pts[0].y + pts[1].y) / 2
+        const centerClient = { x: cx, y: cy }
+
+        const pxy = clientToViewBox(centerClient.x, centerClient.y)
+        const cpx = pxy.x
+        const cpy = pxy.y
+
+        const vb = zoomAtPoint(state.startVb, factor, cpx, cpy)
+        setCurVb(vb)
+      }
+    }
+
+    const onPointerUpOrCancel = e => {
+      state.pointers.delete(e.pointerId)
+      if (state.pointers.size === 0) {
+        state.startVb = null
+        state.startDist = 0
+        state.startCenter = null
+        wrap.__mermaidLastSinglePointer = null
+      } else if (state.pointers.size === 1) {
+        // reset single pointer baseline to avoid jump
+        wrap.__mermaidLastSinglePointer = [...state.pointers.values()][0]
+      }
+    }
+
+    // Wheel zoom (mouse/trackpad)
+    const onWheel = e => {
+      // ctrlKey on mac trackpad pinch; we treat both as zoom
+      e.preventDefault()
+      const delta = e.deltaY
+      const zoomFactor = delta > 0 ? 1.1 : 0.9
+      const { x, y } = clientToViewBox(e.clientX, e.clientY)
+      const vb = (wrap.__mermaidCurViewBox || getSvgViewBox(svg)).slice()
+      setCurVb(zoomAtPoint(vb, zoomFactor, x, y))
+    }
+
+    const onDblClick = () => {
+      const init = wrap.__mermaidInitViewBox
+      if (!init) return
+      wrap.__mermaidCurViewBox = init.slice()
+      setSvgViewBox(svg, init)
+    }
+
+    svg.addEventListener('pointerdown', onPointerDown)
+    svg.addEventListener('pointermove', onPointerMove)
+    svg.addEventListener('pointerup', onPointerUpOrCancel)
+    svg.addEventListener('pointercancel', onPointerUpOrCancel)
+    svg.addEventListener('wheel', onWheel, { passive: false })
+    svg.addEventListener('dblclick', onDblClick)
+  }
+
+  const runMermaid = ele => {
+    window.loadMermaid = true
+    const theme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default'
+
+    ele.forEach((item, index) => {
+      const mermaidSrc = item.firstElementChild
+
+      // Clear old render (themeChange/pjax will rerun)
+      const oldSvg = item.querySelector('svg')
+      if (oldSvg) oldSvg.remove()
+      item.__mermaidGestureBound = false
+
+      const config = mermaidSrc.dataset.config ? JSON.parse(mermaidSrc.dataset.config) : {}
+      if (!config.theme) {
+        config.theme = theme
+      }
+      const mermaidThemeConfig = `%%{init: ${JSON.stringify(config)}}%%\n`
+      const mermaidID = `mermaid-${index}`
+      const mermaidDefinition = mermaidThemeConfig + mermaidSrc.textContent
+
+      const renderFn = mermaid.render(mermaidID, mermaidDefinition)
+      const renderMermaid = svg => {
+        mermaidSrc.insertAdjacentHTML('afterend', svg)
+        if (true) initMermaidGestures(item)
+        item.__mermaidOriginalSvg = svg
+        if (true) attachMermaidViewerButton(item)
+      }
+
+
+      // mermaid v9 and v10 compatibility
+      typeof renderFn === 'string' ? renderMermaid(renderFn) : renderFn.then(({ svg }) => renderMermaid(svg))
+    })
+  }
+
+  const codeToMermaid = () => {
+    const codeMermaidEle = document.querySelectorAll('pre > code.mermaid')
+    if (codeMermaidEle.length === 0) return
+
+    codeMermaidEle.forEach(ele => {
+      const preEle = document.createElement('pre')
+      preEle.className = 'mermaid-src'
+      preEle.hidden = true
+      preEle.textContent = ele.textContent
+      const newEle = document.createElement('div')
+      newEle.className = 'mermaid-wrap'
+      newEle.appendChild(preEle)
+      ele.parentNode.replaceWith(newEle)
+    })
+  }
+
+  const loadMermaid = () => {
+    if (true) codeToMermaid()
+    const $mermaid = document.querySelectorAll('#article-container .mermaid-wrap')
+    if ($mermaid.length === 0) return
+
+    const runMermaidFn = () => runMermaid($mermaid)
+    btf.addGlobalFn('themeChange', runMermaidFn, 'mermaid')
+    window.loadMermaid ? runMermaidFn() : btf.getScript('https://cdn.jsdelivr.net/npm/mermaid@11.15.0/dist/mermaid.min.js').then(runMermaidFn)
+  }
+
+  btf.addGlobalFn('encrypt', loadMermaid, 'mermaid')
+  window.pjax ? loadMermaid() : document.addEventListener('DOMContentLoaded', loadMermaid)
+})()</script></div><script src="/js/abcjs-detect.js"></script><script src="/js/bubble.js"></script><script id="click-heart" src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/dist/click-heart.min.js" async="async" mobile="true"></script><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script><div id="local-search"><div class="search-dialog"><nav class="search-nav"><span class="search-dialog-title">搜索</span><i class="fas fa-spinner fa-pulse" id="loading-status" hidden="hidden"></i><button class="search-close-button"><i class="fas fa-times"></i></button></nav><div class="text-center" id="loading-database"><i class="fas fa-spinner fa-pulse"></i><span>  数据加载中</span></div><div class="local-search-input"><input placeholder="输入关键词…" type="text"/></div><hr/><div id="local-search-results"></div><div class="ais-Pagination" id="local-search-pagination" style="display:none;"><ul class="ais-Pagination-list"></ul></div><div id="local-search-stats"></div></div><div id="search-mask"></div><script src="/js/search/local-search.js?v=5.5.5"></script></div></div></body></html>

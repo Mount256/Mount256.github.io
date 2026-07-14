@@ -1,39 +1,83 @@
-// Butterfly主题abcjs按需加载器 - 兼容PJAX
-let abcjsLoaded = false;
+document.addEventListener('DOMContentLoaded', async function () {
+  const scores = document.querySelectorAll('.abcjs-score:not(.abcjs-initialized)')
+  if (!scores.length) return
 
-// 初始化函数（页面加载和PJAX跳转都会调用）
-function initAbcjs() {
-    // 检查页面上是否有乐谱元素
-    const hasScores = document.querySelectorAll('.abcjs-score').length > 0;
-    
-    if (hasScores && !abcjsLoaded) {
-        // 动态加载CSS
-        const abcjsStyle = document.createElement('link');
-        abcjsStyle.rel = 'stylesheet';
-        abcjsStyle.href = 'https://cdn.jsdelivr.net/npm/abcjs@6.6.3/abcjs-audio.min.css';
-        document.head.appendChild(abcjsStyle);
-        
-        // 动态加载abcjs库
-        const abcjsScript = document.createElement('script');
-        abcjsScript.src = 'https://cdn.jsdelivr.net/npm/abcjs@6.6.3/dist/abcjs-basic-min.min.js';
-        abcjsScript.onload = function() {
-            abcjsLoaded = true;
-            // 加载播放器脚本
-            const playerScript = document.createElement('script');
-            playerScript.src = '/js/abcjs-player.js';
-            document.body.appendChild(playerScript);
-        };
-        document.body.appendChild(abcjsScript);
-    } else if (hasScores && abcjsLoaded) {
-        // 如果abcjs已经加载过，直接调用播放器初始化
-        if (window.initAbcjsPlayer) {
-            window.initAbcjsPlayer();
-        }
+  // 加载你确认可用的 CSS + JS
+  function loadCSS(href) {
+    return new Promise(resolve => {
+      const link = document.createElement('link')
+      link.rel = 'stylesheet'
+      link.href = href
+      link.onload = resolve
+      document.head.appendChild(link)
+    })
+  }
+
+  function loadJS(src) {
+    return new Promise(resolve => {
+      const script = document.createElement('script')
+      script.src = src
+      script.onload = resolve
+      document.body.appendChild(script)
+    })
+  }
+
+  // 你确认可用的资源
+  await loadCSS('https://cdn.jsdelivr.net/npm/abcjs@6.6.3/abcjs-audio.min.css')
+  await loadJS('https://cdn.jsdelivr.net/npm/abcjs@6.6.3/dist/abcjs-basic-min.js')
+
+  // 遍历所有乐谱（官方 DEMO 标准逻辑）
+  for (const el of scores) {
+    el.classList.add('abcjs-initialized')
+    const abc = el.textContent.trim()
+    el.innerHTML = ''
+
+    // 创建官方标准结构：乐谱 + 播放器
+    const paper = document.createElement('div')
+    const audio = document.createElement('div')
+    el.appendChild(paper)
+    el.appendChild(audio)
+
+    // 1. 渲染乐谱
+    const visualObj = ABCJS.renderAbc(paper, abc, {
+      responsive: 'resize',
+      add_classes: true,
+      scale: 1.1
+    })[0]
+
+    if (!ABCJS.synth.supportsAudio()) continue
+
+    // 2. 官方标准光标控制
+    const cursorControl = {
+      beatSubdivisions: 2,
+      onEvent: function (ev) {
+        if (ev.measureStart && ev.left === null) return
+        document.querySelectorAll('.abcjs-note-highlight').forEach(e => e.classList.remove('abcjs-note-highlight'))
+        if (ev.elements) ev.elements.forEach(arr => arr.forEach(n => n.classList.add('abcjs-note-highlight')))
+      }
     }
-}
 
-// 页面首次加载时执行
-document.addEventListener('DOMContentLoaded', initAbcjs);
+    // 3. 官方标准播放器
+    const synthControl = new ABCJS.synth.SynthController()
+    synthControl.load(audio, cursorControl, {
+      displayLoop: true,
+      displayRestart: true,
+      displayPlay: true,
+      displayProgress: true,
+      displayWarp: true
+    })
 
-// 关键修复：监听Butterfly主题的PJAX完成事件
-document.addEventListener('pjax:complete', initAbcjs);
+    // 4. 官方标准音频初始化（必须这样写才会请求音频）
+    const synth = new ABCJS.synth.CreateSynth()
+    await synth.init({ visualObj: visualObj })
+    await synthControl.setTune(visualObj, false)
+  }
+
+  // 全局样式
+  const style = document.createElement('style')
+  style.textContent = `
+    .abcjs-note-highlight { fill: red !important; stroke:red !important; }
+    .abcjs-inline-midi { width:100% !important; border-radius:6px; margin:10px 0; }
+  `
+  document.head.appendChild(style)
+})

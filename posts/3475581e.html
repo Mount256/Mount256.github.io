@@ -1,0 +1,1568 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>【组成原理-数据】定点数的编码与运算 | Mount256的个人小站</title><meta name="author" content="Mount256"><meta name="copyright" content="Mount256"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="0 必知的常用数  (128)10&#x3D;(7F)16&#x3D;27(128)_{10} &#x3D; (7F)_{16} &#x3D; 2^7(128)10​&#x3D;(7F)16​&#x3D;27 (256)10&#x3D;(FF)16&#x3D;28(256)_{10} &#x3D; (FF)_{16} &#x3D; 2^8(256)10​&#x3D;(FF)16​&#x3D;28 (1024)10&#x3D;(400)16&#x3D;210(1024)_{10} &#x3D; (400)_{16} &#x3D; 2^{10}(1024)1">
+<meta property="og:type" content="article">
+<meta property="og:title" content="【组成原理-数据】定点数的编码与运算">
+<meta property="og:url" content="https://blog.mount256.com/posts/3475581e.html">
+<meta property="og:site_name" content="Mount256的个人小站">
+<meta property="og:description" content="0 必知的常用数  (128)10&#x3D;(7F)16&#x3D;27(128)_{10} &#x3D; (7F)_{16} &#x3D; 2^7(128)10​&#x3D;(7F)16​&#x3D;27 (256)10&#x3D;(FF)16&#x3D;28(256)_{10} &#x3D; (FF)_{16} &#x3D; 2^8(256)10​&#x3D;(FF)16​&#x3D;28 (1024)10&#x3D;(400)16&#x3D;210(1024)_{10} &#x3D; (400)_{16} &#x3D; 2^{10}(1024)1">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://blog.mount256.com/img/cover2.jpg">
+<meta property="article:published_time" content="2022-08-11T16:00:00.000Z">
+<meta property="article:modified_time" content="2026-07-10T16:00:00.000Z">
+<meta property="article:author" content="Mount256">
+<meta property="article:tag" content="数据运算">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://blog.mount256.com/img/cover2.jpg"><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "【组成原理-数据】定点数的编码与运算",
+  "url": "https://blog.mount256.com/posts/3475581e.html",
+  "image": "https://blog.mount256.com/img/cover2.jpg",
+  "datePublished": "2022-08-11T16:00:00.000Z",
+  "dateModified": "2026-07-10T16:00:00.000Z",
+  "author": [
+    {
+      "@type": "Person",
+      "name": "Mount256",
+      "url": "https://blog.mount256.com"
+    }
+  ]
+}</script><link rel="shortcut icon" href="/img/favicon.png"><link rel="canonical" href="https://blog.mount256.com/posts/3475581e.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css?v=5.5.5"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@7.2.0/css/all.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/ui@6.1.14/dist/fancybox/fancybox.min.css" media="print" onload="this.media='all'"><script>
+    (() => {
+      
+    const saveToLocal = {
+      set: (key, value, ttl) => {
+        if (!ttl) return
+        const expiry = Date.now() + ttl * 86400000
+        localStorage.setItem(key, JSON.stringify({ value, expiry }))
+      },
+      get: key => {
+        const itemStr = localStorage.getItem(key)
+        if (!itemStr) return undefined
+        const { value, expiry } = JSON.parse(itemStr)
+        if (Date.now() > expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return value
+      }
+    }
+
+    window.btf = {
+      saveToLocal,
+      getScript: (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        Object.entries(attr).forEach(([key, val]) => script.setAttribute(key, val))
+        script.onload = script.onreadystatechange = () => {
+          if (!script.readyState || /loaded|complete/.test(script.readyState)) resolve()
+        }
+        script.onerror = reject
+        document.head.appendChild(script)
+      }),
+      getCSS: (url, id) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onload = link.onreadystatechange = () => {
+          if (!link.readyState || /loaded|complete/.test(link.readyState)) resolve()
+        }
+        link.onerror = reject
+        document.head.appendChild(link)
+      }),
+      addGlobalFn: (key, fn, name = false, parent = window) => {
+        if (!false && key.startsWith('pjax')) return
+        const globalFn = parent.globalFn || {}
+        globalFn[key] = globalFn[key] || {}
+        globalFn[key][name || Object.keys(globalFn[key]).length] = fn
+        parent.globalFn = globalFn
+      }
+    }
+  
+      
+      const activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      const activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+
+      btf.activateDarkMode = activateDarkMode
+      btf.activateLightMode = activateLightMode
+
+      const theme = saveToLocal.get('theme')
+    
+          theme === 'dark' ? activateDarkMode() : theme === 'light' ? activateLightMode() : null
+        
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        document.documentElement.classList.toggle('hide-aside', asideStatus === 'hide')
+      }
+    
+      
+    const detectApple = () => {
+      if (/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)) {
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+  
+    })()
+  </script><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: {"path":"/search.xml","preload":false,"top_n_per_article":1,"unescape":false,"pagination":{"enable":false,"hitsPerPage":8},"languages":{"hits_empty":"未找到符合您查询的内容：${query}","hits_stats":"共找到 ${hits} 篇文章"}},
+  translate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false,"highlightFullpage":false,"highlightMacStyle":false},
+  copy: {
+    success: '复制成功',
+    error: '复制失败',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'fancybox',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid@4.13.0/dist/infinitegrid.min.js',
+    buttonText: '加载更多'
+  },
+  isPhotoFigcaption: false,
+  islazyloadPlugin: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: '【组成原理-数据】定点数的编码与运算',
+  isHighlightShrink: false,
+  isToc: true,
+  pageType: 'post'
+}</script><link rel="stylesheet" href="/css/mouse.css"><script src="/live2d-widget/dist/autoload.js"></script><!-- hexo injector head_end start -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.css">
+<!-- hexo injector head_end end --><meta name="generator" content="Hexo 8.1.2"></head><body><div class="bg-animation" id="web_bg" style="background-image: url(/img/background.png);"></div><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img text-center"><img src="/img/avatar.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data text-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">131</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">128</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">25</div></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 链接</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header" style="background-image: url(/img/cover2.jpg);"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><span class="site-name">Mount256的个人小站</span></a><a class="nav-page-title" href="/"><span class="site-name">【组成原理-数据】定点数的编码与运算</span><span class="site-name"><i class="fa-solid fa-circle-arrow-left"></i><span>  返回首页</span></span></a></span><div id="menus"><div id="search-button"><span class="site-page social-icon search"><i class="fas fa-search fa-fw"></i><span> 搜索</span></span></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 链接</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于</span></a></div></div><div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div></div></nav><div id="post-info"><h1 class="post-title">【组成原理-数据】定点数的编码与运算</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2022-08-11T16:00:00.000Z" title="发表于 2022-08-12 00:00:00">2022-08-12</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2026-07-10T16:00:00.000Z" title="更新于 2026-07-11 00:00:00">2026-07-11</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80%E5%9B%9B%E5%A4%A7%E4%BB%B6/">计算机基础四大件</a><i class="fas fa-angle-right post-meta-separator"></i><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80%E5%9B%9B%E5%A4%A7%E4%BB%B6/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86/">计算机组成原理</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-wordcount"><i class="far fa-file-word fa-fw post-meta-icon"></i><span class="post-meta-label">总字数:</span><span class="word-count">6.9k</span><span class="post-meta-separator">|</span><i class="far fa-clock fa-fw post-meta-icon"></i><span class="post-meta-label">阅读时长:</span><span>27分钟</span></span><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title=""><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">浏览量:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="container post-content" id="article-container"><h2 id="0-必知的常用数">0 必知的常用数</h2>
+<ul>
+<li><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false">(</mo><mn>128</mn><msub><mo stretchy="false">)</mo><mn>10</mn></msub><mo>=</mo><mo stretchy="false">(</mo><mn>7</mn><mi>F</mi><msub><mo stretchy="false">)</mo><mn>16</mn></msub><mo>=</mo><msup><mn>2</mn><mn>7</mn></msup></mrow><annotation encoding="application/x-tex">(128)_{10} = (7F)_{16} = 2^7</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mopen">(</span><span class="mord">128</span><span class="mclose"><span class="mclose">)</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">10</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mopen">(</span><span class="mord">7</span><span class="mord mathnormal" style="margin-right:0.1389em;">F</span><span class="mclose"><span class="mclose">)</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">16</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.8141em;"></span><span class="mord"><span class="mord">2</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">7</span></span></span></span></span></span></span></span></span></span></span></li>
+<li><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false">(</mo><mn>256</mn><msub><mo stretchy="false">)</mo><mn>10</mn></msub><mo>=</mo><mo stretchy="false">(</mo><mi>F</mi><mi>F</mi><msub><mo stretchy="false">)</mo><mn>16</mn></msub><mo>=</mo><msup><mn>2</mn><mn>8</mn></msup></mrow><annotation encoding="application/x-tex">(256)_{10} = (FF)_{16} = 2^8</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mopen">(</span><span class="mord">256</span><span class="mclose"><span class="mclose">)</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">10</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mopen">(</span><span class="mord mathnormal" style="margin-right:0.1389em;">F</span><span class="mord mathnormal" style="margin-right:0.1389em;">F</span><span class="mclose"><span class="mclose">)</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">16</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.8141em;"></span><span class="mord"><span class="mord">2</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">8</span></span></span></span></span></span></span></span></span></span></span></li>
+<li><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false">(</mo><mn>1024</mn><msub><mo stretchy="false">)</mo><mn>10</mn></msub><mo>=</mo><mo stretchy="false">(</mo><mn>400</mn><msub><mo stretchy="false">)</mo><mn>16</mn></msub><mo>=</mo><msup><mn>2</mn><mn>10</mn></msup></mrow><annotation encoding="application/x-tex">(1024)_{10} = (400)_{16} = 2^{10}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mopen">(</span><span class="mord">1024</span><span class="mclose"><span class="mclose">)</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">10</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mopen">(</span><span class="mord">400</span><span class="mclose"><span class="mclose">)</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">16</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.8141em;"></span><span class="mord"><span class="mord">2</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">10</span></span></span></span></span></span></span></span></span></span></span></span></li>
+<li><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false">(</mo><mn>32768</mn><msub><mo stretchy="false">)</mo><mn>10</mn></msub><mo>=</mo><mo stretchy="false">(</mo><mi>F</mi><mi>F</mi><mi>F</mi><mi>F</mi><msub><mo stretchy="false">)</mo><mn>16</mn></msub><mo>=</mo><msup><mn>2</mn><mn>15</mn></msup></mrow><annotation encoding="application/x-tex">(32768)_{10} = (FFFF)_{16} = 2^{15}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mopen">(</span><span class="mord">32768</span><span class="mclose"><span class="mclose">)</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">10</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mopen">(</span><span class="mord mathnormal" style="margin-right:0.1389em;">F</span><span class="mord mathnormal" style="margin-right:0.1389em;">F</span><span class="mord mathnormal" style="margin-right:0.1389em;">F</span><span class="mord mathnormal" style="margin-right:0.1389em;">F</span><span class="mclose"><span class="mclose">)</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">16</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.8141em;"></span><span class="mord"><span class="mord">2</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">15</span></span></span></span></span></span></span></span></span></span></span></span></li>
+<li><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false">(</mo><mn>65536</mn><msub><mo stretchy="false">)</mo><mn>10</mn></msub><mo>=</mo><mo stretchy="false">(</mo><mn>10000</mn><msub><mo stretchy="false">)</mo><mn>16</mn></msub><mo>=</mo><msup><mn>2</mn><mn>16</mn></msup></mrow><annotation encoding="application/x-tex">(65536)_{10} = (10000)_{16} = 2^{16}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mopen">(</span><span class="mord">65536</span><span class="mclose"><span class="mclose">)</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">10</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mopen">(</span><span class="mord">10000</span><span class="mclose"><span class="mclose">)</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">16</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.8141em;"></span><span class="mord"><span class="mord">2</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">16</span></span></span></span></span></span></span></span></span></span></span></span></li>
+<li><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false">(</mo><mn>2147483648</mn><msub><mo stretchy="false">)</mo><mn>10</mn></msub><mo>=</mo><msup><mn>2</mn><mn>31</mn></msup></mrow><annotation encoding="application/x-tex">(2147483648)_{10}= 2^{31}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mopen">(</span><span class="mord">2147483648</span><span class="mclose"><span class="mclose">)</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">10</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.8141em;"></span><span class="mord"><span class="mord">2</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">31</span></span></span></span></span></span></span></span></span></span></span></span></li>
+<li><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false">(</mo><mn>4294967296</mn><msub><mo stretchy="false">)</mo><mn>10</mn></msub><mo>=</mo><msup><mn>2</mn><mn>32</mn></msup></mrow><annotation encoding="application/x-tex">(4294967296)_{10} = 2^{32}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mopen">(</span><span class="mord">4294967296</span><span class="mclose"><span class="mclose">)</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">10</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.8141em;"></span><span class="mord"><span class="mord">2</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">32</span></span></span></span></span></span></span></span></span></span></span></span></li>
+</ul>
+<h2 id="1-定点数的编码">1 定点数的编码</h2>
+<h3 id="1-1-编码的种类">1.1 编码的种类</h3>
+<p>定点数编码有四种：</p>
+<ul>
+<li><strong>原码</strong>：最高位表示真值的符号（1 表示负，0 表示正），其余各位表示真值的绝对值</li>
+</ul>
+<blockquote>
+<p>【注 1】设原码字长为 n（即有 n 位），则原码整数的表示范围为<span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo>−</mo><mo stretchy="false">(</mo><msup><mn>2</mn><mrow><mi>n</mi><mo>−</mo><mn>1</mn></mrow></msup><mo>−</mo><mn>1</mn><mo stretchy="false">)</mo><mo>≤</mo><mi>x</mi><mo>≤</mo><mo>+</mo><mo stretchy="false">(</mo><msup><mn>2</mn><mrow><mi>n</mi><mo>−</mo><mn>1</mn></mrow></msup><mo>−</mo><mn>1</mn><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">-(2^{n-1}-1) ≤ x ≤ +(2^{n-1}-1)</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1.0641em;vertical-align:-0.25em;"></span><span class="mord">−</span><span class="mopen">(</span><span class="mord"><span class="mord">2</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">n</span><span class="mbin mtight">−</span><span class="mord mtight">1</span></span></span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">1</span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">≤</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.7719em;vertical-align:-0.136em;"></span><span class="mord mathnormal">x</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">≤</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1.0641em;vertical-align:-0.25em;"></span><span class="mord">+</span><span class="mopen">(</span><span class="mord"><span class="mord">2</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">n</span><span class="mbin mtight">−</span><span class="mord mtight">1</span></span></span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">1</span><span class="mclose">)</span></span></span></span></p>
+<p>【注 2】设原码字长为 n（即有 n 位），则原码小数的表示范围为<span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo>−</mo><mo stretchy="false">(</mo><mn>1</mn><mo>−</mo><msup><mn>2</mn><mrow><mo>−</mo><mo stretchy="false">(</mo><mi>n</mi><mo>−</mo><mn>1</mn><mo stretchy="false">)</mo></mrow></msup><mo stretchy="false">)</mo><mo>≤</mo><mi>x</mi><mo>≤</mo><mo>+</mo><mo stretchy="false">(</mo><mn>1</mn><mo>−</mo><msup><mn>2</mn><mrow><mo>−</mo><mo stretchy="false">(</mo><mi>n</mi><mo>−</mo><mn>1</mn><mo stretchy="false">)</mo></mrow></msup><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">-(1-2^{-(n-1)}) ≤ x ≤ +(1-2^{-(n-1)})</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">−</span><span class="mopen">(</span><span class="mord">1</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1.138em;vertical-align:-0.25em;"></span><span class="mord"><span class="mord">2</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.888em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">−</span><span class="mopen mtight">(</span><span class="mord mathnormal mtight">n</span><span class="mbin mtight">−</span><span class="mord mtight">1</span><span class="mclose mtight">)</span></span></span></span></span></span></span></span></span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">≤</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.7719em;vertical-align:-0.136em;"></span><span class="mord mathnormal">x</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">≤</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">+</span><span class="mopen">(</span><span class="mord">1</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1.138em;vertical-align:-0.25em;"></span><span class="mord"><span class="mord">2</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.888em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">−</span><span class="mopen mtight">(</span><span class="mord mathnormal mtight">n</span><span class="mbin mtight">−</span><span class="mord mtight">1</span><span class="mclose mtight">)</span></span></span></span></span></span></span></span></span><span class="mclose">)</span></span></span></span></p>
+<p>【注 3】原码全 0，对应真值的最小值<span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo>−</mo><mo stretchy="false">(</mo><msup><mn>2</mn><mi>n</mi></msup><mo>−</mo><mn>1</mn><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">-(2^n-1)</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">−</span><span class="mopen">(</span><span class="mord"><span class="mord">2</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.6644em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">n</span></span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">1</span><span class="mclose">)</span></span></span></span>；原码全 1，对应真值的最大值<span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo>+</mo><mo stretchy="false">(</mo><msup><mn>2</mn><mrow><mi>n</mi><mo>−</mo><mn>1</mn></mrow></msup><mo>−</mo><mn>1</mn><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">+(2^{n-1}-1)</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1.0641em;vertical-align:-0.25em;"></span><span class="mord">+</span><span class="mopen">(</span><span class="mord"><span class="mord">2</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">n</span><span class="mbin mtight">−</span><span class="mord mtight">1</span></span></span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">1</span><span class="mclose">)</span></span></span></span></p>
+<p>【注 4】0 的表示不唯一，分正负零（0,000,0000 和 1,000,0000）</p>
+</blockquote>
+<ul>
+<li><strong>反码</strong>：正数的反码与原码一样，负数的反码其数值部分全部取反</li>
+</ul>
+<blockquote>
+<p>【注 1】设反码字长为 n（即有 n 位），则反码整数的表示范围为<span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo>−</mo><mo stretchy="false">(</mo><msup><mn>2</mn><mrow><mi>n</mi><mo>−</mo><mn>1</mn></mrow></msup><mo>−</mo><mn>1</mn><mo stretchy="false">)</mo><mo>≤</mo><mi>x</mi><mo>≤</mo><mo>+</mo><mo stretchy="false">(</mo><msup><mn>2</mn><mrow><mi>n</mi><mo>−</mo><mn>1</mn></mrow></msup><mo>−</mo><mn>1</mn><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">-(2^{n-1}-1) ≤ x ≤ +(2^{n-1}-1)</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1.0641em;vertical-align:-0.25em;"></span><span class="mord">−</span><span class="mopen">(</span><span class="mord"><span class="mord">2</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">n</span><span class="mbin mtight">−</span><span class="mord mtight">1</span></span></span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">1</span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">≤</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.7719em;vertical-align:-0.136em;"></span><span class="mord mathnormal">x</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">≤</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1.0641em;vertical-align:-0.25em;"></span><span class="mord">+</span><span class="mopen">(</span><span class="mord"><span class="mord">2</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">n</span><span class="mbin mtight">−</span><span class="mord mtight">1</span></span></span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">1</span><span class="mclose">)</span></span></span></span></p>
+<p>【注 2】设反码字长为 n（即有 n 位），则反码小数的表示范围为<span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo>−</mo><mo stretchy="false">(</mo><mn>1</mn><mo>−</mo><msup><mn>2</mn><mrow><mo>−</mo><mo stretchy="false">(</mo><mi>n</mi><mo>−</mo><mn>1</mn><mo stretchy="false">)</mo></mrow></msup><mo stretchy="false">)</mo><mo>≤</mo><mi>x</mi><mo>≤</mo><mo>+</mo><mo stretchy="false">(</mo><mn>1</mn><mo>−</mo><msup><mn>2</mn><mrow><mo>−</mo><mo stretchy="false">(</mo><mi>n</mi><mo>−</mo><mn>1</mn><mo stretchy="false">)</mo></mrow></msup><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">-(1-2^{-(n-1)}) ≤ x ≤ +(1-2^{-(n-1)})</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">−</span><span class="mopen">(</span><span class="mord">1</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1.138em;vertical-align:-0.25em;"></span><span class="mord"><span class="mord">2</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.888em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">−</span><span class="mopen mtight">(</span><span class="mord mathnormal mtight">n</span><span class="mbin mtight">−</span><span class="mord mtight">1</span><span class="mclose mtight">)</span></span></span></span></span></span></span></span></span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">≤</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.7719em;vertical-align:-0.136em;"></span><span class="mord mathnormal">x</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">≤</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">+</span><span class="mopen">(</span><span class="mord">1</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1.138em;vertical-align:-0.25em;"></span><span class="mord"><span class="mord">2</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.888em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">−</span><span class="mopen mtight">(</span><span class="mord mathnormal mtight">n</span><span class="mbin mtight">−</span><span class="mord mtight">1</span><span class="mclose mtight">)</span></span></span></span></span></span></span></span></span><span class="mclose">)</span></span></span></span></p>
+<p>【注 3】反码全 0，对应真值的最小值<span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo>−</mo><mo stretchy="false">(</mo><msup><mn>2</mn><mi>n</mi></msup><mo>−</mo><mn>1</mn><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">-(2^n-1)</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">−</span><span class="mopen">(</span><span class="mord"><span class="mord">2</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.6644em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">n</span></span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">1</span><span class="mclose">)</span></span></span></span>；反码全 1，对应真值的最大值<span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo>+</mo><mo stretchy="false">(</mo><msup><mn>2</mn><mrow><mi>n</mi><mo>−</mo><mn>1</mn></mrow></msup><mo>−</mo><mn>1</mn><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">+(2^{n-1}-1)</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1.0641em;vertical-align:-0.25em;"></span><span class="mord">+</span><span class="mopen">(</span><span class="mord"><span class="mord">2</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">n</span><span class="mbin mtight">−</span><span class="mord mtight">1</span></span></span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">1</span><span class="mclose">)</span></span></span></span></p>
+<p>【注 4】0 的表示不唯一，分正负零（0,000,0000 和 1,111,1111）</p>
+</blockquote>
+<ul>
+<li><strong>补码（带符号整数）</strong>：正数的补码与反码一样，负数的补码等于反码加 1</li>
+</ul>
+<blockquote>
+<p>【注 1】设补码字长为 n（即有 n 位），则补码整数的表示范围为<span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo>−</mo><mo stretchy="false">(</mo><msup><mn>2</mn><mrow><mi>n</mi><mo>−</mo><mn>1</mn></mrow></msup><mo stretchy="false">)</mo><mo>≤</mo><mi>x</mi><mo>≤</mo><mo>+</mo><mo stretchy="false">(</mo><msup><mn>2</mn><mrow><mi>n</mi><mo>−</mo><mn>1</mn></mrow></msup><mo>−</mo><mn>1</mn><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">-(2^{n-1}) ≤ x ≤ +(2^{n-1}-1)</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1.0641em;vertical-align:-0.25em;"></span><span class="mord">−</span><span class="mopen">(</span><span class="mord"><span class="mord">2</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">n</span><span class="mbin mtight">−</span><span class="mord mtight">1</span></span></span></span></span></span></span></span></span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">≤</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.7719em;vertical-align:-0.136em;"></span><span class="mord mathnormal">x</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">≤</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1.0641em;vertical-align:-0.25em;"></span><span class="mord">+</span><span class="mopen">(</span><span class="mord"><span class="mord">2</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">n</span><span class="mbin mtight">−</span><span class="mord mtight">1</span></span></span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">1</span><span class="mclose">)</span></span></span></span></p>
+<p>【注 2】设补码字长为 n（即有 n 位），则补码小数的表示范围为<span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1</mn><mo>≤</mo><mi>x</mi><mo>≤</mo><mo>+</mo><mo stretchy="false">(</mo><mn>1</mn><mo>−</mo><msup><mn>2</mn><mrow><mo>−</mo><mi>n</mi></mrow></msup><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">1 ≤ x ≤ +(1-2^{-n})</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.7804em;vertical-align:-0.136em;"></span><span class="mord">1</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">≤</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.7719em;vertical-align:-0.136em;"></span><span class="mord mathnormal">x</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">≤</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">+</span><span class="mopen">(</span><span class="mord">1</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1.0213em;vertical-align:-0.25em;"></span><span class="mord"><span class="mord">2</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.7713em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">−</span><span class="mord mathnormal mtight">n</span></span></span></span></span></span></span></span></span><span class="mclose">)</span></span></span></span></p>
+<p>【注 3】补码全 0，对应真值的最小值<span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo>−</mo><mo stretchy="false">(</mo><msup><mn>2</mn><mi>n</mi></msup><mo>−</mo><msup><mn>1</mn><mo stretchy="false">)</mo></msup></mrow><annotation encoding="application/x-tex">-(2^n-1^)</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">−</span><span class="mopen">(</span><span class="mord"><span class="mord">2</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.6644em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">n</span></span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.888em;"></span><span class="mord"><span class="mord">1</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.888em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mclose mtight">)</span></span></span></span></span></span></span></span></span></span></span>；补码全 1，对应真值的最大值<span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo>+</mo><mo stretchy="false">(</mo><msup><mn>2</mn><mrow><mi>n</mi><mo>−</mo><mn>1</mn></mrow></msup><mo>−</mo><mn>1</mn><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">+(2^{n-1}-1)</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1.0641em;vertical-align:-0.25em;"></span><span class="mord">+</span><span class="mopen">(</span><span class="mord"><span class="mord">2</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">n</span><span class="mbin mtight">−</span><span class="mord mtight">1</span></span></span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">1</span><span class="mclose">)</span></span></span></span></p>
+<p>【注 4】0 的表示唯一（0,000,0000）；<strong>无论补码有多少位，只要所有位都为 1，那么表示的真值为 -1</strong></p>
+<p>【注 5】<strong>若补码的符号位相同，则数值位越大码值越大</strong></p>
+</blockquote>
+<ul>
+<li><strong>移码</strong>：真值基础上加上一个偏置常数（取 2^n^）</li>
+</ul>
+<blockquote>
+<p>【注 1】设移码字长为 n（即有 n 位），则移码整数的表示范围为<span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo>−</mo><mo stretchy="false">(</mo><msup><mn>2</mn><mrow><mi>n</mi><mo>−</mo><mn>1</mn></mrow></msup><mo stretchy="false">)</mo><mo>≤</mo><mi>x</mi><mo>≤</mo><mo>+</mo><mo stretchy="false">(</mo><msup><mn>2</mn><mrow><mi>n</mi><mo>−</mo><mn>1</mn></mrow></msup><mo>−</mo><mn>1</mn><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">-(2^{n-1}) ≤ x ≤ +(2^{n-1}-1)</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1.0641em;vertical-align:-0.25em;"></span><span class="mord">−</span><span class="mopen">(</span><span class="mord"><span class="mord">2</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">n</span><span class="mbin mtight">−</span><span class="mord mtight">1</span></span></span></span></span></span></span></span></span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">≤</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.7719em;vertical-align:-0.136em;"></span><span class="mord mathnormal">x</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">≤</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1.0641em;vertical-align:-0.25em;"></span><span class="mord">+</span><span class="mopen">(</span><span class="mord"><span class="mord">2</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">n</span><span class="mbin mtight">−</span><span class="mord mtight">1</span></span></span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">1</span><span class="mclose">)</span></span></span></span></p>
+<p>【注 2】移码全 0，对应真值的最小值<span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo>−</mo><msup><mn>2</mn><mi>n</mi></msup></mrow><annotation encoding="application/x-tex">-2^n</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.7477em;vertical-align:-0.0833em;"></span><span class="mord">−</span><span class="mord"><span class="mord">2</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.6644em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">n</span></span></span></span></span></span></span></span></span></span></span>；移码全 1，对应真值的最大值<span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo>+</mo><mo stretchy="false">(</mo><msup><mn>2</mn><mi>n</mi></msup><mo>−</mo><mn>1</mn><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">+(2^n-1)</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">+</span><span class="mopen">(</span><span class="mord"><span class="mord">2</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.6644em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">n</span></span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">1</span><span class="mclose">)</span></span></span></span></p>
+<p>【注 3】0 的表示唯一（1,000,0000）</p>
+<p>【注 4】移码保持了数据原有的大小顺序，移码大真值就大，移码小真值就小</p>
+</blockquote>
+<table>
+<thead>
+<tr>
+<th>真值</th>
+<th>补码</th>
+<th>移码</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>-128</td>
+<td>1000,0000</td>
+<td>0000,0000</td>
+</tr>
+<tr>
+<td>-127</td>
+<td>1000,0001</td>
+<td>0000,0001</td>
+</tr>
+<tr>
+<td>-126</td>
+<td>1000,0010</td>
+<td>0000,0010</td>
+</tr>
+<tr>
+<td>…</td>
+<td>…</td>
+<td>…</td>
+</tr>
+<tr>
+<td>-2</td>
+<td>1111,1110</td>
+<td>0111,1110</td>
+</tr>
+<tr>
+<td>-1</td>
+<td>1111,1111</td>
+<td>0111,1111</td>
+</tr>
+<tr>
+<td>0</td>
+<td>0000,0000</td>
+<td>1000,0000</td>
+</tr>
+<tr>
+<td>1</td>
+<td>0000,0001</td>
+<td>1000,0001</td>
+</tr>
+<tr>
+<td>2</td>
+<td>0000,0010</td>
+<td>1000,0010</td>
+</tr>
+<tr>
+<td>…</td>
+<td>…</td>
+<td>…</td>
+</tr>
+<tr>
+<td>125</td>
+<td>0111,1101</td>
+<td>1111,1101</td>
+</tr>
+<tr>
+<td>126</td>
+<td>0111,1110</td>
+<td>1111,1110</td>
+</tr>
+<tr>
+<td>127</td>
+<td>0111,1111</td>
+<td>1111,1111</td>
+</tr>
+</tbody>
+</table>
+<h3 id="1-2-编码的转换">1.2 编码的转换</h3>
+<ul>
+<li>正数：<code>原码 --（不用变）–&gt; 反码 --（不用变）–&gt; 补码 --（符号位取反）–&gt; 移码 </code></li>
+<li>负数：<code>原码 --（数值部分取反）–&gt; 反码 --（直接加 1）–&gt; 补码 --（符号位取反）–&gt; 移码</code></li>
+<li>负数：<code>原码 &lt;–（从右往左找第一个“1”，“1”左边所有<strong>数值位</strong>取反）–&gt; 补码</code></li>
+<li>补码转真值：最高的符号位有<strong>负值加权</strong>，例：<span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false">[</mo><mn>1</mn><mo separator="true">,</mo><mn>000</mn><mo separator="true">,</mo><mn>0011</mn><msub><mo stretchy="false">]</mo><mtext>补</mtext></msub><mo>=</mo><mo stretchy="false">(</mo><mo>−</mo><msup><mn>2</mn><mn>7</mn></msup><mo>+</mo><msup><mn>2</mn><mn>1</mn></msup><mo>+</mo><msup><mn>2</mn><mn>0</mn></msup><msub><mo stretchy="false">)</mo><mn>10</mn></msub><mo>=</mo><mo stretchy="false">(</mo><mo>−</mo><mn>125</mn><msub><mo stretchy="false">)</mo><mn>10</mn></msub></mrow><annotation encoding="application/x-tex">[1,000,0011]_补 = (-2^7+2^1+2^0)_{10} = (-125)_{10}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mopen">[</span><span class="mord">1</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord">000</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord">0011</span><span class="mclose"><span class="mclose">]</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3283em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord cjk_fallback mtight">补</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1.0641em;vertical-align:-0.25em;"></span><span class="mopen">(</span><span class="mord">−</span><span class="mord"><span class="mord">2</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">7</span></span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.8974em;vertical-align:-0.0833em;"></span><span class="mord"><span class="mord">2</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">1</span></span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1.0641em;vertical-align:-0.25em;"></span><span class="mord"><span class="mord">2</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">0</span></span></span></span></span></span></span></span><span class="mclose"><span class="mclose">)</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">10</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mopen">(</span><span class="mord">−</span><span class="mord">125</span><span class="mclose"><span class="mclose">)</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">10</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span></li>
+</ul>
+<p>【例 1】<span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false">(</mo><mo>−</mo><mn>100</mn><msub><mo stretchy="false">)</mo><mn>10</mn></msub></mrow><annotation encoding="application/x-tex">(-100)_{10}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mopen">(</span><span class="mord">−</span><span class="mord">100</span><span class="mclose"><span class="mclose">)</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">10</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span> 的编码转换（默认 8 位字长）</p>
+<blockquote>
+<p>先化为十六进制，再转换为二进制：<span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false">(</mo><mn>100</mn><msub><mo stretchy="false">)</mo><mn>10</mn></msub><mo>=</mo><mo stretchy="false">(</mo><mn>64</mn><msub><mo stretchy="false">)</mo><mn>16</mn></msub><mo>=</mo><mo stretchy="false">(</mo><mn>0110</mn><mo separator="true">,</mo><mn>0100</mn><msub><mo stretchy="false">)</mo><mn>2</mn></msub></mrow><annotation encoding="application/x-tex">(100)_{10} = (64)_{16} = (0110,0100)_2</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mopen">(</span><span class="mord">100</span><span class="mclose"><span class="mclose">)</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">10</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mopen">(</span><span class="mord">64</span><span class="mclose"><span class="mclose">)</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">16</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mopen">(</span><span class="mord">0110</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord">0100</span><span class="mclose"><span class="mclose">)</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">2</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span></p>
+<p>（1）原码：1,110,0100</p>
+<p>（2）反码：1,001,1011</p>
+<p>（3）补码：1,001,1100</p>
+<p>（4）移码：0,001,1100</p>
+</blockquote>
+<p>【例 2】<span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false">(</mo><mn>1</mn><mo separator="true">,</mo><mn>000</mn><mo separator="true">,</mo><mn>1101</mn><msub><mo stretchy="false">)</mo><mn>2</mn></msub></mrow><annotation encoding="application/x-tex">(1,000,1101)_2</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mopen">(</span><span class="mord">1</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord">000</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord">1101</span><span class="mclose"><span class="mclose">)</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">2</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span>（默认 8 位字长），若为（1）原码；（2）反码；（3）补码；（4）移码，求对应真值？</p>
+<blockquote>
+<p>（1）原码：1,000,1101 --&gt; 转换为十六进制：1(-),000(0),1101(13) --&gt; 转换为十进制：(-13)~10~</p>
+<p>（2）反码：1,000,1101 --&gt; 原码：1,111,0010 --&gt; 转换为十六进制：1(-),111(7),0010(2) --&gt; 转换为十进制：-(16\*7+2)_{10} = (-114)_{10}</p>
+<p>（3）补码：1,000,1101 --&gt; 原码：1,111,0011 --&gt; 转换为十六进制：1(-),111(7),0011(3) --&gt; 转换为十进制：-(16\*7+3)_{10} = (-115)_{10}</p>
+<p>（4）移码：1,000,1101 --&gt; 补码：0,000,1101 --&gt; 转换为十六进制：0(+),000(0),1101(13) --&gt; 转换为十进制：<span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false">(</mo><mo>+</mo><mn>13</mn><msub><mo stretchy="false">)</mo><mn>10</mn></msub></mrow><annotation encoding="application/x-tex">(+13)_{10}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mopen">(</span><span class="mord">+</span><span class="mord">13</span><span class="mclose"><span class="mclose">)</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">10</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span></p>
+</blockquote>
+<h4 id="补充：负数补码和原码的转换技巧（几秒钟内迅速转换一个-32-位二进制数！）">补充：负数补码和原码的转换技巧（几秒钟内迅速转换一个 32 位二进制数！）</h4>
+<p>下面教大家一个<strong>小技巧</strong>：有时候需要对一个长达 16 位或 32 位的<strong>负定点数</strong>进行原码和补码的转换，如果一位位进行取反，这就显得太过麻烦了。实际上有非常迅速地转换方法</p>
+<p>我们注意到十六进制与二进制之间的联系，即一位十六进制数正好对应四位二进制数，所以同时变换四位二进制数相当于变换一位十六进制数，这样一个 16 位数只需变换 4 次即可。变换操作的实质是取反操作，见下表，容易发现，<strong>取反前和取反后的值加起来恒等于 15</strong>，所以我们看到一位十六进制数就可以立即说出它取反后的结果。</p>
+<table>
+<thead>
+<tr>
+<th>取反前</th>
+<th>取反后</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0（0000）</td>
+<td>F（1111）</td>
+</tr>
+<tr>
+<td>1（0001）</td>
+<td>E（1110）</td>
+</tr>
+<tr>
+<td>2（0010）</td>
+<td>D（1101）</td>
+</tr>
+<tr>
+<td>3（0011）</td>
+<td>C（1100）</td>
+</tr>
+<tr>
+<td>4（0100）</td>
+<td>B（1011）</td>
+</tr>
+<tr>
+<td>5（0101）</td>
+<td>A（1010）</td>
+</tr>
+<tr>
+<td>6（0110）</td>
+<td>9（1001）</td>
+</tr>
+<tr>
+<td>7（0111）</td>
+<td>8（1011）</td>
+</tr>
+<tr>
+<td>8（1000）</td>
+<td>7（0111）</td>
+</tr>
+<tr>
+<td>9（1001）</td>
+<td>6（1011）</td>
+</tr>
+<tr>
+<td>A（1010）</td>
+<td>5（0101）</td>
+</tr>
+<tr>
+<td>B（1011）</td>
+<td>4（0100）</td>
+</tr>
+<tr>
+<td>C（1100）</td>
+<td>3（0011）</td>
+</tr>
+<tr>
+<td>D（1101）</td>
+<td>2（0010）</td>
+</tr>
+<tr>
+<td>E（1110）</td>
+<td>1（0001）</td>
+</tr>
+<tr>
+<td>F（1111）</td>
+<td>0（0000）</td>
+</tr>
+</tbody>
+</table>
+<p>【例 3】一个 16 位补码 0x8F0A 的原码是多少？</p>
+<blockquote>
+<p>【解】根据补码转原码规则，先找到该补码的第一个“1”在哪里，它所在的十六进制位数不能用上述方法，需要<strong>特殊处理</strong>。显然在最低位的“A”处出现第一个“1”，写出二进制形式：1010，按照转换规则得到：0110，即十六进制的 6。</p>
+<p>剩余三位全部取反，“8F0”取反后为“70F”，所以对应无符号原码为 0x70F6。而对于有符号原码，最高位为符号位，答案应为 0x80F6。</p>
+</blockquote>
+<p>其实一开始的<strong>特殊处理</strong>也是可以直接口答结果，因为容易发现，<strong>特殊处理前和特殊处理后的值相加恒等于 16</strong>。见下表：</p>
+<table>
+<thead>
+<tr>
+<th>特殊处理前</th>
+<th>特殊处理后</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0（0000）</td>
+<td>不需要处理</td>
+</tr>
+<tr>
+<td>1（0001）</td>
+<td>F（1111）</td>
+</tr>
+<tr>
+<td>2（0010）</td>
+<td>E（1110）</td>
+</tr>
+<tr>
+<td>3（0011）</td>
+<td>D（1101）</td>
+</tr>
+<tr>
+<td>4（0100）</td>
+<td>C（1100）</td>
+</tr>
+<tr>
+<td>5（0101）</td>
+<td>B（1011）</td>
+</tr>
+<tr>
+<td>6（0110）</td>
+<td>A（1010）</td>
+</tr>
+<tr>
+<td>7（0111）</td>
+<td>9（1001）</td>
+</tr>
+<tr>
+<td>8（1000）</td>
+<td>8（1000）</td>
+</tr>
+<tr>
+<td>9（1001）</td>
+<td>7（0111）</td>
+</tr>
+<tr>
+<td>A（1010）</td>
+<td>6（0110）</td>
+</tr>
+<tr>
+<td>B（1011）</td>
+<td>5（0101）</td>
+</tr>
+<tr>
+<td>C（1100）</td>
+<td>4（0100）</td>
+</tr>
+<tr>
+<td>D（1101）</td>
+<td>3（0011）</td>
+</tr>
+<tr>
+<td>E（1110）</td>
+<td>2（0010）</td>
+</tr>
+<tr>
+<td>F（1111）</td>
+<td>1（0001）</td>
+</tr>
+</tbody>
+</table>
+<p>【例 4】一个 32 位补码 0xFFFF FFDF 对应真值是多少？</p>
+<blockquote>
+<p>【解】最低位的“F”需要特殊处理，转换为“1”（16 减 15）。剩余七位全部取反，“FFFF FFD”取反后为“0000 002”，所以对应原码为 0x0000 0021，真值为 -(2 * 16 + 1) = -33。</p>
+</blockquote>
+<p>【例 5】真值 -98 转化为 32 位补码是多少？</p>
+<blockquote>
+<p>【解】将 98 化为十六进制数 0x62，扩展成 32 位原码 0x0000 0062。最低位的“2”需特殊处理，转换为“E”（16 减 2）。剩余七位全部取反，“0000 006”取反后为“FFFF FF9”，所以对应补码为 0xFFFF FF9E。</p>
+</blockquote>
+<p><strong>【总结】负数补码和原码的转换技巧</strong></p>
+<p><strong>前提：补码表示的是真值是负数！</strong></p>
+<p><strong>（1）找到需要特殊处理的最低位，该位需要特殊处理，特殊处理前和特殊处理后的值相加恒等于 16；</strong></p>
+<p><strong>（2）剩余的高位进行取反操作，取反前和取反后的值相加恒等于 15。</strong></p>
+<h3 id="1-3-C-语言的强制转换">1.3 C 语言的强制转换</h3>
+<ul>
+<li>相同字长下，有符号数与无符号数的转换：保持位值不变，仅改变解释位值的方式</li>
+<li>长字长转换短字长：多余的高位直接丢弃，低位直接赋值</li>
+<li>短字长转换长字长：无符号情况下，扩展的高位部分用 0 填充；有符号情况下，扩展的高位部分用原数字符号填充</li>
+<li>C 语言中赋值和判断也会出现强制类型转换，常见转换路径：char–&gt;int–&gt;long–&gt;double 和 float–&gt;double（范围和精度从小到大，转换过程没有损失）</li>
+</ul>
+<p>【例 1】16 位补码 0x8FA0 扩展为 32 位是 0xFFFF 8FA0。</p>
+<p>【例 2】假设变量 i、f 和 d 的数据类型分别为 int、float 和 double，其中 f = 1.5678E3，d = 1.5E100，则下列是否为“真”？</p>
+<blockquote>
+<ul>
+<li><code>i==(int)(float)i</code>：转换过程为 int–&gt;float–&gt;int，没有精度损失，结果为真</li>
+<li><code>f==(float)(int)f</code>：转换过程为 float–&gt;int–&gt;float，转换的第一步存在精度损失，结果为假</li>
+<li><code>f==(float)(double)f</code>：转换过程为 float–&gt;double–&gt;float，没有精度损失，结果为真</li>
+<li><code>d==(double)(float)d</code>：转换过程为 double–&gt;float–&gt;double，转换的第一步存在精度损失，结果为假</li>
+<li><code>(d+f)-f==f</code>：浮点数运算，f 需要先转换为 double 类型，再和 d 进行对阶，对阶过程中 f 产生精度损失，结果为假</li>
+</ul>
+</blockquote>
+<h4 id="补充：不同机器下的数据类型长度">补充：不同机器下的数据类型长度</h4>
+<table>
+<thead>
+<tr>
+<th>类型</th>
+<th>16 位机器</th>
+<th>32 位机器</th>
+<th>64 位机器</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>char</td>
+<td>8</td>
+<td>8</td>
+<td>8</td>
+</tr>
+<tr>
+<td>short</td>
+<td>16</td>
+<td>16</td>
+<td>16</td>
+</tr>
+<tr>
+<td>int</td>
+<td>16</td>
+<td>32</td>
+<td>32</td>
+</tr>
+<tr>
+<td>long</td>
+<td>32</td>
+<td>32</td>
+<td>32</td>
+</tr>
+<tr>
+<td>long long</td>
+<td>64</td>
+<td>64</td>
+<td>64</td>
+</tr>
+<tr>
+<td>float</td>
+<td>16</td>
+<td>32</td>
+<td>32</td>
+</tr>
+<tr>
+<td>double</td>
+<td>64</td>
+<td>64</td>
+<td>64</td>
+</tr>
+</tbody>
+</table>
+<h2 id="2-定点数的运算">2 定点数的运算</h2>
+<h3 id="2-1-定点数的移位">2.1 定点数的移位</h3>
+<p>移位有三种：算术移位、逻辑移位、循环移位。</p>
+<h4 id="2-1-1-算术移位（有符号数）">2.1.1 算术移位（有符号数）</h4>
+<p>【规则】</p>
+<ul>
+<li>算术移位过程中，<strong>符号位均保持不变</strong>。</li>
+<li><strong>正数</strong>的算术移位：原码、补码、反码算术移位，空位添 0</li>
+<li><strong>负数原码</strong>的算术移位：用 0 占据空位</li>
+</ul>
+<blockquote>
+<p>负数的原码数值部分与真值相同，因此移位时符号位不变，其余空位添 0</p>
+</blockquote>
+<ul>
+<li><strong>负数反码</strong>的算术移位：空位添 1</li>
+</ul>
+<blockquote>
+<p>负数的反码数值部分与负数的原码相反，因此移位时其余空位添相反的数，即为 1</p>
+</blockquote>
+<ul>
+<li><strong>负数补码</strong>的算术移位：算术左移，低位空位添 0；算术右移，高位空位添 1</li>
+</ul>
+<blockquote>
+<p>负数的原码转补码，从右往左（从低到高）找到第一个“1”，这个“1”的左边（符号位除外）与原码相反，故空位添相反的数，即为 1；右边与原码相同，故空位仍添 0</p>
+</blockquote>
+<p>【例】负数补码的算术移位</p>
+<blockquote>
+<p>算术右移 1 位：1,110,0110 &gt;&gt; 1 = 1,<strong>1</strong>11,0011</p>
+<p>算术右移 2 位：1,110,0110 &gt;&gt; 2 = 1,<strong>11</strong>1,1001</p>
+<p>算术左移 1 位：1,110,0110 &lt;&lt; 1 = 1,100,110<strong>0</strong></p>
+<p>算术左移 2 位：1,110,0110 &lt;&lt; 1 = 1,001,10<strong>00</strong></p>
+</blockquote>
+<p>【注】补码正数的符号位为 0，左移最高位为 0 时，数据不会丢失；负数的符号位为 1，左移最高位为 1 时，数据不会丢失。</p>
+<h4 id="2-1-2-逻辑移位（无符号数）">2.1.2 逻辑移位（无符号数）</h4>
+<p>【规则】</p>
+<ul>
+<li>逻辑移位将操作数视为无符号数</li>
+<li>逻辑左移：高位丢弃，低位添 0</li>
+<li>逻辑右移：低位丢弃，高位添 0</li>
+</ul>
+<h4 id="2-1-3-循环移位">2.1.3 循环移位</h4>
+<p>【规则】</p>
+<ul>
+<li>不带进位的循环左移：高位溢出的数填充回低位，且高位溢出的数还要存入进位标志位 CF</li>
+<li>不带进位的循环右移：低位溢出的数填充回高位，且低位溢出的数还要存入进位标志位 CF</li>
+<li>带进位的循环左移：CF 的值填充回低位，且高位溢出的数还要存入进位标志位 CF</li>
+<li>带进位的循环右移：CF 的值填充回高位，且低位溢出的数还要存入进位标志位 CF</li>
+<li>循环移 n 位：相当于进行 n 次的循环移 1 位</li>
+<li>一般用途：将数据的低字节数据与高字节数据互换位置</li>
+</ul>
+<p>【例】一个 8 位寄存器内的数值为 0100,1011，进位标志位 CF=1，若（1）带进位循环左移一位；（2）带进位循环右移一位；（3）不带进位循环左移一位；（4）不带进位循环右移一位，结果是多少？</p>
+<blockquote>
+<p>【注】括号内的英文表示该数值位是从 CF、数值的高位（HIGH）还是数值的低位（LOW）移进来的。</p>
+<p>（1）带进位循环左移一位：100,1011,1 (CF)；CF = 0 (HIGH)</p>
+<p>（2）带进位循环右移一位：1 (CF),0100,101；CF = 1 (LOW)</p>
+<p>（3）不带进位循环左移一位：100,1011,0 (HIGH)；CF = 0 (HIGH)</p>
+<p>（4）不带进位循环右移一位：1 (LOW),0100,101；CF = 1 (LOW)</p>
+</blockquote>
+<h3 id="2-2-定点数的加减法">2.2 定点数的加减法</h3>
+<h4 id="2-2-1-补码的加减法">2.2.1 补码的加减法</h4>
+<ul>
+<li>加法运算：补码直接相加</li>
+<li>减法运算：被减数-减数，减数转换为其负数的补码，转换为加法运算进行</li>
+</ul>
+<p>【例】A = 15，B = 28，计算 <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false">[</mo><mi>A</mi><mo>+</mo><mi>B</mi><msub><mo stretchy="false">]</mo><mtext>补</mtext></msub><mtext>，</mtext><mo stretchy="false">[</mo><mi>A</mi><mo>−</mo><mi>B</mi><msub><mo stretchy="false">]</mo><mtext>补</mtext></msub></mrow><annotation encoding="application/x-tex">[A+B]_补，[A-B]_补</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mopen">[</span><span class="mord mathnormal">A</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathnormal" style="margin-right:0.0502em;">B</span><span class="mclose"><span class="mclose">]</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3283em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord cjk_fallback mtight">补</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mord cjk_fallback">，</span><span class="mopen">[</span><span class="mord mathnormal">A</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathnormal" style="margin-right:0.0502em;">B</span><span class="mclose"><span class="mclose">]</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3283em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord cjk_fallback mtight">补</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span></p>
+<blockquote>
+<p>转换为二进制：<span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>A</mi><mo>=</mo><mo stretchy="false">(</mo><mn>15</mn><msub><mo stretchy="false">)</mo><mn>10</mn></msub><mo>=</mo><mo stretchy="false">(</mo><mn>000</mn><mo separator="true">,</mo><mn>1111</mn><msub><mo stretchy="false">)</mo><mn>2</mn></msub><mo separator="true">,</mo><mi>B</mi><mo>=</mo><mo stretchy="false">(</mo><mn>28</mn><msub><mo stretchy="false">)</mo><mn>10</mn></msub><mo>=</mo><mo stretchy="false">(</mo><mn>001</mn><mo separator="true">,</mo><mn>1100</mn><msub><mo stretchy="false">)</mo><mn>2</mn></msub></mrow><annotation encoding="application/x-tex">A = (15)_{10} = (000,1111)_2, B = (28)_{10} = (001,1100)_2</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal">A</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mopen">(</span><span class="mord">15</span><span class="mclose"><span class="mclose">)</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">10</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mopen">(</span><span class="mord">000</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord">1111</span><span class="mclose"><span class="mclose">)</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">2</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal" style="margin-right:0.0502em;">B</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mopen">(</span><span class="mord">28</span><span class="mclose"><span class="mclose">)</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">10</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mopen">(</span><span class="mord">001</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord">1100</span><span class="mclose"><span class="mclose">)</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">2</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span></p>
+<p><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false">[</mo><mi>A</mi><msub><mo stretchy="false">]</mo><mtext>原</mtext></msub><mo>=</mo><mn>0</mn><mo separator="true">,</mo><mn>000</mn><mo separator="true">,</mo><mn>1111</mn><mo separator="true">,</mo><mo stretchy="false">[</mo><mi>B</mi><msub><mo stretchy="false">]</mo><mtext>原</mtext></msub><mo>=</mo><mn>0</mn><mo separator="true">,</mo><mn>001</mn><mo separator="true">,</mo><mn>1100</mn></mrow><annotation encoding="application/x-tex">[A]_原= 0,000,1111, [B]_原= 0,001,1100</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mopen">[</span><span class="mord mathnormal">A</span><span class="mclose"><span class="mclose">]</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3283em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord cjk_fallback mtight">原</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">0</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord">000</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord">1111</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mopen">[</span><span class="mord mathnormal" style="margin-right:0.0502em;">B</span><span class="mclose"><span class="mclose">]</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3283em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord cjk_fallback mtight">原</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.8389em;vertical-align:-0.1944em;"></span><span class="mord">0</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord">001</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord">1100</span></span></span></span></p>
+<p><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false">[</mo><mi>A</mi><msub><mo stretchy="false">]</mo><mtext>补</mtext></msub><mo>=</mo><mn>0</mn><mo separator="true">,</mo><mn>000</mn><mo separator="true">,</mo><mn>1111</mn><mo separator="true">,</mo><mo stretchy="false">[</mo><mi>B</mi><msub><mo stretchy="false">]</mo><mtext>补</mtext></msub><mo>=</mo><mn>0</mn><mo separator="true">,</mo><mn>001</mn><mo separator="true">,</mo><mn>1100</mn><mo separator="true">,</mo><mo stretchy="false">[</mo><mo>−</mo><mi>B</mi><msub><mo stretchy="false">]</mo><mtext>补</mtext></msub><mo>=</mo><mn>1</mn><mo separator="true">,</mo><mn>110</mn><mo separator="true">,</mo><mn>0100</mn></mrow><annotation encoding="application/x-tex">[A]_补= 0,000,1111, [B]_补= 0,001,1100, [-B]_补= 1,110,0100</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mopen">[</span><span class="mord mathnormal">A</span><span class="mclose"><span class="mclose">]</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3283em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord cjk_fallback mtight">补</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">0</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord">000</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord">1111</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mopen">[</span><span class="mord mathnormal" style="margin-right:0.0502em;">B</span><span class="mclose"><span class="mclose">]</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3283em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord cjk_fallback mtight">补</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">0</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord">001</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord">1100</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mopen">[</span><span class="mord">−</span><span class="mord mathnormal" style="margin-right:0.0502em;">B</span><span class="mclose"><span class="mclose">]</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3283em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord cjk_fallback mtight">补</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.8389em;vertical-align:-0.1944em;"></span><span class="mord">1</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord">110</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord">0100</span></span></span></span></p>
+<p><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false">[</mo><mi>A</mi><mo>+</mo><mi>B</mi><msub><mo stretchy="false">]</mo><mtext>补</mtext></msub><mo>=</mo><mn>0</mn><mo separator="true">,</mo><mn>000</mn><mo separator="true">,</mo><mn>1111</mn><mo>+</mo><mn>0</mn><mo separator="true">,</mo><mn>001</mn><mo separator="true">,</mo><mn>1100</mn><mo>=</mo><mn>0</mn><mo separator="true">,</mo><mn>010</mn><mo separator="true">,</mo><mn>1011</mn><mo>=</mo><mo stretchy="false">(</mo><mo>+</mo><mn>43</mn><msub><mo stretchy="false">)</mo><mn>10</mn></msub></mrow><annotation encoding="application/x-tex">[A+B]_补 = 0,000,1111 + 0,001,1100 = 0,010,1011 = (+43)_{10}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mopen">[</span><span class="mord mathnormal">A</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathnormal" style="margin-right:0.0502em;">B</span><span class="mclose"><span class="mclose">]</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3283em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord cjk_fallback mtight">补</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.8389em;vertical-align:-0.1944em;"></span><span class="mord">0</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord">000</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord">1111</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.8389em;vertical-align:-0.1944em;"></span><span class="mord">0</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord">001</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord">1100</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.8389em;vertical-align:-0.1944em;"></span><span class="mord">0</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord">010</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord">1011</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mopen">(</span><span class="mord">+</span><span class="mord">43</span><span class="mclose"><span class="mclose">)</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">10</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span></p>
+<p><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false">[</mo><mi>A</mi><mo>−</mo><mi>B</mi><msub><mo stretchy="false">]</mo><mtext>补</mtext></msub><mo>=</mo><mn>0</mn><mo separator="true">,</mo><mn>000</mn><mo separator="true">,</mo><mn>1111</mn><mo>+</mo><mn>1</mn><mo separator="true">,</mo><mn>110</mn><mo separator="true">,</mo><mn>0100</mn><mo>=</mo><mn>1</mn><mo separator="true">,</mo><mn>111</mn><mo separator="true">,</mo><mn>0011</mn><mo>=</mo><mo stretchy="false">(</mo><mo>−</mo><mn>13</mn><msub><mo stretchy="false">)</mo><mn>10</mn></msub></mrow><annotation encoding="application/x-tex">[A-B]_补 = 0,000,1111 + 1,110,0100 = 1,111,0011 = (-13)_{10}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mopen">[</span><span class="mord mathnormal">A</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathnormal" style="margin-right:0.0502em;">B</span><span class="mclose"><span class="mclose">]</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3283em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord cjk_fallback mtight">补</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.8389em;vertical-align:-0.1944em;"></span><span class="mord">0</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord">000</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord">1111</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.8389em;vertical-align:-0.1944em;"></span><span class="mord">1</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord">110</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord">0100</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.8389em;vertical-align:-0.1944em;"></span><span class="mord">1</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord">111</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord">0011</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mopen">(</span><span class="mord">−</span><span class="mord">13</span><span class="mclose"><span class="mclose">)</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">10</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span></p>
+</blockquote>
+<h4 id="2-2-2-补码加减溢出的判别">2.2.2 补码加减溢出的判别</h4>
+<p>发生溢出的情况：</p>
+<ul>
+<li>两个同号数相加，得到的结果却异号</li>
+<li>两个异号数相减，得到的结果与被减数异号</li>
+</ul>
+<blockquote>
+<p>【模 2 补码】有一个符号位的补码，即正常的补码。</p>
+<p>【模 4 补码（变形补码）】有两个符号位 <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>S</mi><mn>1</mn></msub><msub><mi>S</mi><mn>2</mn></msub></mrow><annotation encoding="application/x-tex">S_1S_2</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.0576em;">S</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:-0.0576em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">1</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.0576em;">S</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:-0.0576em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">2</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span> 的补码，“00”表示正数，“11”表示负数，如：</p>
+<ul>
+<li>-3：补码：1,101；变形补码：11,101</li>
+<li>+3：补码：0,011；变形补码：00,011</li>
+</ul>
+<p>若两个符号位不同，“01”表示正溢出，“10”表示负溢出，最高位符号位表示真正的符号。</p>
+<p>实际情况下，存储每个变形补码仅需一个符号位，因为无论正数还是负数，两个符号位都是一样的，只有在运算时才会出现不一样的情况。</p>
+</blockquote>
+<ul>
+<li>溢出标志位 OF = 1 时，说明发生了溢出</li>
+<li>OF = 最高位（即符号位）进位 ⊕ 次高位（即数值的最高位）进位 =  <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>S</mi><mn>1</mn></msub><mo>⊕</mo><msub><mi>S</mi><mn>2</mn></msub></mrow><annotation encoding="application/x-tex">S_1⊕ S_2</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.0576em;">S</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:-0.0576em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">1</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">⊕</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.8333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.0576em;">S</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:-0.0576em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">2</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span></li>
+<li>OF 位仅对于有符号数有意义！</li>
+</ul>
+<blockquote>
+<p>即：<strong>最高位和次高位，一个有进位，另一个没有进位，若它们的异或值是 1，则结果就有溢出。</strong></p>
+</blockquote>
+<h5 id="补码加减溢出的相关例题">补码加减溢出的相关例题</h5>
+<p>【例 1】溢出的例子：0100,0000 + 0100,0000 = 1000,0000</p>
+<p>列竖式：</p>
+<table>
+<thead>
+<tr>
+<th>运算</th>
+<th>溢出</th>
+<th>操作数</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>.</td>
+<td></td>
+<td>0100 0000</td>
+</tr>
+<tr>
+<td>(+)</td>
+<td></td>
+<td>0100 0000</td>
+</tr>
+<tr>
+<td>.</td>
+<td></td>
+<td><strong>1</strong> <em>0</em> 00 0000</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>加黑体数位为最高位，最高位没有产生进位</li>
+<li>斜体数位为次高位，次高位产生了进位</li>
+<li>因此结果溢出</li>
+</ul>
+<p>【例 2】溢出的例子：1000,0000 + 1000,0000 = 0000,0000</p>
+<p>列竖式：</p>
+<table>
+<thead>
+<tr>
+<th>运算</th>
+<th>溢出</th>
+<th>操作数</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>.</td>
+<td></td>
+<td>1000 0000</td>
+</tr>
+<tr>
+<td>(+)</td>
+<td></td>
+<td>1000 0000</td>
+</tr>
+<tr>
+<td>.</td>
+<td>1</td>
+<td><strong>0</strong> <em>0</em> 00 0000</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>加黑体数位为最高位，最高位产生了进位</li>
+<li>斜体数位为次高位，次高位没有产生进位</li>
+<li>因此结果溢出</li>
+</ul>
+<p>【例 3】没有溢出的例子：1111,1111 + 0001,0000 = 0000,1111</p>
+<p>列竖式：</p>
+<table>
+<thead>
+<tr>
+<th>运算</th>
+<th>溢出</th>
+<th>操作数</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>.</td>
+<td></td>
+<td>1111 1111</td>
+</tr>
+<tr>
+<td>(+)</td>
+<td></td>
+<td>0001 0000</td>
+</tr>
+<tr>
+<td>.</td>
+<td>1</td>
+<td><strong>0</strong> <em>0</em> 00 1111</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>加黑体数位为最高位，最高位产生了进位</li>
+<li>斜体数位为次高位，次高位产生了进位</li>
+<li>因此结果没有溢出</li>
+</ul>
+<h5 id="补充：使用-SF-和-OF-判断补码大小关系">补充：使用 SF 和 OF 判断补码大小关系</h5>
+<p>SF 位：补码为非负，SF = 0；补码为负，SF = 1</p>
+<p>以<code>cmp ah, bh</code>为例，a-b 测试：</p>
+<table>
+<thead>
+<tr>
+<th>OF</th>
+<th>OF 说明</th>
+<th>SF</th>
+<th>SF 说明</th>
+<th>结果</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0</td>
+<td>没有溢出，逻辑上真正结果的正负=实际结果的正负</td>
+<td>1</td>
+<td>实际结果为负</td>
+<td>逻辑上真正的结果为负，<code>(ah)&lt;(bh)</code></td>
+</tr>
+<tr>
+<td>1</td>
+<td>有溢出，逻辑上真正结果的正负≠实际结果的正负</td>
+<td>1</td>
+<td>实际结果为负</td>
+<td>逻辑上真正的结果为非负，<code>(ah)≥(bh)</code></td>
+</tr>
+<tr>
+<td>1</td>
+<td>有溢出，逻辑上真正结果的正负≠实际结果的正负</td>
+<td>0</td>
+<td>实际结果为非负</td>
+<td>逻辑上真正的结果为负，<code>(ah)&lt;(bh)</code></td>
+</tr>
+<tr>
+<td>0</td>
+<td>没有溢出，逻辑上真正结果的正负=实际结果的正负</td>
+<td>0</td>
+<td>实际结果为非负</td>
+<td>逻辑上真正的结果为非负，<code>(ah)≥(bh)</code></td>
+</tr>
+</tbody>
+</table>
+<h4 id="2-2-3-进-借位的判别">2.2.3 进/借位的判别</h4>
+<ul>
+<li>CF 位仅对无符号数有意义！</li>
+<li>加法：CF = 最高位进位输出</li>
+<li>减法：CF = 最高位进位输出取反（CF = 最高位产生的进位 ⊕ sub，其中 sub = 1 表示减法）</li>
+</ul>
+<h3 id="2-3-定点数的乘除法">2.3 定点数的乘除法</h3>
+<h4 id="2-3-1-定点数乘除法的技巧">2.3.1 定点数乘除法的技巧</h4>
+<p>在介绍定点数乘除法规则之前，先讲一个相关技巧：当一个数乘以或除以 2 的幂次方的数时，可以使用移位运算，具体原理就不细说了。</p>
+<p>【规则】</p>
+<p><strong>（1）补码</strong>：当二进制数 A 乘以 <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mn>2</mn><mi>n</mi></msup></mrow><annotation encoding="application/x-tex">2^n</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6644em;"></span><span class="mord"><span class="mord">2</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.6644em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">n</span></span></span></span></span></span></span></span></span></span></span> 时，二进制数 A <strong>算术左移</strong> n 位；当二进制数 A 除以 <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mn>2</mn><mi>n</mi></msup></mrow><annotation encoding="application/x-tex">2^n</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6644em;"></span><span class="mord"><span class="mord">2</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.6644em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">n</span></span></span></span></span></span></span></span></span></span></span> 时，二进制数 A <strong>算术右移</strong> n 位。</p>
+<p><strong>（2）原码</strong>：当二进制数 A 乘以 <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mn>2</mn><mi>n</mi></msup></mrow><annotation encoding="application/x-tex">2^n</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6644em;"></span><span class="mord"><span class="mord">2</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.6644em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">n</span></span></span></span></span></span></span></span></span></span></span> 时，二进制数 A <strong>逻辑左移</strong> n 位；当二进制数 A 除以 <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mn>2</mn><mi>n</mi></msup></mrow><annotation encoding="application/x-tex">2^n</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6644em;"></span><span class="mord"><span class="mord">2</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.6644em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">n</span></span></span></span></span></span></span></span></span></span></span> 时，二进制数 A <strong>逻辑右移</strong> n 位。</p>
+<p>【例 1】32 位补码乘法运算 B052H * 0008H = ?</p>
+<blockquote>
+<p>【解】十六进制 B052H 转成二进制：1011 0000 0101 0010，因为 <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>8</mn><mo>=</mo><msup><mn>2</mn><mn>3</mn></msup></mrow><annotation encoding="application/x-tex">8 = 2^3</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">8</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.8141em;"></span><span class="mord"><span class="mord">2</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">3</span></span></span></span></span></span></span></span></span></span></span>，所以需<strong>算数左移</strong>三位，即 1 0000 0101 0010 000，整理一下得到：1000 0010 1001 0000，即十六进制的 8290H（可以发现结果溢出，因为数值部分高三位都被丢弃了，原结果应为 D8290H）。</p>
+</blockquote>
+<p>【例 2】32 位补码乘法运算 B052H / 0008H = ?</p>
+<blockquote>
+<p>【解】十六进制 B052H 转成二进制：1011 0000 0101 0010，因为 <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>8</mn><mo>=</mo><msup><mn>2</mn><mn>3</mn></msup></mrow><annotation encoding="application/x-tex">8 = 2^3</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">8</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.8141em;"></span><span class="mord"><span class="mord">2</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">3</span></span></span></span></span></span></span></span></span></span></span>，所以需<strong>算数右移</strong>三位，即 111 1011 0000 0101 0，整理一下得到：1111 0110 0000 1010，即十六进制的 F60AH。</p>
+</blockquote>
+<h4 id="2-3-2-乘法的溢出判断">2.3.2 乘法的溢出判断</h4>
+<ul>
+<li><strong>无符号乘法</strong>：n 位 * n 位，用 2n 位保存中间运算结果，取后 n 位为最终结果。仅当前 n 位都是 0 时不溢出。</li>
+<li><strong>有符号乘法</strong>：n 位 * n 位，用 2n 位保存中间运算结果，取后 n 位为最终结果。仅当前 n+1 位都是 0 或 1 时不溢出。</li>
+</ul>
+<p>【例】32 位补码 7FFF,FFFFH 乘 2 的 64 位中间乘积结果是多少？最终结果需存入 32 位寄存器中，请问溢出了吗？</p>
+<blockquote>
+<p>【解】中间结果是 0000,0000,FFFF,FFFEH，由于前 33 位不全为 0 或 1，所以发生了溢出。</p>
+</blockquote>
+<h4 id="2-3-3-原码的乘法">2.3.3 原码的乘法</h4>
+<p>设<span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false">[</mo><mi>X</mi><msub><mo stretchy="false">]</mo><mtext>原</mtext></msub><mo>=</mo><msub><mi>x</mi><mi>s</mi></msub><mi mathvariant="normal">.</mi><msub><mi>x</mi><mn>1</mn></msub><msub><mi>x</mi><mn>2</mn></msub><mi mathvariant="normal">.</mi><mi mathvariant="normal">.</mi><mi mathvariant="normal">.</mi><msub><mi>x</mi><mi>n</mi></msub><mtext>，</mtext><mo stretchy="false">[</mo><mi>Y</mi><msub><mo stretchy="false">]</mo><mtext>原</mtext></msub><mo>=</mo><msub><mi>y</mi><mi>s</mi></msub><mi mathvariant="normal">.</mi><msub><mi>y</mi><mn>1</mn></msub><msub><mi>y</mi><mn>2</mn></msub><mi mathvariant="normal">.</mi><mi mathvariant="normal">.</mi><mi mathvariant="normal">.</mi><msub><mi>y</mi><mi>n</mi></msub></mrow><annotation encoding="application/x-tex">[X]_原=x_s.x_1x_2...x_n，[Y]_原=y_s.y_1y_2...y_n</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mopen">[</span><span class="mord mathnormal" style="margin-right:0.0785em;">X</span><span class="mclose"><span class="mclose">]</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3283em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord cjk_fallback mtight">原</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord"><span class="mord mathnormal">x</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.1514em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">s</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mord">.</span><span class="mord"><span class="mord mathnormal">x</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">1</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mord"><span class="mord mathnormal">x</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">2</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mord">...</span><span class="mord"><span class="mord mathnormal">x</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.1514em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">n</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mord cjk_fallback">，</span><span class="mopen">[</span><span class="mord mathnormal" style="margin-right:0.2222em;">Y</span><span class="mclose"><span class="mclose">]</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3283em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord cjk_fallback mtight">原</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.625em;vertical-align:-0.1944em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.0359em;">y</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.1514em;"><span style="top:-2.55em;margin-left:-0.0359em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">s</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mord">.</span><span class="mord"><span class="mord mathnormal" style="margin-right:0.0359em;">y</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:-0.0359em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">1</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.0359em;">y</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:-0.0359em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">2</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mord">...</span><span class="mord"><span class="mord mathnormal" style="margin-right:0.0359em;">y</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.1514em;"><span style="top:-2.55em;margin-left:-0.0359em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">n</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span>，<strong>原码一位乘法 X*Y</strong> 的规则如下：</p>
+<ul>
+<li><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mtext>符号位</mtext><mo>=</mo><msub><mi>x</mi><mi>s</mi></msub><mo>⊕</mo><msub><mi>y</mi><mi>s</mi></msub></mrow><annotation encoding="application/x-tex">符号位 = x_s ⊕ y_s</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord cjk_fallback">符号位</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.7333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathnormal">x</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.1514em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">s</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">⊕</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.625em;vertical-align:-0.1944em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.0359em;">y</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.1514em;"><span style="top:-2.55em;margin-left:-0.0359em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">s</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span></li>
+<li>部分积 = X \* y_i</li>
+<li>部分积初值为 0。从 Y 的最低位 <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>y</mi><mi>n</mi></msub></mrow><annotation encoding="application/x-tex">y_n</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.625em;vertical-align:-0.1944em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.0359em;">y</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.1514em;"><span style="top:-2.55em;margin-left:-0.0359em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">n</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span> 开始，部分积 = 部分积 + y_n \* |X|，然后将部分积和 Y <strong>逻辑右移</strong>一位。该步骤重复 n 次，进行加法运算也为 n 次</li>
+</ul>
+<p>【例】x = -0.1101，y = 0.1011，进行原码一位乘法 x * y：</p>
+<table>
+<thead>
+<tr>
+<th>操作</th>
+<th>通用寄存器（被乘数）</th>
+<th>ACC（高位部分积）</th>
+<th>MQ（低位部分积/乘数）</th>
+<th>MQ 丢失</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>初始状态，乘数 y=00.1011</td>
+<td>00.1101</td>
+<td>00.0000</td>
+<td>1011</td>
+<td></td>
+</tr>
+<tr>
+<td>step1. 乘数最低位为 1，ACC 加 |X|</td>
+<td>00.1101</td>
+<td>00.1101</td>
+<td>1011</td>
+<td></td>
+</tr>
+<tr>
+<td>step1. 部分积（和乘数）逻辑右移一位</td>
+<td>00.1101</td>
+<td>00.0110</td>
+<td>1101</td>
+<td>1</td>
+</tr>
+<tr>
+<td>step2. 乘数最低位为 1，ACC 加 |X|</td>
+<td>00.1101</td>
+<td>01.0011</td>
+<td>1101</td>
+<td>1</td>
+</tr>
+<tr>
+<td>step2. 部分积（和乘数）逻辑右移一位</td>
+<td>00.1101</td>
+<td>00.1001</td>
+<td>1110</td>
+<td>11</td>
+</tr>
+<tr>
+<td>step3. 乘数最低位为 0，ACC 加 0</td>
+<td>00.1101</td>
+<td>00.1001</td>
+<td>1110</td>
+<td>11</td>
+</tr>
+<tr>
+<td>step3. 部分积（和乘数）逻辑右移一位</td>
+<td>00.1101</td>
+<td>00.0100</td>
+<td>1111</td>
+<td>011</td>
+</tr>
+<tr>
+<td>step4. 乘数最低位为 1，ACC 加 |X|</td>
+<td>00.1101</td>
+<td>01.0001</td>
+<td>1111</td>
+<td>011</td>
+</tr>
+<tr>
+<td>step4. 部分积（和乘数）逻辑右移一位</td>
+<td>00.1101</td>
+<td>00.1000</td>
+<td>1111</td>
+<td>1011</td>
+</tr>
+</tbody>
+</table>
+<p>符号位 = 1 ⊕ 0 = 1</p>
+<p>x * y = -0.10001111</p>
+<h4 id="2-3-4-补码的乘法">2.3.4 补码的乘法</h4>
+<p>设[X]~补~=x~s~.x~1~x~2~…x~n~，[Y]~补~=y~s~.y~1~y~2~…y~n~，<strong>补码一位乘法 X*Y</strong> 的规则如下：</p>
+<ul>
+<li>部分积、被乘数采用双符号位补码；乘数采用单符号位补码</li>
+<li>符号位参与运算</li>
+<li>Y 增设辅助位 y~n+1~ = 0</li>
+<li>部分积初值为 0。从 Y 的最低位 y~n~ 开始：当 <code>(y~n~y~n+1~) = (01)</code>，<code>部分积 = 部分积 + [X]~补~</code>；当 <code>(y~n~y~n+1~) = (10)</code>，<code>部分积 = 部分积 + [-X]~补~</code>；其他情况加 0。然后将部分积和 Y <strong>算术右移</strong>一位</li>
+<li>以上步骤重复 n+1 次，但最后一次不用移位。所以需要加法运算 n+1 次，移位 n 次</li>
+</ul>
+<p>【例】x = -0.1101，y = 0.1011，进行补码一位乘法 x * y：</p>
+<p>[x]~补~ = 11.0011，[-x]~补~ = 00.1101，[y]~补~ = 0.1011</p>
+<table>
+<thead>
+<tr>
+<th>操作</th>
+<th>通用寄存器（被乘数）</th>
+<th>ACC（高位部分积）</th>
+<th>MQ（低位部分积/乘数）</th>
+<th>MQ（辅助位）</th>
+<th>MQ 丢失</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>初始状态，乘数 y=00.1011</td>
+<td>11.0011 [负数: 00.1101]</td>
+<td>00.0000</td>
+<td>01011</td>
+<td>0</td>
+<td></td>
+</tr>
+<tr>
+<td>step1. 乘数最低位和辅助位为 10，ACC 加 [-X]~补~</td>
+<td>11.0011 [负数: 00.1101]</td>
+<td>00.1101</td>
+<td>01011</td>
+<td>0</td>
+<td></td>
+</tr>
+<tr>
+<td>step1. 部分积（和乘数）算术右移一位</td>
+<td>11.0011 [负数: 00.1101]</td>
+<td>00.0110</td>
+<td>10101</td>
+<td>1</td>
+<td>0</td>
+</tr>
+<tr>
+<td>step2. 乘数最低位和辅助位为 11，ACC 加 0</td>
+<td>11.0011 [负数: 00.1101]</td>
+<td>00.0110</td>
+<td>10101</td>
+<td>1</td>
+<td>0</td>
+</tr>
+<tr>
+<td>step2. 部分积（和乘数）算术右移一位</td>
+<td>11.0011 [负数: 00.1101]</td>
+<td>00.0011</td>
+<td>01010</td>
+<td>1</td>
+<td>10</td>
+</tr>
+<tr>
+<td>step3. 乘数最低位和辅助位为 01，ACC 加 [+X]~补~</td>
+<td>11.0011 [负数: 00.1101]</td>
+<td>11.0110</td>
+<td>01010</td>
+<td>1</td>
+<td>10</td>
+</tr>
+<tr>
+<td>step3. 部分积（和乘数）算术右移一位</td>
+<td>11.0011 [负数: 00.1101]</td>
+<td>11.1011</td>
+<td>00101</td>
+<td>0</td>
+<td>110</td>
+</tr>
+<tr>
+<td>step4. 乘数最低位和辅助位为 10，ACC 加 [-X]~补~</td>
+<td>11.0011 [负数: 00.1101]</td>
+<td>00.1000</td>
+<td>00101</td>
+<td>0</td>
+<td>110</td>
+</tr>
+<tr>
+<td>step4. 部分积（和乘数）算术右移一位</td>
+<td>11.0011 [负数: 00.1101]</td>
+<td>00.0100</td>
+<td>00010</td>
+<td>1</td>
+<td>0110</td>
+</tr>
+<tr>
+<td>step5. 乘数最低位和辅助位为 01，ACC 加 [+X]~补~</td>
+<td>11.0011 [负数: 00.1101]</td>
+<td>11.0111</td>
+<td>00010</td>
+<td>1</td>
+<td>0110</td>
+</tr>
+</tbody>
+</table>
+<p>注：最后的 MQ = 00010 的最低位为原符号位，不用</p>
+<p>[x * y]~补~ = 11.01110001，x * y = -0.10001111</p>
+<h4 id="2-3-5-原码的除法">2.3.5 原码的除法</h4>
+<p>设[X]~原~=x~s~.x~1~x~2~…x~n~，[Y]~原~=y~s~.y~1~y~2~…y~n~，<strong>加减交替法（不恢复余数法）求 X/Y</strong> 的规则如下：</p>
+<ul>
+<li>首先，|被除数| - |除数| = 新余数</li>
+<li>若新余数为负：商 0，余数左移，然后加|除数|，得到新余数</li>
+<li>若新余数为正：商 1，余数左移，然后减|除数|，得到新余数</li>
+<li>以上两个步骤重复 n+1 次，最后一次若余数为负，商 0，需加上|除数|得到正确余数（余数为负，说明不够减，仅在此处恢复余数）</li>
+<li>总的加法运算为 n+1 或 n+2 次，移位总次数为 n 次</li>
+</ul>
+<p>【例】x = 0.1011，y = 0.1101，利用加减交替法求 x / y：</p>
+<p>|x| = 0.1011，|y| = 0.1101，[|y|]~补~ = 0.1101，[-|y|]~补~ = 1.0011</p>
+<table>
+<thead>
+<tr>
+<th>操作</th>
+<th>通用寄存器（除数）</th>
+<th>MQ（被除数/部分余数）</th>
+<th>MQ（商）</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>初始状态：|x|=0.1011，|y|=0.1101</td>
+<td>0.1101 [负数: 1.0011]</td>
+<td>0.1011</td>
+<td>0.0000</td>
+</tr>
+<tr>
+<td>step0. |x|-|y|</td>
+<td>0.1101 [负数: 1.0011]</td>
+<td>1.1110</td>
+<td>0.0000</td>
+</tr>
+<tr>
+<td>step1. 部分余数为负，商 0</td>
+<td>0.1101 [负数: 1.0011]</td>
+<td>1.1110</td>
+<td>0.0000</td>
+</tr>
+<tr>
+<td>step1. 部分余数和商左移一位</td>
+<td>0.1101 [负数: 1.0011]</td>
+<td>1.1100</td>
+<td>0.0000</td>
+</tr>
+<tr>
+<td>step1. +|y|</td>
+<td>0.1101 [负数: 1.0011]</td>
+<td>0.1001</td>
+<td>0.0000</td>
+</tr>
+<tr>
+<td>step2. 部分余数为正，商 1</td>
+<td>0.1101 [负数: 1.0011]</td>
+<td>0.1001</td>
+<td>0.0001</td>
+</tr>
+<tr>
+<td>step2. 部分余数和商左移一位</td>
+<td>0.1101 [负数: 1.0011]</td>
+<td>1.0010</td>
+<td>0.0010</td>
+</tr>
+<tr>
+<td>step2. -|y|</td>
+<td>0.1101 [负数: 1.0011]</td>
+<td>0.0101</td>
+<td>0.0010</td>
+</tr>
+<tr>
+<td>step3. 部分余数为正，商 1</td>
+<td>0.1101 [负数: 1.0011]</td>
+<td>0.0101</td>
+<td>0.0011</td>
+</tr>
+<tr>
+<td>step3. 部分余数和商左移一位</td>
+<td>0.1101 [负数: 1.0011]</td>
+<td>0.1010</td>
+<td>0.0110</td>
+</tr>
+<tr>
+<td>step3. -|y|</td>
+<td>0.1101 [负数: 1.0011]</td>
+<td>1.1101</td>
+<td>0.0110</td>
+</tr>
+<tr>
+<td>step4. 部分余数为负，商 0</td>
+<td>0.1101 [负数: 1.0011]</td>
+<td>1.1101</td>
+<td>0.0110</td>
+</tr>
+<tr>
+<td>step4. 部分余数和商左移一位</td>
+<td>0.1101 [负数: 1.0011]</td>
+<td>1.1010</td>
+<td>0.1100</td>
+</tr>
+<tr>
+<td>step4. +|y|</td>
+<td>0.1101 [负数: 1.0011]</td>
+<td>0.0111</td>
+<td>0.1100</td>
+</tr>
+<tr>
+<td>step5. 部分余数为正，商 1</td>
+<td>0.1101 [负数: 1.0011]</td>
+<td>0.0111</td>
+<td>0.1101</td>
+</tr>
+<tr>
+<td>step6. 部分余数为正，不需要+|y|</td>
+<td>0.1101 [负数: 1.0011]</td>
+<td>0.0111</td>
+<td>0.1101</td>
+</tr>
+</tbody>
+</table>
+<p><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>x</mi><mi mathvariant="normal">/</mi><mi>y</mi><mo>=</mo><mo>+</mo><mn>0.1101</mn><mtext>，余数</mtext><mo>=</mo><mn>0.0111</mn><mo>∗</mo><msup><mn>2</mn><mrow><mo>−</mo><mn>4</mn></mrow></msup></mrow><annotation encoding="application/x-tex">x / y = +0.1101，余数 = 0.0111 * 2^{-4}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathnormal">x</span><span class="mord">/</span><span class="mord mathnormal" style="margin-right:0.0359em;">y</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.7667em;vertical-align:-0.0833em;"></span><span class="mord">+</span><span class="mord">0.1101</span><span class="mord cjk_fallback">，余数</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">0.0111</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">∗</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.8141em;"></span><span class="mord"><span class="mord">2</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">−</span><span class="mord mtight">4</span></span></span></span></span></span></span></span></span></span></span></span></p>
+<h4 id="2-3-6-补码的除法">2.3.6 补码的除法</h4>
+<p>设[X]~补~=x~s~.x~1~x~2~…x~n~，[Y]~补~=y~s~.y~1~y~2~…y~n~，<strong>加减交替法求 X/Y</strong> 的规则如下：</p>
+<ul>
+<li>部分余数、被除数、除数采用双符号位补码</li>
+<li>符号位参与运算</li>
+<li>首先，若 X、Y 同号，则余数 = X - Y；若 X、Y 异号，则余数 = X + Y</li>
+<li>若余数与 Y 同号，则商 1，余数左移，减去 Y</li>
+<li>若余数与 Y 异号，则商 0，余数左移，加上 Y</li>
+<li>重复以上两个步骤 n 次，商末位恒置 1</li>
+</ul>
+<p>【例】x = 0.1000，y = -0.1011，利用加减交替法求 x / y：</p>
+<p>[x]~原~ = 00.1000，[x]~补~ = 00.1000</p>
+<p>[y]~原~ = 11.1011，[y]~补~ = 11.0101，[-y]~补~ = 00.1011</p>
+<table>
+<thead>
+<tr>
+<th>操作</th>
+<th>通用寄存器（除数）</th>
+<th>MQ（被除数/部分余数）</th>
+<th>MQ（商）</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>初始状态：x=00.1000，y=11.0101</td>
+<td>11.0101 [负数: 00.1011]</td>
+<td>00.1000</td>
+<td>0.0000</td>
+</tr>
+<tr>
+<td>step0. x、y 异号，+y</td>
+<td>11.0101 [负数: 00.1011]</td>
+<td>11.1101</td>
+<td>0.0000</td>
+</tr>
+<tr>
+<td>step1. 部分余数与 y 同号，商 1</td>
+<td>11.0101 [负数: 00.1011]</td>
+<td>11.1101</td>
+<td>0.0001</td>
+</tr>
+<tr>
+<td>step1. 部分余数和商左移一位</td>
+<td>11.0101 [负数: 00.1011]</td>
+<td>11.1010</td>
+<td>0.0010</td>
+</tr>
+<tr>
+<td>step1. 部分余数-y</td>
+<td>11.0101 [负数: 00.1011]</td>
+<td>00.0101</td>
+<td>0.0010</td>
+</tr>
+<tr>
+<td>step2. 部分余数与 y 异号，商 0</td>
+<td>11.0101 [负数: 00.1011]</td>
+<td>00.0101</td>
+<td>0.0010</td>
+</tr>
+<tr>
+<td>step2. 部分余数和商左移一位</td>
+<td>11.0101 [负数: 00.1011]</td>
+<td>00.1010</td>
+<td>0.0100</td>
+</tr>
+<tr>
+<td>step2. 部分余数+y</td>
+<td>11.0101 [负数: 00.1011]</td>
+<td>11.1111</td>
+<td>0.0100</td>
+</tr>
+<tr>
+<td>step3. 部分余数与 y 同号，商 1</td>
+<td>11.0101 [负数: 00.1011]</td>
+<td>11.1111</td>
+<td>0.0101</td>
+</tr>
+<tr>
+<td>step3. 部分余数和商左移一位</td>
+<td>11.0101 [负数: 00.1011]</td>
+<td>11.1110</td>
+<td>0.1010</td>
+</tr>
+<tr>
+<td>step3. 部分余数-y</td>
+<td>11.0101 [负数: 00.1011]</td>
+<td>00.1001</td>
+<td>0.1010</td>
+</tr>
+<tr>
+<td>step4. 部分余数与 y 异号，商 0</td>
+<td>11.0101 [负数: 00.1011]</td>
+<td>00.1001</td>
+<td>0.1010</td>
+</tr>
+<tr>
+<td>step4. 部分余数和商左移一位</td>
+<td>11.0101 [负数: 00.1011]</td>
+<td>01.0010</td>
+<td>1.0100</td>
+</tr>
+<tr>
+<td>step4. 部分余数+y（商末位恒置 1）</td>
+<td>11.0101 [负数: 00.1011]</td>
+<td>00.0111</td>
+<td>1.0101</td>
+</tr>
+</tbody>
+</table>
+<p><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false">[</mo><mi>x</mi><mi mathvariant="normal">/</mi><mi>y</mi><mo stretchy="false">]</mo><mtext> 补</mtext><mo>=</mo><mn>1.0101</mn><mtext>，余数</mtext><mo>=</mo><mn>0.0111</mn><mo>∗</mo><msup><mn>2</mn><mrow><mo>−</mo><mn>4</mn></mrow></msup></mrow><annotation encoding="application/x-tex">[x/y]~补 = 1.0101，余数 = 0.0111 * 2^{-4}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mopen">[</span><span class="mord mathnormal">x</span><span class="mord">/</span><span class="mord mathnormal" style="margin-right:0.0359em;">y</span><span class="mclose">]</span><span class="mspace nobreak"> </span><span class="mord cjk_fallback">补</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord">1.0101</span><span class="mord cjk_fallback">，余数</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">0.0111</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">∗</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.8141em;"></span><span class="mord"><span class="mord">2</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">−</span><span class="mord mtight">4</span></span></span></span></span></span></span></span></span></span></span></span></p>
+<p><b><i><center>—EOF—</center></b></i></p>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>文章作者: </span><span class="post-copyright-info"><a href="https://blog.mount256.com">Mount256</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>文章链接: </span><span class="post-copyright-info"><a href="https://blog.mount256.com/posts/3475581e.html">https://blog.mount256.com/posts/3475581e.html</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来源 <a href="https://blog.mount256.com" target="_blank">Mount256的个人小站</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/%E6%95%B0%E6%8D%AE%E8%BF%90%E7%AE%97/">数据运算</a></div><div class="post-share"><div class="social-share" data-image="/img/cover2.jpg" data-sites="facebook,x,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><a class="pagination-related" href="/posts/9949cda8.html" title="【组成原理-数据】浮点数的编码与运算"><img class="cover" src="/img/cover0.jpg" onerror="onerror=null;src='/img/404.jpg'" alt="cover of previous post"><div class="info"><div class="info-1"><div class="info-item-1">上一篇</div><div class="info-item-2">【组成原理-数据】浮点数的编码与运算</div></div><div class="info-2"><div class="info-item-1">1 浮点数的格式 浮点数的格式如下：    符号 (S) 阶码 (E) 尾数 (M)     反映浮点数的正负 反映浮点数的小数点的实际位置 反映浮点数的精度    浮点数真值：N = (-1)^S^ * 1.M * 2^E-偏置值^（E 表示阶码的无符号解释） 1.1 符号 (S) 符号位 S 取值 0 或 1，用来决定浮点数的符号。 1.2 阶码 (E) 阶码或指数 E 是一个二进制定点整数，用 n 位移码表示，其偏置值为2^n-1^-1，与定点数的移码偏置值相比，多减了 1，区别如下：    真值 补码 定点数的移码 浮点数的阶码 对应的无符号数     -128 1000,0000 0000,0000 1111,1111 255   -127 1000,0001 0000,0001 0000,0000 0   -126 1000,0010 0000,0010 0000,0001 1   … … … … …   -2 1111,1110 0111,1110 0111,1101 125   -1 1111,1111 0111,1111 0111,1110 126   0 00...</div></div></div></a><a class="pagination-related" href="/posts/f85dae2.html" title="网络爬虫之json库"><img class="cover" src="/img/cover3.jpg" onerror="onerror=null;src='/img/404.jpg'" alt="cover of next post"><div class="info text-right"><div class="info-1"><div class="info-item-1">下一篇</div><div class="info-item-2">网络爬虫之json库</div></div><div class="info-2"><div class="info-item-1">1 如何在网页中获取 JSON 数据？ 打开一个具有动态渲染的网页，按 F12 打开浏览器开发工具，点击“网络”，再刷新一下网页，观察是否有新的数据包。  发现有 js 后缀的文件，这就是我们想要的 json 数据了。 2 Python 内置的 JSON 库 内置的 json 库的函数：   dumps：用于将 Python 的数据类型转化为 json 字符串。   loads：将 json 字符串转化为 Python 的数据类型。   实例 1： 123456import jsondata = [ &#123; &#x27;a&#x27; : 1, &#x27;b&#x27; : 2, &#x27;c&#x27; : 3, &#x27;d&#x27; : 4, &#x27;e&#x27; : 5 &#125; ]data2 = json.dumps(data)print(data2) 输出结果： 1[&#123;&quot;a&quot;: 1, &quot;c&quot;: 3, &quot;b&quot;: 2, &quot;e&quot;: 5, &quot;d&quot...</div></div></div></a></nav><div class="relatedPosts"><div class="headline"><i class="fas fa-thumbs-up fa-fw"></i><span>相关推荐</span></div><div class="relatedPosts-list"><a class="pagination-related" href="/posts/9949cda8.html" title="【组成原理-数据】浮点数的编码与运算"><img class="cover" src="/img/cover0.jpg" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2022-08-16</div><div class="info-item-2">【组成原理-数据】浮点数的编码与运算</div></div><div class="info-2"><div class="info-item-1">1 浮点数的格式 浮点数的格式如下：    符号 (S) 阶码 (E) 尾数 (M)     反映浮点数的正负 反映浮点数的小数点的实际位置 反映浮点数的精度    浮点数真值：N = (-1)^S^ * 1.M * 2^E-偏置值^（E 表示阶码的无符号解释） 1.1 符号 (S) 符号位 S 取值 0 或 1，用来决定浮点数的符号。 1.2 阶码 (E) 阶码或指数 E 是一个二进制定点整数，用 n 位移码表示，其偏置值为2^n-1^-1，与定点数的移码偏置值相比，多减了 1，区别如下：    真值 补码 定点数的移码 浮点数的阶码 对应的无符号数     -128 1000,0000 0000,0000 1111,1111 255   -127 1000,0001 0000,0001 0000,0000 0   -126 1000,0010 0000,0010 0000,0001 1   … … … … …   -2 1111,1110 0111,1110 0111,1101 125   -1 1111,1111 0111,1111 0111,1110 126   0 00...</div></div></div></a></div></div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info text-center"><div class="avatar-img"><img src="/img/avatar.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info-name">Mount256</div><div class="author-info-description">心似河水，奔流依旧</div><div class="site-data"><a href="/archives/"><div class="headline">文章</div><div class="length-num">131</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">128</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">25</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/Mount256"><i class="fab fa-github"></i><span>Follow Me</span></a></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">自 2026/07/13 开始本站域名由 mount256.github.io 迁移至 blog.mount256.com, 请知悉。</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#0-%E5%BF%85%E7%9F%A5%E7%9A%84%E5%B8%B8%E7%94%A8%E6%95%B0"><span class="toc-text">0 必知的常用数</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#1-%E5%AE%9A%E7%82%B9%E6%95%B0%E7%9A%84%E7%BC%96%E7%A0%81"><span class="toc-text">1 定点数的编码</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-1-%E7%BC%96%E7%A0%81%E7%9A%84%E7%A7%8D%E7%B1%BB"><span class="toc-text">1.1 编码的种类</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-2-%E7%BC%96%E7%A0%81%E7%9A%84%E8%BD%AC%E6%8D%A2"><span class="toc-text">1.2 编码的转换</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E8%A1%A5%E5%85%85%EF%BC%9A%E8%B4%9F%E6%95%B0%E8%A1%A5%E7%A0%81%E5%92%8C%E5%8E%9F%E7%A0%81%E7%9A%84%E8%BD%AC%E6%8D%A2%E6%8A%80%E5%B7%A7%EF%BC%88%E5%87%A0%E7%A7%92%E9%92%9F%E5%86%85%E8%BF%85%E9%80%9F%E8%BD%AC%E6%8D%A2%E4%B8%80%E4%B8%AA-32-%E4%BD%8D%E4%BA%8C%E8%BF%9B%E5%88%B6%E6%95%B0%EF%BC%81%EF%BC%89"><span class="toc-text">补充：负数补码和原码的转换技巧（几秒钟内迅速转换一个 32 位二进制数！）</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-3-C-%E8%AF%AD%E8%A8%80%E7%9A%84%E5%BC%BA%E5%88%B6%E8%BD%AC%E6%8D%A2"><span class="toc-text">1.3 C 语言的强制转换</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E8%A1%A5%E5%85%85%EF%BC%9A%E4%B8%8D%E5%90%8C%E6%9C%BA%E5%99%A8%E4%B8%8B%E7%9A%84%E6%95%B0%E6%8D%AE%E7%B1%BB%E5%9E%8B%E9%95%BF%E5%BA%A6"><span class="toc-text">补充：不同机器下的数据类型长度</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-%E5%AE%9A%E7%82%B9%E6%95%B0%E7%9A%84%E8%BF%90%E7%AE%97"><span class="toc-text">2 定点数的运算</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#2-1-%E5%AE%9A%E7%82%B9%E6%95%B0%E7%9A%84%E7%A7%BB%E4%BD%8D"><span class="toc-text">2.1 定点数的移位</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#2-1-1-%E7%AE%97%E6%9C%AF%E7%A7%BB%E4%BD%8D%EF%BC%88%E6%9C%89%E7%AC%A6%E5%8F%B7%E6%95%B0%EF%BC%89"><span class="toc-text">2.1.1 算术移位（有符号数）</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-1-2-%E9%80%BB%E8%BE%91%E7%A7%BB%E4%BD%8D%EF%BC%88%E6%97%A0%E7%AC%A6%E5%8F%B7%E6%95%B0%EF%BC%89"><span class="toc-text">2.1.2 逻辑移位（无符号数）</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-1-3-%E5%BE%AA%E7%8E%AF%E7%A7%BB%E4%BD%8D"><span class="toc-text">2.1.3 循环移位</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-2-%E5%AE%9A%E7%82%B9%E6%95%B0%E7%9A%84%E5%8A%A0%E5%87%8F%E6%B3%95"><span class="toc-text">2.2 定点数的加减法</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#2-2-1-%E8%A1%A5%E7%A0%81%E7%9A%84%E5%8A%A0%E5%87%8F%E6%B3%95"><span class="toc-text">2.2.1 补码的加减法</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-2-2-%E8%A1%A5%E7%A0%81%E5%8A%A0%E5%87%8F%E6%BA%A2%E5%87%BA%E7%9A%84%E5%88%A4%E5%88%AB"><span class="toc-text">2.2.2 补码加减溢出的判别</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#%E8%A1%A5%E7%A0%81%E5%8A%A0%E5%87%8F%E6%BA%A2%E5%87%BA%E7%9A%84%E7%9B%B8%E5%85%B3%E4%BE%8B%E9%A2%98"><span class="toc-text">补码加减溢出的相关例题</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#%E8%A1%A5%E5%85%85%EF%BC%9A%E4%BD%BF%E7%94%A8-SF-%E5%92%8C-OF-%E5%88%A4%E6%96%AD%E8%A1%A5%E7%A0%81%E5%A4%A7%E5%B0%8F%E5%85%B3%E7%B3%BB"><span class="toc-text">补充：使用 SF 和 OF 判断补码大小关系</span></a></li></ol></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-2-3-%E8%BF%9B-%E5%80%9F%E4%BD%8D%E7%9A%84%E5%88%A4%E5%88%AB"><span class="toc-text">2.2.3 进&#x2F;借位的判别</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-3-%E5%AE%9A%E7%82%B9%E6%95%B0%E7%9A%84%E4%B9%98%E9%99%A4%E6%B3%95"><span class="toc-text">2.3 定点数的乘除法</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#2-3-1-%E5%AE%9A%E7%82%B9%E6%95%B0%E4%B9%98%E9%99%A4%E6%B3%95%E7%9A%84%E6%8A%80%E5%B7%A7"><span class="toc-text">2.3.1 定点数乘除法的技巧</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-3-2-%E4%B9%98%E6%B3%95%E7%9A%84%E6%BA%A2%E5%87%BA%E5%88%A4%E6%96%AD"><span class="toc-text">2.3.2 乘法的溢出判断</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-3-3-%E5%8E%9F%E7%A0%81%E7%9A%84%E4%B9%98%E6%B3%95"><span class="toc-text">2.3.3 原码的乘法</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-3-4-%E8%A1%A5%E7%A0%81%E7%9A%84%E4%B9%98%E6%B3%95"><span class="toc-text">2.3.4 补码的乘法</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-3-5-%E5%8E%9F%E7%A0%81%E7%9A%84%E9%99%A4%E6%B3%95"><span class="toc-text">2.3.5 原码的除法</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-3-6-%E8%A1%A5%E7%A0%81%E7%9A%84%E9%99%A4%E6%B3%95"><span class="toc-text">2.3.6 补码的除法</span></a></li></ol></li></ol></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item"><a class="thumbnail" href="/posts/19f8fc4.html" title="进行式和终止式"><img src="/img/cover2.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="进行式和终止式"/></a><div class="content"><a class="title" href="/posts/19f8fc4.html" title="进行式和终止式">进行式和终止式</a><time datetime="2026-07-10T16:00:00.000Z" title="发表于 2026-07-11 00:00:00">2026-07-11</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/posts/349744ff.html" title="ABC notation渲染测试"><img src="/img/cover3.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="ABC notation渲染测试"/></a><div class="content"><a class="title" href="/posts/349744ff.html" title="ABC notation渲染测试">ABC notation渲染测试</a><time datetime="2026-06-23T02:42:49.000Z" title="发表于 2026-06-23 10:42:49">2026-06-23</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/posts/f9ae104.html" title="Git的分支操作"><img src="/img/cover0.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Git的分支操作"/></a><div class="content"><a class="title" href="/posts/f9ae104.html" title="Git的分支操作">Git的分支操作</a><time datetime="2026-06-11T16:00:00.000Z" title="发表于 2026-06-12 00:00:00">2026-06-12</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/posts/99b9faf2.html" title="Git的撤销操作"><img src="/img/cover1.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Git的撤销操作"/></a><div class="content"><a class="title" href="/posts/99b9faf2.html" title="Git的撤销操作">Git的撤销操作</a><time datetime="2026-06-11T16:00:00.000Z" title="发表于 2026-06-12 00:00:00">2026-06-12</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/posts/81e19116.html" title="Git多人协作"><img src="/img/cover3.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Git多人协作"/></a><div class="content"><a class="title" href="/posts/81e19116.html" title="Git多人协作">Git多人协作</a><time datetime="2026-06-11T16:00:00.000Z" title="发表于 2026-06-12 00:00:00">2026-06-12</time></div></div></div></div></div></div></main><footer id="footer" style="background-image: url(/img/cover2.jpg);"><div class="footer-other"><div class="footer-copyright"><span class="copyright">&copy;&nbsp;2025 - 2026 By Mount256</span><span class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo 8.1.2</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly 5.5.5</a></span></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="日间和夜间模式切换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js?v=5.5.5"></script><script src="/js/main.js?v=5.5.5"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui@6.1.14/dist/fancybox/fancybox.umd.min.js"></script><div class="js-pjax"><script>(() => {
+  const parseViewBox = viewBox => {
+    if (!viewBox) return null
+    const parts = viewBox.trim().split(/[\s,]+/).map(n => Number(n))
+    if (parts.length !== 4 || parts.some(n => Number.isNaN(n))) return null
+    return parts
+  }
+
+  const getSvgViewBox = svg => {
+    const attr = parseViewBox(svg.getAttribute('viewBox'))
+    if (attr) return attr
+
+    // Fallback: use bbox to build a viewBox
+    try {
+      const bbox = svg.getBBox()
+      if (bbox && bbox.width && bbox.height) return [bbox.x, bbox.y, bbox.width, bbox.height]
+    } catch (e) {
+      // getBBox may fail on some edge cases; ignore
+    }
+
+    const w = Number(svg.getAttribute('width')) || 0
+    const h = Number(svg.getAttribute('height')) || 0
+    if (w > 0 && h > 0) return [0, 0, w, h]
+    return [0, 0, 100, 100]
+  }
+
+  const setSvgViewBox = (svg, vb) => {
+    svg.setAttribute('viewBox', `${vb[0]} ${vb[1]} ${vb[2]} ${vb[3]}`)
+  }
+
+  const clamp = (v, min, max) => Math.max(min, Math.min(max, v))
+
+  const openSvgInNewTab = ({ source, initViewBox }) => {
+    const getClonedSvg = () => {
+      if (typeof source === 'string') {
+        const template = document.createElement('template')
+        template.innerHTML = source.trim()
+        const svg = template.content.querySelector('svg')
+        return svg ? svg.cloneNode(true) : null
+      }
+      if (source && typeof source.cloneNode === 'function') {
+        return source.cloneNode(true)
+      }
+      return null
+    }
+
+    const clone = getClonedSvg()
+    if (!clone) return
+    if (initViewBox && initViewBox.length === 4) {
+      clone.setAttribute('viewBox', initViewBox.join(' '))
+    }
+    if (!clone.getAttribute('xmlns')) clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg')
+    if (!clone.getAttribute('xmlns:xlink') && clone.outerHTML.includes('xlink:')) {
+      clone.setAttribute('xmlns:xlink', 'http://www.w3.org/1999/xlink')
+    }
+    // inject background to match current theme
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark'
+    const bg = getComputedStyle(document.body).backgroundColor || (isDark ? '#1e1e1e' : '#ffffff')
+    if (!clone.style.background) clone.style.background = bg
+
+    const serializer = new XMLSerializer()
+    const svgSource = serializer.serializeToString(clone)
+    const htmlSource = `<!doctype html><html><head><meta charset="utf-8" />
+      <style>
+        html, body { width: 100%; height: 100%; margin: 0; display: flex; align-items: center; justify-content: center; background: ${bg}; }
+        svg { max-width: 100%; max-height: 100%; height: auto; width: auto; }
+      </style>
+      </head><body>${svgSource}</body></html>`
+    const blob = new Blob([htmlSource], { type: 'text/html;charset=utf-8' })
+    const url = URL.createObjectURL(blob)
+    window.open(url, '_blank', 'noopener')
+    setTimeout(() => URL.revokeObjectURL(url), 30000)
+  }
+
+  const attachMermaidViewerButton = wrap => {
+    let btn = wrap.querySelector('.mermaid-open-btn')
+    if (!btn) {
+      btn = document.createElement('button')
+      btn.type = 'button'
+      btn.className = 'mermaid-open-btn'
+      wrap.appendChild(btn)
+    }
+
+    btn.innerHTML = '<i class="fa fa-search fa-fw" aria-hidden="true"></i>'
+
+    if (!btn.__mermaidViewerBound) {
+      btn.addEventListener('click', e => {
+        e.preventDefault()
+        e.stopPropagation()
+        const svg = wrap.__mermaidOriginalSvg || wrap.querySelector('svg')
+        if (!svg) return
+        const initViewBox = wrap.__mermaidInitViewBox
+        if (typeof svg === 'string') {
+          openSvgInNewTab({ source: svg, initViewBox })
+          return
+        }
+        openSvgInNewTab({ source: svg, initViewBox })
+      })
+      btn.__mermaidViewerBound = true
+    }
+  }
+
+  // Zoom around a point (px, py) in the SVG viewport (in viewBox coordinates)
+  const zoomAtPoint = (vb, factor, px, py) => {
+    const w = vb[2] * factor
+    const h = vb[3] * factor
+    const nx = px - (px - vb[0]) * factor
+    const ny = py - (py - vb[1]) * factor
+    return [nx, ny, w, h]
+  }
+
+  const initMermaidGestures = wrap => {
+    const svg = wrap.querySelector('svg')
+    if (!svg) return
+
+    // Ensure viewBox exists so gestures always work
+    const initVb = getSvgViewBox(svg)
+    wrap.__mermaidInitViewBox = initVb
+    wrap.__mermaidCurViewBox = initVb.slice()
+    setSvgViewBox(svg, initVb)
+
+    // Avoid binding multiple times on themeChange/pjax
+    if (wrap.__mermaidGestureBound) return
+    wrap.__mermaidGestureBound = true
+
+    // Helper: map client (viewport) coordinate -> viewBox coordinate
+    const clientToViewBox = (clientX, clientY) => {
+      const rect = svg.getBoundingClientRect()
+      const vb = wrap.__mermaidCurViewBox || getSvgViewBox(svg)
+      const x = vb[0] + (clientX - rect.left) * (vb[2] / rect.width)
+      const y = vb[1] + (clientY - rect.top) * (vb[3] / rect.height)
+      return { x, y, rect, vb }
+    }
+
+    const state = {
+      pointers: new Map(),
+      startVb: null,
+      startDist: 0,
+      startCenter: null
+    }
+
+    const clampVb = vb => {
+      const init = wrap.__mermaidInitViewBox || vb
+      const minW = init[2] * 0.1
+      const maxW = init[2] * 10
+      const minH = init[3] * 0.1
+      const maxH = init[3] * 10
+      vb[2] = clamp(vb[2], minW, maxW)
+      vb[3] = clamp(vb[3], minH, maxH)
+      return vb
+    }
+
+    const setCurVb = vb => {
+      vb = clampVb(vb)
+      wrap.__mermaidCurViewBox = vb
+      setSvgViewBox(svg, vb)
+    }
+
+    const onPointerDown = e => {
+      // Allow only primary button for mouse
+      if (e.pointerType === 'mouse' && e.button !== 0) return
+      svg.setPointerCapture(e.pointerId)
+      state.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY })
+
+      if (state.pointers.size === 1) {
+        state.startVb = (wrap.__mermaidCurViewBox || getSvgViewBox(svg)).slice()
+      } else if (state.pointers.size === 2) {
+        const pts = [...state.pointers.values()]
+        const dx = pts[0].x - pts[1].x
+        const dy = pts[0].y - pts[1].y
+        state.startDist = Math.hypot(dx, dy)
+        state.startVb = (wrap.__mermaidCurViewBox || getSvgViewBox(svg)).slice()
+        state.startCenter = { x: (pts[0].x + pts[1].x) / 2, y: (pts[0].y + pts[1].y) / 2 }
+      }
+    }
+
+    const onPointerMove = e => {
+      if (!state.pointers.has(e.pointerId)) return
+      state.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY })
+
+      // Pan with 1 pointer
+      if (state.pointers.size === 1 && state.startVb) {
+        const p = [...state.pointers.values()][0]
+        const prev = { x: e.clientX - e.movementX, y: e.clientY - e.movementY }
+        // movementX/Y unreliable on touch, compute from stored last position
+        const last = wrap.__mermaidLastSinglePointer || p
+        const dxClient = p.x - last.x
+        const dyClient = p.y - last.y
+        wrap.__mermaidLastSinglePointer = p
+
+        const { rect } = clientToViewBox(p.x, p.y)
+        const vb = (wrap.__mermaidCurViewBox || getSvgViewBox(svg)).slice()
+        const dx = dxClient * (vb[2] / rect.width)
+        const dy = dyClient * (vb[3] / rect.height)
+        setCurVb([vb[0] - dx, vb[1] - dy, vb[2], vb[3]])
+        return
+      }
+
+      // Pinch zoom with 2 pointers
+      if (state.pointers.size === 2 && state.startVb && state.startDist > 0) {
+        const pts = [...state.pointers.values()]
+        const dx = pts[0].x - pts[1].x
+        const dy = pts[0].y - pts[1].y
+        const dist = Math.hypot(dx, dy)
+        if (!dist) return
+        const factor = state.startDist / dist // dist bigger => zoom in (viewBox smaller)
+
+        const cx = (pts[0].x + pts[1].x) / 2
+        const cy = (pts[0].y + pts[1].y) / 2
+        const centerClient = { x: cx, y: cy }
+
+        const pxy = clientToViewBox(centerClient.x, centerClient.y)
+        const cpx = pxy.x
+        const cpy = pxy.y
+
+        const vb = zoomAtPoint(state.startVb, factor, cpx, cpy)
+        setCurVb(vb)
+      }
+    }
+
+    const onPointerUpOrCancel = e => {
+      state.pointers.delete(e.pointerId)
+      if (state.pointers.size === 0) {
+        state.startVb = null
+        state.startDist = 0
+        state.startCenter = null
+        wrap.__mermaidLastSinglePointer = null
+      } else if (state.pointers.size === 1) {
+        // reset single pointer baseline to avoid jump
+        wrap.__mermaidLastSinglePointer = [...state.pointers.values()][0]
+      }
+    }
+
+    // Wheel zoom (mouse/trackpad)
+    const onWheel = e => {
+      // ctrlKey on mac trackpad pinch; we treat both as zoom
+      e.preventDefault()
+      const delta = e.deltaY
+      const zoomFactor = delta > 0 ? 1.1 : 0.9
+      const { x, y } = clientToViewBox(e.clientX, e.clientY)
+      const vb = (wrap.__mermaidCurViewBox || getSvgViewBox(svg)).slice()
+      setCurVb(zoomAtPoint(vb, zoomFactor, x, y))
+    }
+
+    const onDblClick = () => {
+      const init = wrap.__mermaidInitViewBox
+      if (!init) return
+      wrap.__mermaidCurViewBox = init.slice()
+      setSvgViewBox(svg, init)
+    }
+
+    svg.addEventListener('pointerdown', onPointerDown)
+    svg.addEventListener('pointermove', onPointerMove)
+    svg.addEventListener('pointerup', onPointerUpOrCancel)
+    svg.addEventListener('pointercancel', onPointerUpOrCancel)
+    svg.addEventListener('wheel', onWheel, { passive: false })
+    svg.addEventListener('dblclick', onDblClick)
+  }
+
+  const runMermaid = ele => {
+    window.loadMermaid = true
+    const theme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default'
+
+    ele.forEach((item, index) => {
+      const mermaidSrc = item.firstElementChild
+
+      // Clear old render (themeChange/pjax will rerun)
+      const oldSvg = item.querySelector('svg')
+      if (oldSvg) oldSvg.remove()
+      item.__mermaidGestureBound = false
+
+      const config = mermaidSrc.dataset.config ? JSON.parse(mermaidSrc.dataset.config) : {}
+      if (!config.theme) {
+        config.theme = theme
+      }
+      const mermaidThemeConfig = `%%{init: ${JSON.stringify(config)}}%%\n`
+      const mermaidID = `mermaid-${index}`
+      const mermaidDefinition = mermaidThemeConfig + mermaidSrc.textContent
+
+      const renderFn = mermaid.render(mermaidID, mermaidDefinition)
+      const renderMermaid = svg => {
+        mermaidSrc.insertAdjacentHTML('afterend', svg)
+        if (true) initMermaidGestures(item)
+        item.__mermaidOriginalSvg = svg
+        if (true) attachMermaidViewerButton(item)
+      }
+
+
+      // mermaid v9 and v10 compatibility
+      typeof renderFn === 'string' ? renderMermaid(renderFn) : renderFn.then(({ svg }) => renderMermaid(svg))
+    })
+  }
+
+  const codeToMermaid = () => {
+    const codeMermaidEle = document.querySelectorAll('pre > code.mermaid')
+    if (codeMermaidEle.length === 0) return
+
+    codeMermaidEle.forEach(ele => {
+      const preEle = document.createElement('pre')
+      preEle.className = 'mermaid-src'
+      preEle.hidden = true
+      preEle.textContent = ele.textContent
+      const newEle = document.createElement('div')
+      newEle.className = 'mermaid-wrap'
+      newEle.appendChild(preEle)
+      ele.parentNode.replaceWith(newEle)
+    })
+  }
+
+  const loadMermaid = () => {
+    if (true) codeToMermaid()
+    const $mermaid = document.querySelectorAll('#article-container .mermaid-wrap')
+    if ($mermaid.length === 0) return
+
+    const runMermaidFn = () => runMermaid($mermaid)
+    btf.addGlobalFn('themeChange', runMermaidFn, 'mermaid')
+    window.loadMermaid ? runMermaidFn() : btf.getScript('https://cdn.jsdelivr.net/npm/mermaid@11.15.0/dist/mermaid.min.js').then(runMermaidFn)
+  }
+
+  btf.addGlobalFn('encrypt', loadMermaid, 'mermaid')
+  window.pjax ? loadMermaid() : document.addEventListener('DOMContentLoaded', loadMermaid)
+})()</script></div><script src="/js/abcjs-detect.js"></script><script src="/js/bubble.js"></script><script id="click-heart" src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/dist/click-heart.min.js" async="async" mobile="true"></script><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script><div id="local-search"><div class="search-dialog"><nav class="search-nav"><span class="search-dialog-title">搜索</span><i class="fas fa-spinner fa-pulse" id="loading-status" hidden="hidden"></i><button class="search-close-button"><i class="fas fa-times"></i></button></nav><div class="text-center" id="loading-database"><i class="fas fa-spinner fa-pulse"></i><span>  数据加载中</span></div><div class="local-search-input"><input placeholder="输入关键词…" type="text"/></div><hr/><div id="local-search-results"></div><div class="ais-Pagination" id="local-search-pagination" style="display:none;"><ul class="ais-Pagination-list"></ul></div><div id="local-search-stats"></div></div><div id="search-mask"></div><script src="/js/search/local-search.js?v=5.5.5"></script></div></div></body></html>

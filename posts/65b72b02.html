@@ -1,0 +1,578 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>HDLBits（7）——Multiplexer &amp; Arithmetic Circuits | Mount256的个人小站</title><meta name="author" content="Mount256"><meta name="copyright" content="Mount256"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="----- 61. 2-to-1 multiplexer ----- Problem Statement Create a one-bit wide, 2-to-1 multiplexer. When sel&#x3D;0, choose a. When sel&#x3D;1, choose b. Expected solution length: Around 1 line. Answer 12345678modu">
+<meta property="og:type" content="article">
+<meta property="og:title" content="HDLBits（7）——Multiplexer &amp; Arithmetic Circuits">
+<meta property="og:url" content="https://blog.mount256.com/posts/65b72b02.html">
+<meta property="og:site_name" content="Mount256的个人小站">
+<meta property="og:description" content="----- 61. 2-to-1 multiplexer ----- Problem Statement Create a one-bit wide, 2-to-1 multiplexer. When sel&#x3D;0, choose a. When sel&#x3D;1, choose b. Expected solution length: Around 1 line. Answer 12345678modu">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://blog.mount256.com/img/cover3.jpg">
+<meta property="article:published_time" content="2021-08-03T16:00:00.000Z">
+<meta property="article:modified_time" content="2026-07-09T16:00:00.000Z">
+<meta property="article:author" content="Mount256">
+<meta property="article:tag" content="FPGA">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://blog.mount256.com/img/cover3.jpg"><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "HDLBits（7）——Multiplexer & Arithmetic Circuits",
+  "url": "https://blog.mount256.com/posts/65b72b02.html",
+  "image": "https://blog.mount256.com/img/cover3.jpg",
+  "datePublished": "2021-08-03T16:00:00.000Z",
+  "dateModified": "2026-07-09T16:00:00.000Z",
+  "author": [
+    {
+      "@type": "Person",
+      "name": "Mount256",
+      "url": "https://blog.mount256.com"
+    }
+  ]
+}</script><link rel="shortcut icon" href="/img/favicon.png"><link rel="canonical" href="https://blog.mount256.com/posts/65b72b02.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css?v=5.5.5"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@7.2.0/css/all.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/ui@6.1.14/dist/fancybox/fancybox.min.css" media="print" onload="this.media='all'"><script>
+    (() => {
+      
+    const saveToLocal = {
+      set: (key, value, ttl) => {
+        if (!ttl) return
+        const expiry = Date.now() + ttl * 86400000
+        localStorage.setItem(key, JSON.stringify({ value, expiry }))
+      },
+      get: key => {
+        const itemStr = localStorage.getItem(key)
+        if (!itemStr) return undefined
+        const { value, expiry } = JSON.parse(itemStr)
+        if (Date.now() > expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return value
+      }
+    }
+
+    window.btf = {
+      saveToLocal,
+      getScript: (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        Object.entries(attr).forEach(([key, val]) => script.setAttribute(key, val))
+        script.onload = script.onreadystatechange = () => {
+          if (!script.readyState || /loaded|complete/.test(script.readyState)) resolve()
+        }
+        script.onerror = reject
+        document.head.appendChild(script)
+      }),
+      getCSS: (url, id) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onload = link.onreadystatechange = () => {
+          if (!link.readyState || /loaded|complete/.test(link.readyState)) resolve()
+        }
+        link.onerror = reject
+        document.head.appendChild(link)
+      }),
+      addGlobalFn: (key, fn, name = false, parent = window) => {
+        if (!false && key.startsWith('pjax')) return
+        const globalFn = parent.globalFn || {}
+        globalFn[key] = globalFn[key] || {}
+        globalFn[key][name || Object.keys(globalFn[key]).length] = fn
+        parent.globalFn = globalFn
+      }
+    }
+  
+      
+      const activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      const activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+
+      btf.activateDarkMode = activateDarkMode
+      btf.activateLightMode = activateLightMode
+
+      const theme = saveToLocal.get('theme')
+    
+          theme === 'dark' ? activateDarkMode() : theme === 'light' ? activateLightMode() : null
+        
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        document.documentElement.classList.toggle('hide-aside', asideStatus === 'hide')
+      }
+    
+      
+    const detectApple = () => {
+      if (/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)) {
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+  
+    })()
+  </script><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: {"path":"/search.xml","preload":false,"top_n_per_article":1,"unescape":false,"pagination":{"enable":false,"hitsPerPage":8},"languages":{"hits_empty":"未找到符合您查询的内容：${query}","hits_stats":"共找到 ${hits} 篇文章"}},
+  translate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false,"highlightFullpage":false,"highlightMacStyle":false},
+  copy: {
+    success: '复制成功',
+    error: '复制失败',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'fancybox',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid@4.13.0/dist/infinitegrid.min.js',
+    buttonText: '加载更多'
+  },
+  isPhotoFigcaption: false,
+  islazyloadPlugin: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'HDLBits（7）——Multiplexer & Arithmetic Circuits',
+  isHighlightShrink: false,
+  isToc: true,
+  pageType: 'post'
+}</script><link rel="stylesheet" href="/css/mouse.css"><script src="/live2d-widget/dist/autoload.js"></script><!-- hexo injector head_end start -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.css">
+<!-- hexo injector head_end end --><meta name="generator" content="Hexo 8.1.2"></head><body><div class="bg-animation" id="web_bg" style="background-image: url(/img/background.png);"></div><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img text-center"><img src="/img/avatar.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data text-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">131</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">128</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">25</div></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 链接</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header" style="background-image: url(/img/cover3.jpg);"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><span class="site-name">Mount256的个人小站</span></a><a class="nav-page-title" href="/"><span class="site-name">HDLBits（7）——Multiplexer &amp; Arithmetic Circuits</span><span class="site-name"><i class="fa-solid fa-circle-arrow-left"></i><span>  返回首页</span></span></a></span><div id="menus"><div id="search-button"><span class="site-page social-icon search"><i class="fas fa-search fa-fw"></i><span> 搜索</span></span></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 链接</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于</span></a></div></div><div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div></div></nav><div id="post-info"><h1 class="post-title">HDLBits（7）——Multiplexer &amp; Arithmetic Circuits</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2021-08-03T16:00:00.000Z" title="发表于 2021-08-04 00:00:00">2021-08-04</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2026-07-09T16:00:00.000Z" title="更新于 2026-07-10 00:00:00">2026-07-10</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/FPGA%E5%BC%80%E5%8F%91/">FPGA开发</a><i class="fas fa-angle-right post-meta-separator"></i><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/FPGA%E5%BC%80%E5%8F%91/HDLBits%E5%88%B7%E9%A2%98/">HDLBits刷题</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-wordcount"><i class="far fa-file-word fa-fw post-meta-icon"></i><span class="post-meta-label">总字数:</span><span class="word-count">1.8k</span><span class="post-meta-separator">|</span><i class="far fa-clock fa-fw post-meta-icon"></i><span class="post-meta-label">阅读时长:</span><span>11分钟</span></span><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title=""><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">浏览量:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="container post-content" id="article-container"><h2 id="61-2-to-1-multiplexer">----- 61. 2-to-1 multiplexer -----</h2>
+<h3 id="Problem-Statement">Problem Statement</h3>
+<p>Create a one-bit wide, 2-to-1 multiplexer. When sel=0, choose a. When sel=1, choose b.</p>
+<p>Expected solution length: Around 1 line.</p>
+<h3 id="Answer">Answer</h3>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">module top_module( </span><br><span class="line">    input a, b, sel,</span><br><span class="line">    output out ); </span><br><span class="line">    </span><br><span class="line">    assign out = (~sel &amp; a) | (sel &amp; b);</span><br><span class="line">    //other way: assign out = sel ? b : a;</span><br><span class="line"></span><br><span class="line">endmodule</span><br></pre></td></tr></table></figure>
+<h2 id="62-2-to-1-bus-multiplexer">----- 62. 2-to-1 bus multiplexer -----</h2>
+<h3 id="Problem-Statement-2">Problem Statement</h3>
+<p>Create a 100-bit wide, 2-to-1 multiplexer. When sel=0, choose a. When sel=1, choose b.</p>
+<p>Expected solution length: Around 1 line.</p>
+<h3 id="Answer1">Answer1</h3>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">module top_module( </span><br><span class="line">    input [99:0] a, b,</span><br><span class="line">    input sel,</span><br><span class="line">    output [99:0] out );</span><br><span class="line">    </span><br><span class="line">    assign out = ( ~&#123;100&#123;sel&#125;&#125; &amp; a) | ( &#123;100&#123;sel&#125;&#125; &amp; b);</span><br><span class="line">    //other way: assign out = sel ? b : a;</span><br><span class="line"></span><br><span class="line">endmodule</span><br></pre></td></tr></table></figure>
+<h2 id="63-9-to-1-multiplexer">----- 63. 9-to-1 multiplexer -----</h2>
+<h3 id="Problem-Statement-3">Problem Statement</h3>
+<p>Create a 16-bit wide, 9-to-1 multiplexer. sel=0 chooses a, sel=1 chooses b, etc. For the unused cases (sel=9 to 15), set all output bits to ‘1’.</p>
+<p>Expected solution length: Around 15 lines.</p>
+<h3 id="Answer-2">Answer</h3>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line">module top_module( </span><br><span class="line">    input [15:0] a, b, c, d, e, f, g, h, i,</span><br><span class="line">    input [3:0] sel,</span><br><span class="line">    output reg [15:0] out );</span><br><span class="line">    </span><br><span class="line">     always @(*) begin</span><br><span class="line">		case(sel)</span><br><span class="line">			4&#x27;d0: out = a;</span><br><span class="line">			4&#x27;d1: out = b;</span><br><span class="line">			4&#x27;d2: out = c;</span><br><span class="line">			4&#x27;d3: out = d;</span><br><span class="line">			4&#x27;d4: out = e;</span><br><span class="line">			4&#x27;d5: out = f;</span><br><span class="line">			4&#x27;d6: out = g;</span><br><span class="line">			4&#x27;d7: out = h;</span><br><span class="line">			4&#x27;d8: out = i;</span><br><span class="line">			default: out = &#123;16&#123;1&#x27;b1&#125;&#125;;</span><br><span class="line">		endcase</span><br><span class="line">	end</span><br><span class="line"></span><br><span class="line">endmodule</span><br></pre></td></tr></table></figure>
+<h2 id="64-256-to-1-multiplexer">----- 64. 256-to-1 multiplexer -----</h2>
+<h3 id="Problem-Statement-4">Problem Statement</h3>
+<p>Create a 1-bit wide, 256-to-1 multiplexer. The 256 inputs are all packed into a single 256-bit input vector. sel=0 should select <code>in[0]</code>, sel=1 selects bits <code>in[1]</code>, sel=2 selects bits <code>in[2]</code>, etc.</p>
+<p>Expected solution length: Around 1 line.</p>
+<h3 id="Answer-3">Answer</h3>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">module top_module( </span><br><span class="line">    input [255:0] in,</span><br><span class="line">    input [7:0] sel,</span><br><span class="line">    output out );</span><br><span class="line">    </span><br><span class="line">    assign out = in[sel];</span><br><span class="line"></span><br><span class="line">endmodule</span><br></pre></td></tr></table></figure>
+<h2 id="65-256-to-1-4-bit-multiplexer">----- 65. 256-to-1 4-bit multiplexer -----</h2>
+<h3 id="Problem-Statement-5">Problem Statement</h3>
+<p>Create a 4-bit wide, 256-to-1 multiplexer. The 256 4-bit inputs are all packed into a single 1024-bit input vector. sel=0 should select bits <code>in[3:0]</code>, sel=1 selects bits <code>in[7:4]</code>, sel=2 selects bits <code>in[11:8]</code>, etc.</p>
+<p>Expected solution length: Around 1–5 lines.</p>
+<h3 id="Answer-4">Answer</h3>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">module top_module( </span><br><span class="line">    input [1023:0] in,</span><br><span class="line">    input [7:0] sel,</span><br><span class="line">    output [3:0] out );</span><br><span class="line">    </span><br><span class="line">    assign out = &#123;in[4*sel+3], in[4*sel+2], in[4*sel+1], in[4*sel]&#125;;</span><br><span class="line"></span><br><span class="line">endmodule</span><br></pre></td></tr></table></figure>
+<h3 id="Note-An-unfamiliar-syntax">Note: An unfamiliar syntax</h3>
+<p>Alternatively, “indexed vector part select” works better, but has an unfamiliar syntax:</p>
+<ul>
+<li><code>assign out = in[sel*4 +: 4];		// Select starting at index “sel*4”, then select a total width of 4 bits with increasing (+:) index number.</code></li>
+<li><code>assign out = in[sel*4+3 -: 4];	// Select starting at index “sel*4+3”, then select a total width of 4 bits with decreasing (-:) index number.</code></li>
+<li>Note: The width (4 in this case) must be constant. So <code>assign out = in[4*sel+3 : 4*sel]</code> is the wrong way.</li>
+</ul>
+<h2 id="66-Half-adder">----- 66. Half adder -----</h2>
+<h3 id="Problem-Statement-6">Problem Statement</h3>
+<p>Create a half adder. A half adder adds two bits (with no carry-in) and produces a sum and carry-out.</p>
+<p>Expected solution length: Around 2 lines.</p>
+<h3 id="Answer1-2">Answer1</h3>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">module top_module( </span><br><span class="line">    input a, b,</span><br><span class="line">    output cout, sum );</span><br><span class="line">    </span><br><span class="line">    assign sum = a ^ b;</span><br><span class="line">    assign cout = a &amp; b;</span><br><span class="line"></span><br><span class="line">endmodule</span><br></pre></td></tr></table></figure>
+<h3 id="Answer2">Answer2</h3>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">module top_module( </span><br><span class="line">    input a, b,</span><br><span class="line">    output cout, sum );</span><br><span class="line">    </span><br><span class="line">    assign &#123;cout, sum&#125; = a + b;</span><br><span class="line"></span><br><span class="line">endmodule</span><br></pre></td></tr></table></figure>
+<h2 id="67-Full-adder">----- 67. Full adder -----</h2>
+<h3 id="Problem-Statement-7">Problem Statement</h3>
+<p>Create a full adder. A full adder adds three bits (including carry-in) and produces a sum and carry-out.</p>
+<p>Expected solution length: Around 2 lines.</p>
+<h3 id="Answer1-3">Answer1</h3>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">module top_module( </span><br><span class="line">    input a, b, cin,</span><br><span class="line">    output cout, sum );</span><br><span class="line">    </span><br><span class="line">    wire s, co1, co2;</span><br><span class="line">	assign s = a ^ b;</span><br><span class="line">	assign co1 = a &amp; b;</span><br><span class="line">	assign sum = cin ^ s;</span><br><span class="line">	assign co2 = cin &amp; s;</span><br><span class="line">	assign cout = co1 | co2;</span><br><span class="line"></span><br><span class="line">endmodule</span><br></pre></td></tr></table></figure>
+<h3 id="Answer2-2">Answer2</h3>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">module top_module( </span><br><span class="line">    input a, b, cin,</span><br><span class="line">    output cout, sum );</span><br><span class="line">    </span><br><span class="line">    assign &#123;cout, sum&#125; = a + b + cin;</span><br><span class="line"></span><br><span class="line">endmodule</span><br></pre></td></tr></table></figure>
+<h2 id="68-3-bit-binary-adder">----- 68. 3-bit binary adder -----</h2>
+<h3 id="Problem-Statement-8">Problem Statement</h3>
+<p>Now that you know how to build a full adder, make 3 instances of it to create a 3-bit binary ripple-carry adder. The adder adds two 3-bit numbers and a carry-in to produce a 3-bit sum and carry out. To encourage you to actually instantiate full adders, <strong>also output the carry-out from each full adder in the ripple-carry adder.</strong> <code>cout[2]</code> is the final carry-out from the last full adder, and is the carry-out you usually see.</p>
+<h3 id="Answer-5">Answer</h3>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">module top_module( </span><br><span class="line">    input [2:0] a, b,</span><br><span class="line">    input cin,</span><br><span class="line">    output [2:0] cout,</span><br><span class="line">    output [2:0] sum );</span><br><span class="line">    </span><br><span class="line">     adder adder1(.a(a[0]), .b(b[0]), .cin(cin), .cout(cout[0]), .sum(sum[0])); // low-bit</span><br><span class="line">	 adder adder2(.a(a[1]), .b(b[1]), .cin(cout[0]), .cout(cout[1]), .sum(sum[1]));</span><br><span class="line">	 adder adder3(.a(a[2]), .b(b[2]), .cin(cout[1]), .cout(cout[2]), .sum(sum[2])); // high-bit</span><br><span class="line"></span><br><span class="line">endmodule</span><br><span class="line"></span><br><span class="line">module adder( </span><br><span class="line">    input a, b, cin,</span><br><span class="line">    output cout, sum );</span><br><span class="line">    </span><br><span class="line">    assign &#123;cout, sum&#125; = a + b + cin;</span><br><span class="line"></span><br><span class="line">endmodule</span><br></pre></td></tr></table></figure>
+<h2 id="69-Adder">----- 69. Adder -----</h2>
+<h3 id="Problem-Statement-9">Problem Statement</h3>
+<p>Implement the following circuit:</p>
+<img src="/posts/65b72b02/p69.png" class="" title="p69">
+<p>(“FA” is a full adder)</p>
+<h3 id="Answer-6">Answer</h3>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">module top_module (</span><br><span class="line">    input [3:0] x,</span><br><span class="line">    input [3:0] y, </span><br><span class="line">    output [4:0] sum);</span><br><span class="line">    </span><br><span class="line">    wire [2:0] io;</span><br><span class="line">	adder adder1(.a(x[0]), .b(y[0]), .cin(0), .cout(io[0]), .sum(sum[0])); // low-bit</span><br><span class="line">	adder adder2(.a(x[1]), .b(y[1]), .cin(io[0]), .cout(io[1]), .sum(sum[1]));</span><br><span class="line">	adder adder3(.a(x[2]), .b(y[2]), .cin(io[1]), .cout(io[2]), .sum(sum[2]));</span><br><span class="line">	adder adder4(.a(x[3]), .b(y[3]), .cin(io[2]), .cout(sum[4]), .sum(sum[3])); // high-bit</span><br><span class="line"></span><br><span class="line">endmodule</span><br><span class="line"></span><br><span class="line">module adder( </span><br><span class="line">    input a, b, cin,</span><br><span class="line">    output cout, sum );</span><br><span class="line">    </span><br><span class="line">    assign &#123;cout, sum&#125; = a + b + cin;</span><br><span class="line"></span><br><span class="line">endmodule</span><br></pre></td></tr></table></figure>
+<h2 id="70-Signed-addition-overflow">----- 70. Signed addition overflow -----</h2>
+<h3 id="Problem-Statement-10">Problem Statement</h3>
+<p>Assume that you have two 8-bit <strong>2’s complement numbers（二补码，一个更为熟悉的翻译是二进制补码）</strong>, a[7:0] and b[7:0]. These numbers are added to produce s[7:0]. Also compute whether a (signed) <strong>overflow</strong> has occurred.</p>
+<h3 id="Answer1-4">Answer1</h3>
+<p><strong>检测补码加法中的溢出（深入理解计算机系统，CS:APP，P65）</strong>：令<code>s = x + y</code>，当<code> x &gt; 0, y &gt; 0, s &lt; 0 </code>时，<code>s</code>发生正溢出（即 x 和 y的最高位为 0，s 最高位为 1 时发生正溢出）；当<code> x &lt; 0, y &lt; 0, s &gt; 0 </code>时，<code>s</code>发生负溢出（即 x 和 y的最高位为 1，s 最高位为 0 时发生负溢出）。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line">module top_module (</span><br><span class="line">    input [7:0] a,</span><br><span class="line">    input [7:0] b,</span><br><span class="line">    output [7:0] s,</span><br><span class="line">    output overflow</span><br><span class="line">); </span><br><span class="line">    </span><br><span class="line">     wire [7:0] io;</span><br><span class="line">	 adder adder0(.a(a[0]), .b(b[0]), .cin(0), .cout(io[0]), .sum(s[0])); // low-bit</span><br><span class="line">	 adder adder1(.a(a[1]), .b(b[1]), .cin(io[0]), .cout(io[1]), .sum(s[1]));</span><br><span class="line">	 adder adder2(.a(a[2]), .b(b[2]), .cin(io[1]), .cout(io[2]), .sum(s[2]));</span><br><span class="line">	 adder adder3(.a(a[3]), .b(b[3]), .cin(io[2]), .cout(io[3]), .sum(s[3])); </span><br><span class="line">	 adder adder4(.a(a[4]), .b(b[4]), .cin(io[3]), .cout(io[4]), .sum(s[4]));</span><br><span class="line">	 adder adder5(.a(a[5]), .b(b[5]), .cin(io[4]), .cout(io[5]), .sum(s[5]));</span><br><span class="line">	 adder adder6(.a(a[6]), .b(b[6]), .cin(io[5]), .cout(io[6]), .sum(s[6]));</span><br><span class="line">	 adder adder7(.a(a[7]), .b(b[7]), .cin(io[6]), .cout(io[7]), .sum(s[7])); // high-bit</span><br><span class="line">	 assign overflow = (a[7] &amp; b[7] &amp; ~s[7]) | (~a[7] &amp; ~b[7] &amp; s[7]); // 检测补码加法中的溢出（CS:APP，P65）</span><br><span class="line"></span><br><span class="line">endmodule</span><br><span class="line"></span><br><span class="line">module adder( </span><br><span class="line">    input a, b, cin,</span><br><span class="line">    output cout, sum );</span><br><span class="line">    </span><br><span class="line">    assign &#123;cout, sum&#125; = a + b + cin;</span><br><span class="line"></span><br><span class="line">endmodule</span><br></pre></td></tr></table></figure>
+<h3 id="Answer2-3">Answer2</h3>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">module top_module (</span><br><span class="line">    input [7:0] a,</span><br><span class="line">    input [7:0] b,</span><br><span class="line">    output [7:0] s,</span><br><span class="line">    output overflow</span><br><span class="line">); </span><br><span class="line"></span><br><span class="line">   	 assign s = a + b;</span><br><span class="line">	 assign overflow = (a[7] &amp; b[7] &amp; ~s[7]) | (~a[7] &amp; ~b[7] &amp; s[7]);</span><br><span class="line"></span><br><span class="line">endmodule</span><br></pre></td></tr></table></figure>
+<h2 id="71-100-bit-binary-adder">----- 71. 100-bit binary adder -----</h2>
+<h3 id="Problem-Statement-11">Problem Statement</h3>
+<p>Create a 100-bit binary adder. The adder adds two 100-bit numbers and a carry-in to produce a 100-bit sum and carry out.</p>
+<p>Expected solution length: Around 1 line.</p>
+<h3 id="Answer1-5">Answer1</h3>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">module top_module( </span><br><span class="line">    input [99:0] a, b,</span><br><span class="line">    input cin,</span><br><span class="line">    output cout,</span><br><span class="line">    output [99:0] sum );</span><br><span class="line">    </span><br><span class="line">    genvar i;</span><br><span class="line">	wire [99:0] io;</span><br><span class="line">	generate</span><br><span class="line">		for(i = 0; i &lt;= 99; i = i + 1)begin: add100</span><br><span class="line">			if(i == 0)</span><br><span class="line">				assign &#123;io[i], sum[i]&#125; = a[i] + b[i] + cin;</span><br><span class="line">			else</span><br><span class="line">				assign &#123;io[i], sum[i]&#125; = a[i] + b[i] + io[i-1];</span><br><span class="line">		end</span><br><span class="line">		assign cout = io[99];</span><br><span class="line">   endgenerate</span><br><span class="line"></span><br><span class="line">endmodule</span><br></pre></td></tr></table></figure>
+<h3 id="Answer2-4">Answer2</h3>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">module top_module (</span><br><span class="line">	input [99:0] a,</span><br><span class="line">	input [99:0] b,</span><br><span class="line">	input cin,</span><br><span class="line">	output cout,</span><br><span class="line">	output [99:0] sum</span><br><span class="line">);</span><br><span class="line"></span><br><span class="line">	// The concatenation &#123;cout, sum&#125; is a 101-bit vector.</span><br><span class="line">	assign &#123;cout, sum&#125; = a+b+cin;</span><br><span class="line"></span><br><span class="line">endmodule</span><br></pre></td></tr></table></figure>
+<h2 id="72-4-digit-BCD-adder">----- 72. 4-digit BCD adder -----</h2>
+<h3 id="Problem-Statement-12">Problem Statement</h3>
+<p><strong>You are provided with a BCD (binary-coded decimal) one-digit adder named <code>bcd_fadd</code></strong> that adds two BCD digits and carry-in, and produces a sum and carry-out.</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">module bcd_fadd (</span><br><span class="line">    input [3:0] a,</span><br><span class="line">    input [3:0] b,</span><br><span class="line">    input     cin,</span><br><span class="line">    output   cout,</span><br><span class="line">    output [3:0] sum );</span><br></pre></td></tr></table></figure>
+<p>Instantiate 4 copies of bcd_fadd to create a 4-digit BCD ripple-carry adder. Your adder should add two 4-digit BCD numbers (packed into 16-bit vectors) and a carry-in to produce a 4-digit sum and carry out.</p>
+<h3 id="Answer-7">Answer</h3>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line">module bcd_fadd (</span><br><span class="line">    input [3:0] a,</span><br><span class="line">    input [3:0] b,</span><br><span class="line">    input     cin,</span><br><span class="line">    output   cout,</span><br><span class="line">    output [3:0] sum );</span><br><span class="line">	 </span><br><span class="line">	 //...</span><br><span class="line">	 </span><br><span class="line">endmodule</span><br><span class="line"></span><br><span class="line">module top_module( </span><br><span class="line">    input [15:0] a, b,</span><br><span class="line">    input cin,</span><br><span class="line">    output cout,</span><br><span class="line">    output [15:0] sum );</span><br><span class="line">    </span><br><span class="line">     wire io0, io1, io2, io3;</span><br><span class="line">     bcd_fadd bcd_fadd0(.a(a[3:0]), .b(b[3:0]), .cin(cin), .cout(io0), .sum(sum[3:0]));</span><br><span class="line">	 bcd_fadd bcd_fadd1(.a(a[7:4]), .b(b[7:4]), .cin(io0), .cout(io1), .sum(sum[7:4]));</span><br><span class="line">	 bcd_fadd bcd_fadd2(.a(a[11:8]), .b(b[11:8]), .cin(io1), .cout(io2), .sum(sum[11:8]));</span><br><span class="line">	 bcd_fadd bcd_fadd3(.a(a[15:12]), .b(b[15:12]), .cin(io2), .cout(io3), .sum(sum[15:12]));</span><br><span class="line">	 assign cout = io3;</span><br><span class="line"></span><br><span class="line">endmodule</span><br></pre></td></tr></table></figure>
+<h3 id="Warning">Warning</h3>
+<ul>
+<li>Warning (10230): Verilog HDL assignment warning at tb_modules.sv(8): truncated value with size 32 to match size of target (4) File</li>
+</ul>
+<p>Truncating values occur when the right side of an assignment is wider than the left side and the upper bits are cut off. This can indicate a bug if there is a truncation you didn’t expect, so check these carefully. The most common case where this isn’t a bug is when you’re using literals without a width (32 bits is implied), e.g., using assign <code>a[1:0] = 1;</code> instead of assign <code>a[1:0] = 2’d1;</code>.</p>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>文章作者: </span><span class="post-copyright-info"><a href="https://blog.mount256.com">Mount256</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>文章链接: </span><span class="post-copyright-info"><a href="https://blog.mount256.com/posts/65b72b02.html">https://blog.mount256.com/posts/65b72b02.html</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来源 <a href="https://blog.mount256.com" target="_blank">Mount256的个人小站</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/FPGA/">FPGA</a></div><div class="post-share"><div class="social-share" data-image="/img/cover3.jpg" data-sites="facebook,x,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><a class="pagination-related" href="/posts/c24fc2f2.html" title="HDLBits（8）——Karnaugh Map to Circuit"><img class="cover" src="/img/cover2.jpg" onerror="onerror=null;src='/img/404.jpg'" alt="cover of previous post"><div class="info"><div class="info-1"><div class="info-item-1">上一篇</div><div class="info-item-2">HDLBits（8）——Karnaugh Map to Circuit</div></div><div class="info-2"><div class="info-item-1">----- 73. 3-varible ----- Problem Statement ==（三变量卡诺图）== Implement the circuit described by the Karnaugh map below.  Answer 一个非常容易化简的卡诺图，因此这里仅放出化简后的逻辑表达式，图就不放了： out’ = a’b’c’ or out = (a’b’c’)’ （撇号表示取反，乘积表示与运算，加法表示或运算） 123456789module top_module(    input a,    input b,    input c,    output out  );         assign out = ~(~a &amp; ~b &amp; ~c);endmodule ----- 74. 4-varible (a) ----- Problem Statement ==（四变量卡诺图）== Implement the circuit described by the Karnaugh map below.  Answer  out = a’d’ +...</div></div></div></a><a class="pagination-related" href="/posts/85e0cc39.html" title="HDLBits（6）——Basic Gates"><img class="cover" src="/img/cover1.jpg" onerror="onerror=null;src='/img/404.jpg'" alt="cover of next post"><div class="info text-right"><div class="info-1"><div class="info-item-1">下一篇</div><div class="info-item-2">HDLBits（6）——Basic Gates</div></div><div class="info-2"><div class="info-item-1">----- 44. Wire ----- Problem Statement Implement the following circuit:  Answer 1234567module top_module (    input in,    output out);        assign out = in;endmodule ----- 45. GND ----- Problem Statement Implement the following circuit:  Answer 123456module top_module (    output out);        assign out = 1&#x27;b0;endmodule ----- 46. NOR ----- Problem Statement Implement the following circuit:  Answer 12345678module top_module (    input in1,    input in2,    output out);        assign ou...</div></div></div></a></nav><div class="relatedPosts"><div class="headline"><i class="fas fa-thumbs-up fa-fw"></i><span>相关推荐</span></div><div class="relatedPosts-list"><a class="pagination-related" href="/posts/85e0cc39.html" title="HDLBits（6）——Basic Gates"><img class="cover" src="/img/cover1.jpg" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2021-08-01</div><div class="info-item-2">HDLBits（6）——Basic Gates</div></div><div class="info-2"><div class="info-item-1">----- 44. Wire ----- Problem Statement Implement the following circuit:  Answer 1234567module top_module (    input in,    output out);        assign out = in;endmodule ----- 45. GND ----- Problem Statement Implement the following circuit:  Answer 123456module top_module (    output out);        assign out = 1&#x27;b0;endmodule ----- 46. NOR ----- Problem Statement Implement the following circuit:  Answer 12345678module top_module (    input in1,    input in2,    output out);        assign ou...</div></div></div></a><a class="pagination-related" href="/posts/3c88ba73.html" title="HDLBits（9）——Latches and Flip-Flops"><img class="cover" src="/img/cover0.jpg" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2021-08-12</div><div class="info-item-2">HDLBits（9）——Latches and Flip-Flops</div></div><div class="info-2"><div class="info-item-1">----- 81. D flip-flop ----- Problem Statement A D flip-flop is a circuit that stores a bit and is updated periodically, at the (usually) positive edge of a clock signal.  D flip-flops are created by the logic synthesizer when a clocked always block is used. A D flip-flop is the simplest form of “blob of combinational logic followed by a flip-flop” where the combinational logic portion is just a wire. Create a single D flip-flop. Answer 12345678910111213module top_module (    input clk,    // ...</div></div></div></a><a class="pagination-related" href="/posts/dcda46b6.html" title="HDLBits（1）——Getting Started &amp; Basics"><img class="cover" src="/img/cover0.jpg" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2021-07-16</div><div class="info-item-2">HDLBits（1）——Getting Started &amp; Basics</div></div><div class="info-2"><div class="info-item-1">----- 1. Step One ----- Problem Statement Build a circuit with no inputs and one output. That output should always drive 1 (or logic high). Expected solution length: Around 1 line. Answer 123456module top_module( output one );// Insert your code here    assign one = 1;endmodule Warning  Warning (13024): Output pins are stuck at VCC or GND  This warning says that an output pin never changes (is “stuck”). This can sometimes indicate a bug if the output pin shouldn’t be a constant. If this pin i...</div></div></div></a><a class="pagination-related" href="/posts/e14f1516.html" title="HDLBits（4）——Procedures"><img class="cover" src="/img/cover2.jpg" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2021-07-26</div><div class="info-item-2">HDLBits（4）——Procedures</div></div><div class="info-2"><div class="info-item-1">----- 29. Alwaysblock1 ----- Problem Statement Build an AND gate using both an assign statement and a combinational always block.  Answer 123456789101112// synthesis verilog_input_version verilog_2001module top_module(    input a,     input b,    output wire out_assign,    output reg out_alwaysblock);        assign out_assign = a &amp; b;    always @(*) out_alwaysblock = a &amp; b;endmodule Note For synthesizing hardware, two types of always blocks are relevant:  Combinational: always @(*) Cl...</div></div></div></a><a class="pagination-related" href="/posts/c24fc2f2.html" title="HDLBits（8）——Karnaugh Map to Circuit"><img class="cover" src="/img/cover2.jpg" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2021-08-09</div><div class="info-item-2">HDLBits（8）——Karnaugh Map to Circuit</div></div><div class="info-2"><div class="info-item-1">----- 73. 3-varible ----- Problem Statement ==（三变量卡诺图）== Implement the circuit described by the Karnaugh map below.  Answer 一个非常容易化简的卡诺图，因此这里仅放出化简后的逻辑表达式，图就不放了： out’ = a’b’c’ or out = (a’b’c’)’ （撇号表示取反，乘积表示与运算，加法表示或运算） 123456789module top_module(    input a,    input b,    input c,    output out  );         assign out = ~(~a &amp; ~b &amp; ~c);endmodule ----- 74. 4-varible (a) ----- Problem Statement ==（四变量卡诺图）== Implement the circuit described by the Karnaugh map below.  Answer  out = a’d’ +...</div></div></div></a><a class="pagination-related" href="/posts/9f7af13c.html" title="HDLBits（3）——Modules"><img class="cover" src="/img/cover3.jpg" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2021-07-25</div><div class="info-item-2">HDLBits（3）——Modules</div></div><div class="info-2"><div class="info-item-1">----- 20. Module ----- Problem Statement The figure below shows a very simple circuit with a sub-module. In this exercise, create one instance of module mod_a, then connect the module’s three pins (in1, in2, and out) to your top-level module’s three ports (wires a, b, and out). The module mod_a is provided for you — you must instantiate（实例化） it.  Expected solution length: Around 1 line. Answer 123456789module mod_a ( input in1, input in2, output out );    // Module bodyendmodule//批注：上面部分不属于答案...</div></div></div></a></div></div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info text-center"><div class="avatar-img"><img src="/img/avatar.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info-name">Mount256</div><div class="author-info-description">心似河水，奔流依旧</div><div class="site-data"><a href="/archives/"><div class="headline">文章</div><div class="length-num">131</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">128</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">25</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/Mount256"><i class="fab fa-github"></i><span>Follow Me</span></a></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">自 2026/07/13 开始本站域名由 mount256.github.io 迁移至 blog.mount256.com, 请知悉。</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#61-2-to-1-multiplexer"><span class="toc-text">----- 61. 2-to-1 multiplexer -----</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Problem-Statement"><span class="toc-text">Problem Statement</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Answer"><span class="toc-text">Answer</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#62-2-to-1-bus-multiplexer"><span class="toc-text">----- 62. 2-to-1 bus multiplexer -----</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Problem-Statement-2"><span class="toc-text">Problem Statement</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Answer1"><span class="toc-text">Answer1</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#63-9-to-1-multiplexer"><span class="toc-text">----- 63. 9-to-1 multiplexer -----</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Problem-Statement-3"><span class="toc-text">Problem Statement</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Answer-2"><span class="toc-text">Answer</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#64-256-to-1-multiplexer"><span class="toc-text">----- 64. 256-to-1 multiplexer -----</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Problem-Statement-4"><span class="toc-text">Problem Statement</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Answer-3"><span class="toc-text">Answer</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#65-256-to-1-4-bit-multiplexer"><span class="toc-text">----- 65. 256-to-1 4-bit multiplexer -----</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Problem-Statement-5"><span class="toc-text">Problem Statement</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Answer-4"><span class="toc-text">Answer</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Note-An-unfamiliar-syntax"><span class="toc-text">Note: An unfamiliar syntax</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#66-Half-adder"><span class="toc-text">----- 66. Half adder -----</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Problem-Statement-6"><span class="toc-text">Problem Statement</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Answer1-2"><span class="toc-text">Answer1</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Answer2"><span class="toc-text">Answer2</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#67-Full-adder"><span class="toc-text">----- 67. Full adder -----</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Problem-Statement-7"><span class="toc-text">Problem Statement</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Answer1-3"><span class="toc-text">Answer1</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Answer2-2"><span class="toc-text">Answer2</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#68-3-bit-binary-adder"><span class="toc-text">----- 68. 3-bit binary adder -----</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Problem-Statement-8"><span class="toc-text">Problem Statement</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Answer-5"><span class="toc-text">Answer</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#69-Adder"><span class="toc-text">----- 69. Adder -----</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Problem-Statement-9"><span class="toc-text">Problem Statement</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Answer-6"><span class="toc-text">Answer</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#70-Signed-addition-overflow"><span class="toc-text">----- 70. Signed addition overflow -----</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Problem-Statement-10"><span class="toc-text">Problem Statement</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Answer1-4"><span class="toc-text">Answer1</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Answer2-3"><span class="toc-text">Answer2</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#71-100-bit-binary-adder"><span class="toc-text">----- 71. 100-bit binary adder -----</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Problem-Statement-11"><span class="toc-text">Problem Statement</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Answer1-5"><span class="toc-text">Answer1</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Answer2-4"><span class="toc-text">Answer2</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#72-4-digit-BCD-adder"><span class="toc-text">----- 72. 4-digit BCD adder -----</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Problem-Statement-12"><span class="toc-text">Problem Statement</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Answer-7"><span class="toc-text">Answer</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Warning"><span class="toc-text">Warning</span></a></li></ol></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item"><a class="thumbnail" href="/posts/19f8fc4.html" title="进行式和终止式"><img src="/img/cover2.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="进行式和终止式"/></a><div class="content"><a class="title" href="/posts/19f8fc4.html" title="进行式和终止式">进行式和终止式</a><time datetime="2026-07-10T16:00:00.000Z" title="发表于 2026-07-11 00:00:00">2026-07-11</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/posts/349744ff.html" title="ABC notation渲染测试"><img src="/img/cover3.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="ABC notation渲染测试"/></a><div class="content"><a class="title" href="/posts/349744ff.html" title="ABC notation渲染测试">ABC notation渲染测试</a><time datetime="2026-06-23T02:42:49.000Z" title="发表于 2026-06-23 10:42:49">2026-06-23</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/posts/f9ae104.html" title="Git的分支操作"><img src="/img/cover0.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Git的分支操作"/></a><div class="content"><a class="title" href="/posts/f9ae104.html" title="Git的分支操作">Git的分支操作</a><time datetime="2026-06-11T16:00:00.000Z" title="发表于 2026-06-12 00:00:00">2026-06-12</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/posts/99b9faf2.html" title="Git的撤销操作"><img src="/img/cover1.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Git的撤销操作"/></a><div class="content"><a class="title" href="/posts/99b9faf2.html" title="Git的撤销操作">Git的撤销操作</a><time datetime="2026-06-11T16:00:00.000Z" title="发表于 2026-06-12 00:00:00">2026-06-12</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/posts/81e19116.html" title="Git多人协作"><img src="/img/cover3.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Git多人协作"/></a><div class="content"><a class="title" href="/posts/81e19116.html" title="Git多人协作">Git多人协作</a><time datetime="2026-06-11T16:00:00.000Z" title="发表于 2026-06-12 00:00:00">2026-06-12</time></div></div></div></div></div></div></main><footer id="footer" style="background-image: url(/img/cover3.jpg);"><div class="footer-other"><div class="footer-copyright"><span class="copyright">&copy;&nbsp;2025 - 2026 By Mount256</span><span class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo 8.1.2</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly 5.5.5</a></span></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="日间和夜间模式切换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js?v=5.5.5"></script><script src="/js/main.js?v=5.5.5"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui@6.1.14/dist/fancybox/fancybox.umd.min.js"></script><div class="js-pjax"><script>(() => {
+  const parseViewBox = viewBox => {
+    if (!viewBox) return null
+    const parts = viewBox.trim().split(/[\s,]+/).map(n => Number(n))
+    if (parts.length !== 4 || parts.some(n => Number.isNaN(n))) return null
+    return parts
+  }
+
+  const getSvgViewBox = svg => {
+    const attr = parseViewBox(svg.getAttribute('viewBox'))
+    if (attr) return attr
+
+    // Fallback: use bbox to build a viewBox
+    try {
+      const bbox = svg.getBBox()
+      if (bbox && bbox.width && bbox.height) return [bbox.x, bbox.y, bbox.width, bbox.height]
+    } catch (e) {
+      // getBBox may fail on some edge cases; ignore
+    }
+
+    const w = Number(svg.getAttribute('width')) || 0
+    const h = Number(svg.getAttribute('height')) || 0
+    if (w > 0 && h > 0) return [0, 0, w, h]
+    return [0, 0, 100, 100]
+  }
+
+  const setSvgViewBox = (svg, vb) => {
+    svg.setAttribute('viewBox', `${vb[0]} ${vb[1]} ${vb[2]} ${vb[3]}`)
+  }
+
+  const clamp = (v, min, max) => Math.max(min, Math.min(max, v))
+
+  const openSvgInNewTab = ({ source, initViewBox }) => {
+    const getClonedSvg = () => {
+      if (typeof source === 'string') {
+        const template = document.createElement('template')
+        template.innerHTML = source.trim()
+        const svg = template.content.querySelector('svg')
+        return svg ? svg.cloneNode(true) : null
+      }
+      if (source && typeof source.cloneNode === 'function') {
+        return source.cloneNode(true)
+      }
+      return null
+    }
+
+    const clone = getClonedSvg()
+    if (!clone) return
+    if (initViewBox && initViewBox.length === 4) {
+      clone.setAttribute('viewBox', initViewBox.join(' '))
+    }
+    if (!clone.getAttribute('xmlns')) clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg')
+    if (!clone.getAttribute('xmlns:xlink') && clone.outerHTML.includes('xlink:')) {
+      clone.setAttribute('xmlns:xlink', 'http://www.w3.org/1999/xlink')
+    }
+    // inject background to match current theme
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark'
+    const bg = getComputedStyle(document.body).backgroundColor || (isDark ? '#1e1e1e' : '#ffffff')
+    if (!clone.style.background) clone.style.background = bg
+
+    const serializer = new XMLSerializer()
+    const svgSource = serializer.serializeToString(clone)
+    const htmlSource = `<!doctype html><html><head><meta charset="utf-8" />
+      <style>
+        html, body { width: 100%; height: 100%; margin: 0; display: flex; align-items: center; justify-content: center; background: ${bg}; }
+        svg { max-width: 100%; max-height: 100%; height: auto; width: auto; }
+      </style>
+      </head><body>${svgSource}</body></html>`
+    const blob = new Blob([htmlSource], { type: 'text/html;charset=utf-8' })
+    const url = URL.createObjectURL(blob)
+    window.open(url, '_blank', 'noopener')
+    setTimeout(() => URL.revokeObjectURL(url), 30000)
+  }
+
+  const attachMermaidViewerButton = wrap => {
+    let btn = wrap.querySelector('.mermaid-open-btn')
+    if (!btn) {
+      btn = document.createElement('button')
+      btn.type = 'button'
+      btn.className = 'mermaid-open-btn'
+      wrap.appendChild(btn)
+    }
+
+    btn.innerHTML = '<i class="fa fa-search fa-fw" aria-hidden="true"></i>'
+
+    if (!btn.__mermaidViewerBound) {
+      btn.addEventListener('click', e => {
+        e.preventDefault()
+        e.stopPropagation()
+        const svg = wrap.__mermaidOriginalSvg || wrap.querySelector('svg')
+        if (!svg) return
+        const initViewBox = wrap.__mermaidInitViewBox
+        if (typeof svg === 'string') {
+          openSvgInNewTab({ source: svg, initViewBox })
+          return
+        }
+        openSvgInNewTab({ source: svg, initViewBox })
+      })
+      btn.__mermaidViewerBound = true
+    }
+  }
+
+  // Zoom around a point (px, py) in the SVG viewport (in viewBox coordinates)
+  const zoomAtPoint = (vb, factor, px, py) => {
+    const w = vb[2] * factor
+    const h = vb[3] * factor
+    const nx = px - (px - vb[0]) * factor
+    const ny = py - (py - vb[1]) * factor
+    return [nx, ny, w, h]
+  }
+
+  const initMermaidGestures = wrap => {
+    const svg = wrap.querySelector('svg')
+    if (!svg) return
+
+    // Ensure viewBox exists so gestures always work
+    const initVb = getSvgViewBox(svg)
+    wrap.__mermaidInitViewBox = initVb
+    wrap.__mermaidCurViewBox = initVb.slice()
+    setSvgViewBox(svg, initVb)
+
+    // Avoid binding multiple times on themeChange/pjax
+    if (wrap.__mermaidGestureBound) return
+    wrap.__mermaidGestureBound = true
+
+    // Helper: map client (viewport) coordinate -> viewBox coordinate
+    const clientToViewBox = (clientX, clientY) => {
+      const rect = svg.getBoundingClientRect()
+      const vb = wrap.__mermaidCurViewBox || getSvgViewBox(svg)
+      const x = vb[0] + (clientX - rect.left) * (vb[2] / rect.width)
+      const y = vb[1] + (clientY - rect.top) * (vb[3] / rect.height)
+      return { x, y, rect, vb }
+    }
+
+    const state = {
+      pointers: new Map(),
+      startVb: null,
+      startDist: 0,
+      startCenter: null
+    }
+
+    const clampVb = vb => {
+      const init = wrap.__mermaidInitViewBox || vb
+      const minW = init[2] * 0.1
+      const maxW = init[2] * 10
+      const minH = init[3] * 0.1
+      const maxH = init[3] * 10
+      vb[2] = clamp(vb[2], minW, maxW)
+      vb[3] = clamp(vb[3], minH, maxH)
+      return vb
+    }
+
+    const setCurVb = vb => {
+      vb = clampVb(vb)
+      wrap.__mermaidCurViewBox = vb
+      setSvgViewBox(svg, vb)
+    }
+
+    const onPointerDown = e => {
+      // Allow only primary button for mouse
+      if (e.pointerType === 'mouse' && e.button !== 0) return
+      svg.setPointerCapture(e.pointerId)
+      state.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY })
+
+      if (state.pointers.size === 1) {
+        state.startVb = (wrap.__mermaidCurViewBox || getSvgViewBox(svg)).slice()
+      } else if (state.pointers.size === 2) {
+        const pts = [...state.pointers.values()]
+        const dx = pts[0].x - pts[1].x
+        const dy = pts[0].y - pts[1].y
+        state.startDist = Math.hypot(dx, dy)
+        state.startVb = (wrap.__mermaidCurViewBox || getSvgViewBox(svg)).slice()
+        state.startCenter = { x: (pts[0].x + pts[1].x) / 2, y: (pts[0].y + pts[1].y) / 2 }
+      }
+    }
+
+    const onPointerMove = e => {
+      if (!state.pointers.has(e.pointerId)) return
+      state.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY })
+
+      // Pan with 1 pointer
+      if (state.pointers.size === 1 && state.startVb) {
+        const p = [...state.pointers.values()][0]
+        const prev = { x: e.clientX - e.movementX, y: e.clientY - e.movementY }
+        // movementX/Y unreliable on touch, compute from stored last position
+        const last = wrap.__mermaidLastSinglePointer || p
+        const dxClient = p.x - last.x
+        const dyClient = p.y - last.y
+        wrap.__mermaidLastSinglePointer = p
+
+        const { rect } = clientToViewBox(p.x, p.y)
+        const vb = (wrap.__mermaidCurViewBox || getSvgViewBox(svg)).slice()
+        const dx = dxClient * (vb[2] / rect.width)
+        const dy = dyClient * (vb[3] / rect.height)
+        setCurVb([vb[0] - dx, vb[1] - dy, vb[2], vb[3]])
+        return
+      }
+
+      // Pinch zoom with 2 pointers
+      if (state.pointers.size === 2 && state.startVb && state.startDist > 0) {
+        const pts = [...state.pointers.values()]
+        const dx = pts[0].x - pts[1].x
+        const dy = pts[0].y - pts[1].y
+        const dist = Math.hypot(dx, dy)
+        if (!dist) return
+        const factor = state.startDist / dist // dist bigger => zoom in (viewBox smaller)
+
+        const cx = (pts[0].x + pts[1].x) / 2
+        const cy = (pts[0].y + pts[1].y) / 2
+        const centerClient = { x: cx, y: cy }
+
+        const pxy = clientToViewBox(centerClient.x, centerClient.y)
+        const cpx = pxy.x
+        const cpy = pxy.y
+
+        const vb = zoomAtPoint(state.startVb, factor, cpx, cpy)
+        setCurVb(vb)
+      }
+    }
+
+    const onPointerUpOrCancel = e => {
+      state.pointers.delete(e.pointerId)
+      if (state.pointers.size === 0) {
+        state.startVb = null
+        state.startDist = 0
+        state.startCenter = null
+        wrap.__mermaidLastSinglePointer = null
+      } else if (state.pointers.size === 1) {
+        // reset single pointer baseline to avoid jump
+        wrap.__mermaidLastSinglePointer = [...state.pointers.values()][0]
+      }
+    }
+
+    // Wheel zoom (mouse/trackpad)
+    const onWheel = e => {
+      // ctrlKey on mac trackpad pinch; we treat both as zoom
+      e.preventDefault()
+      const delta = e.deltaY
+      const zoomFactor = delta > 0 ? 1.1 : 0.9
+      const { x, y } = clientToViewBox(e.clientX, e.clientY)
+      const vb = (wrap.__mermaidCurViewBox || getSvgViewBox(svg)).slice()
+      setCurVb(zoomAtPoint(vb, zoomFactor, x, y))
+    }
+
+    const onDblClick = () => {
+      const init = wrap.__mermaidInitViewBox
+      if (!init) return
+      wrap.__mermaidCurViewBox = init.slice()
+      setSvgViewBox(svg, init)
+    }
+
+    svg.addEventListener('pointerdown', onPointerDown)
+    svg.addEventListener('pointermove', onPointerMove)
+    svg.addEventListener('pointerup', onPointerUpOrCancel)
+    svg.addEventListener('pointercancel', onPointerUpOrCancel)
+    svg.addEventListener('wheel', onWheel, { passive: false })
+    svg.addEventListener('dblclick', onDblClick)
+  }
+
+  const runMermaid = ele => {
+    window.loadMermaid = true
+    const theme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default'
+
+    ele.forEach((item, index) => {
+      const mermaidSrc = item.firstElementChild
+
+      // Clear old render (themeChange/pjax will rerun)
+      const oldSvg = item.querySelector('svg')
+      if (oldSvg) oldSvg.remove()
+      item.__mermaidGestureBound = false
+
+      const config = mermaidSrc.dataset.config ? JSON.parse(mermaidSrc.dataset.config) : {}
+      if (!config.theme) {
+        config.theme = theme
+      }
+      const mermaidThemeConfig = `%%{init: ${JSON.stringify(config)}}%%\n`
+      const mermaidID = `mermaid-${index}`
+      const mermaidDefinition = mermaidThemeConfig + mermaidSrc.textContent
+
+      const renderFn = mermaid.render(mermaidID, mermaidDefinition)
+      const renderMermaid = svg => {
+        mermaidSrc.insertAdjacentHTML('afterend', svg)
+        if (true) initMermaidGestures(item)
+        item.__mermaidOriginalSvg = svg
+        if (true) attachMermaidViewerButton(item)
+      }
+
+
+      // mermaid v9 and v10 compatibility
+      typeof renderFn === 'string' ? renderMermaid(renderFn) : renderFn.then(({ svg }) => renderMermaid(svg))
+    })
+  }
+
+  const codeToMermaid = () => {
+    const codeMermaidEle = document.querySelectorAll('pre > code.mermaid')
+    if (codeMermaidEle.length === 0) return
+
+    codeMermaidEle.forEach(ele => {
+      const preEle = document.createElement('pre')
+      preEle.className = 'mermaid-src'
+      preEle.hidden = true
+      preEle.textContent = ele.textContent
+      const newEle = document.createElement('div')
+      newEle.className = 'mermaid-wrap'
+      newEle.appendChild(preEle)
+      ele.parentNode.replaceWith(newEle)
+    })
+  }
+
+  const loadMermaid = () => {
+    if (true) codeToMermaid()
+    const $mermaid = document.querySelectorAll('#article-container .mermaid-wrap')
+    if ($mermaid.length === 0) return
+
+    const runMermaidFn = () => runMermaid($mermaid)
+    btf.addGlobalFn('themeChange', runMermaidFn, 'mermaid')
+    window.loadMermaid ? runMermaidFn() : btf.getScript('https://cdn.jsdelivr.net/npm/mermaid@11.15.0/dist/mermaid.min.js').then(runMermaidFn)
+  }
+
+  btf.addGlobalFn('encrypt', loadMermaid, 'mermaid')
+  window.pjax ? loadMermaid() : document.addEventListener('DOMContentLoaded', loadMermaid)
+})()</script></div><script src="/js/abcjs-detect.js"></script><script src="/js/bubble.js"></script><script id="click-heart" src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/dist/click-heart.min.js" async="async" mobile="true"></script><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script><div id="local-search"><div class="search-dialog"><nav class="search-nav"><span class="search-dialog-title">搜索</span><i class="fas fa-spinner fa-pulse" id="loading-status" hidden="hidden"></i><button class="search-close-button"><i class="fas fa-times"></i></button></nav><div class="text-center" id="loading-database"><i class="fas fa-spinner fa-pulse"></i><span>  数据加载中</span></div><div class="local-search-input"><input placeholder="输入关键词…" type="text"/></div><hr/><div id="local-search-results"></div><div class="ais-Pagination" id="local-search-pagination" style="display:none;"><ul class="ais-Pagination-list"></ul></div><div id="local-search-stats"></div></div><div id="search-mask"></div><script src="/js/search/local-search.js?v=5.5.5"></script></div></div></body></html>
